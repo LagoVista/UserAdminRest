@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.6</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard1.6\LagoVista.UserManagement.Rest.xml</DocumentationFile>
+    <NoWarn>1701;1702;1705;1591</NoWarn>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LagoVista.Core" Version="0.8.119-alpha01205" />
+    <PackageReference Include="LagoVista.Core.Authentication" Version="0.8.119-alpha01205" />
+    <PackageReference Include="LagoVista.IoT.Web.Common" Version="0.8.112-alpha01270" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="1.1.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.1.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LagoVista.UserManagement\LagoVista.UserManagement.csproj" />
+  </ItemGroup>
+
+</Project>
