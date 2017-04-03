@@ -1,21 +1,19 @@
 ﻿using LagoVista.IoT.Web.Common.Controllers;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using LagoVista.Core.PlatformSupport;
-using LagoVista.UserManagement.Models.Account;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using LagoVista.Web.Identity.Models;
-using LagoVista.Core.Networking.Models;
-using LagoVista.Core.Authentication.Models;
 using System.Threading.Tasks;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
+using LagoVista.UserAdmin.Models.Account;
+using LagoVista.Core.Authentication.Models;
+using LagoVista.Core.Networking.Models;
+using LagoVista.AspNetCore.Identity.Models;
 
-namespace LagoVista.UserManagement.Rest.Rest
+namespace LagoVista.UserAdmin.Rest.Rest
 {
     /// <summary>
     /// Authentication Services
@@ -62,6 +60,26 @@ namespace LagoVista.UserManagement.Rest.Rest
             return APIResponse<AuthResponse>.FromFailedStatusCode(System.Net.HttpStatusCode.Unauthorized);
         }
 
+        private string GetToken(string user, DateTime? expires)
+        {
+            var handler = new JwtSecurityTokenHandler();
+
+            // Here, you should create or look up an identity for the user which is being authenticated.
+            // For now, just creating a simple generic identity.
+            var identity = new ClaimsIdentity(new GenericIdentity(user, "TokenAuth"), new[] { new Claim("EntityID", "1", ClaimValueTypes.Integer) });
+
+            var securityToken = handler.CreateToken(new Microsoft.IdentityModel.Tokens.SecurityTokenDescriptor()
+            {
+                Issuer = _tokenOptions.Issuer,
+                Audience = _tokenOptions.Audience,
+                //SigningCredentials = _tokenOptions.SigningCredentials,
+                Subject = identity,
+                Expires = expires
+            });
+
+            return handler.WriteToken(securityToken);
+        }
+
         /// <summary>
         /// Auth by JSON Body
         /// </summary>
@@ -83,27 +101,5 @@ namespace LagoVista.UserManagement.Rest.Rest
         {
             return Auth(req);
         }
-
-        private string GetToken(string user, DateTime? expires)
-        {
-            var handler = new JwtSecurityTokenHandler();
-
-            // Here, you should create or look up an identity for the user which is being authenticated.
-            // For now, just creating a simple generic identity.
-            var identity = new ClaimsIdentity(new GenericIdentity(user, "TokenAuth"), new[] { new Claim("EntityID", "1", ClaimValueTypes.Integer) });
-
-            var securityToken = handler.CreateToken(new Microsoft.IdentityModel.Tokens.SecurityTokenDescriptor()
-            {
-                Issuer = _tokenOptions.Issuer,
-                Audience = _tokenOptions.Audience,
-                //SigningCredentials = _tokenOptions.SigningCredentials,
-                Subject = identity,
-                Expires = expires
-            });
-
-            return handler.WriteToken(securityToken);
-        }
-
-
     }
 }
