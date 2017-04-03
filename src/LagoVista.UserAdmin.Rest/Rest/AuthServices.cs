@@ -13,7 +13,7 @@ using LagoVista.Core.Authentication.Models;
 using LagoVista.Core.Networking.Models;
 using LagoVista.AspNetCore.Identity.Models;
 
-namespace LagoVista.UserAdmin.Rest.Rest
+namespace LagoVista.UserAdmin.Rest
 {
     /// <summary>
     /// Authentication Services
