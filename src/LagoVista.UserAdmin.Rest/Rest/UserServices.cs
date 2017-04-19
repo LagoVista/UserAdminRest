@@ -11,6 +11,9 @@ using LagoVista.UserAdmin.Models.Account;
 
 namespace LagoVista.UserManagement.Rest
 {
+    /// <summary>
+    /// User Services
+    /// </summary>
     [Authorize]
     [Route("api/v1/user")]
     public class UserServices : LagoVistaBaseController
@@ -21,6 +24,11 @@ namespace LagoVista.UserManagement.Rest
             _appUserManager = appUserManager;
         }
 
+        /// <summary>
+        /// User Service - Get by Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet("{id}")]
         public async Task<DetailResponse<AppUser>> GetUserAsync(String id)
         {
@@ -29,10 +37,14 @@ namespace LagoVista.UserManagement.Rest
             return DetailResponse<AppUser>.Create(appUser);
         }
 
+        /// <summary>
+        /// User Service - Get by User Name (generally email)
+        /// </summary>
+        /// <returns></returns>
         [HttpGet()]
         public async Task<DetailResponse<AppUser>> GetCurrentUser()
         {
-            var appUser = await _appUserManager.GetUserByIdAsync(User.Identity.Name, UserEntityHeader);
+            var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, UserEntityHeader);
             appUser.PasswordHash = null;
             return DetailResponse<AppUser>.Create(appUser);
         }
