@@ -18,7 +18,7 @@ namespace LagoVista.UserAdmin.Rest
     /// <summary>
     /// Authentication Services
     /// </summary>
-    [Authorize]
+    [AllowAnonymous]
     [Route("api/v1/auth")]
     public class AuthServices : LagoVistaBaseController
     {
@@ -97,7 +97,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="req"></param>
         /// <returns></returns>
         [HttpPost("form")]
-        public Task<APIResponse<AuthResponse>> PostFromFrom([FromForm] AuthRequest req)
+        public Task<APIResponse<AuthResponse>> PostFromForm([FromForm] AuthRequest req)
         {
             return Auth(req);
         }

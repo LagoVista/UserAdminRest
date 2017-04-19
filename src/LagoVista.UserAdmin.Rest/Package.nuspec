@@ -17,7 +17,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="readme.txt" target="" />
+    <file src="bin\release\netstandard1.6\LagoVista.UserAdmin.Admin.Rest.xml" target="contentFiles\wwwroot\xmldocs" />
     <file src="bin\release\netstandard1.6\*.dll" target="lib\netstandard1.6" />
   </files>
 </package>

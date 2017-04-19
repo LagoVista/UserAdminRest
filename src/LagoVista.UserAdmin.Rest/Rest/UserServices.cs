@@ -28,5 +28,13 @@ namespace LagoVista.UserManagement.Rest
             appUser.PasswordHash = null;
             return DetailResponse<AppUser>.Create(appUser);
         }
+
+        [HttpGet()]
+        public async Task<DetailResponse<AppUser>> GetCurrentUser()
+        {
+            var appUser = await _appUserManager.GetUserByIdAsync(User.Identity.Name, UserEntityHeader);
+            appUser.PasswordHash = null;
+            return DetailResponse<AppUser>.Create(appUser);
+        }
     }
 }
