@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LagoVista.UserAdmin.Managers;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.UserAdmin.Models.Account;
+using LagoVista.UserAdmin.Interfaces.Managers;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -15,13 +16,14 @@ namespace LagoVista.UserManagement.Rest
     /// User Services
     /// </summary>
     [Authorize]
-    [Route("api/v1/user")]
     public class UserServices : LagoVistaBaseController
     {
         IAppUserManager _appUserManager;
-        public UserServices(IAppUserManager appUserManager, UserManager<AppUser> userManager, ILogger logger) : base(userManager, logger)
+        IOrganizationManager _orgManager;
+        public UserServices(IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, ILogger logger) : base(userManager, logger)
         {
             _appUserManager = appUserManager;
+            _orgManager = orgManager;
         }
 
         /// <summary>
@@ -29,7 +31,7 @@ namespace LagoVista.UserManagement.Rest
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("{id}")]
+        [HttpGet("/api/user/{id}")]
         public async Task<DetailResponse<AppUser>> GetUserAsync(String id)
         {
             var appUser = await _appUserManager.GetUserByIdAsync(id, UserEntityHeader);
@@ -42,11 +44,13 @@ namespace LagoVista.UserManagement.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet()]
+        [HttpGet("/api/user")]
         public async Task<DetailResponse<AppUser>> GetCurrentUser()
         {
             var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, UserEntityHeader);
             appUser.PasswordHash = null;
             return DetailResponse<AppUser>.Create(appUser);
         }
+
     }
 }
