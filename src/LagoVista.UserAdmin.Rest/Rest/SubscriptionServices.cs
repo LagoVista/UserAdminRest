@@ -87,7 +87,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="orgId">Organization Id</param>
         /// <returns></returns>
-        [HttpGet("/api/orgs/{subscriptionid}/subscriptions")]
+        [HttpGet("/api/orgs/{orgid}/subscriptions")]
         public async Task<ListResponse<SubscriptionSummary>> GetSubscriptionsForOrgAsync(String orgId)
         {
             var hostSummaries = await _subscriptionManager.GetSubscriptionsForOrgAsync(orgId, UserEntityHeader);
