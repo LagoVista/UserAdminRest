@@ -15,6 +15,7 @@ using LagoVista.Core;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using LagoVista.Core.Models;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -27,24 +28,6 @@ namespace LagoVista.UserAdmin.Rest
         {
             _subscriptionManager = appUserManager;
         }
-
-
-        private void SetAuditProperties(IAuditableEntity entity)
-        {
-            var createDate = DateTime.Now.ToJSONString();
-
-            entity.CreationDate = createDate;
-            entity.LastUpdatedDate = createDate;
-            entity.CreatedBy = UserEntityHeader;
-            entity.LastUpdatedBy = UserEntityHeader;
-        }
-
-        private void SetOwnedProperties(IOwnedEntity entity)
-        {
-            entity.OwnerOrganization = OrgEntityHeader;
-        }
-
-
 
         /// <summary>
         /// Subscription - Add
@@ -65,6 +48,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPut("/api/subscription")]
         public Task<InvokeResult> UpdateSubscriptionAsync([FromBody] Subscription subscription)
         {
+            SetUpdatedProperties(subscription);
             return _subscriptionManager.UpdateSubscriptionAsync(subscription, OrgEntityHeader, UserEntityHeader);
         }
 
@@ -87,7 +71,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="orgId">Organization Id</param>
         /// <returns></returns>
-        [HttpGet("/api/orgs/{orgid}/subscriptions")]
+        [HttpGet("/api/org/{orgid}/subscriptions")]
         public async Task<ListResponse<SubscriptionSummary>> GetSubscriptionsForOrgAsync(String orgId)
         {
             var hostSummaries = await _subscriptionManager.GetSubscriptionsForOrgAsync(orgId, UserEntityHeader);
@@ -101,17 +85,17 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("/api/subscription/candelete/{id}")]
-        public Task<bool> CanDeleteAsync(String id)
+        [HttpGet("/api/subscription/{id}/inuse}")]
+        public Task<DependentObjectCheckResult> CanDeleteAsync(String id)
         {
-            return _subscriptionManager.CanDeleteSubscriptionAsync(id, OrgEntityHeader, UserEntityHeader);
+            return _subscriptionManager.CheckInUseAsync(id, OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>
         /// Subscription - Key In Use
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/subscription/keyinuse/{key}")]
+        [HttpGet("/api/subscription/{key}/keyinuse")]
         public Task<bool> HostKeyInUse(String key)
         {
             return _subscriptionManager.QueryKeyInUse(key, OrgEntityHeader);
