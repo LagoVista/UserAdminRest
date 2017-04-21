@@ -85,8 +85,8 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("/api/subscription/{id}/inuse}")]
-        public Task<DependentObjectCheckResult> CanDeleteAsync(String id)
+        [HttpGet("/api/subscription/{id}/inuse")]
+        public Task<DependentObjectCheckResult> CheckInUse(String id)
         {
             return _subscriptionManager.CheckInUseAsync(id, OrgEntityHeader, UserEntityHeader);
         }
