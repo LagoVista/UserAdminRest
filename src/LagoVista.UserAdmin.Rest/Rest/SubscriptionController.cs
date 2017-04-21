@@ -105,7 +105,7 @@ namespace LagoVista.UserAdmin.Rest
         /// Subscription - Delete
         /// </summary>
         /// <returns></returns>
-        [HttpDelete("/api/subscription")]
+        [HttpDelete("/api/subscription/{id}")]
         public Task<InvokeResult> DeleteSubscriptionAsync(string id)
         {
             return _subscriptionManager.DeleteSubscriptionAsync(id, OrgEntityHeader, UserEntityHeader);
