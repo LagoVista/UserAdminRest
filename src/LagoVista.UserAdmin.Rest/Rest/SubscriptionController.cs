@@ -21,10 +21,10 @@ namespace LagoVista.UserAdmin.Rest
 {
     [SystemAdmin]
     [Authorize]
-    public class SubscriptionServices : LagoVistaBaseController
+    public class SubscriptionController : LagoVistaBaseController
     {
         ISubscriptionManager _subscriptionManager;
-        public SubscriptionServices(ISubscriptionManager appUserManager, UserManager<AppUser> userManager, ILogger logger) : base(userManager, logger)
+        public SubscriptionController(ISubscriptionManager appUserManager, UserManager<AppUser> userManager, ILogger logger) : base(userManager, logger)
         {
             _subscriptionManager = appUserManager;
         }

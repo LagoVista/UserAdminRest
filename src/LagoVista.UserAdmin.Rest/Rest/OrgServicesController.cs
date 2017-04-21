@@ -18,12 +18,12 @@ namespace LagoVista.UserAdmin.Rest
     /// Orgs Srevices
     /// </summary>
     [Authorize]
-    public class OrgService : LagoVistaBaseController
+    public class OrgServicesController : LagoVistaBaseController
     {
         IAppUserManager _appUserManager;
         IOrganizationManager _orgManager;
 
-        public OrgService(IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, ILogger logger) : base(userManager, logger)
+        public OrgServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, ILogger logger) : base(userManager, logger)
         {
             _appUserManager = appUserManager;
             _orgManager = orgManager;

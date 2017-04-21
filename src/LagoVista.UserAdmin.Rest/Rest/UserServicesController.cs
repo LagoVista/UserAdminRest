@@ -16,11 +16,11 @@ namespace LagoVista.UserManagement.Rest
     /// User Services
     /// </summary>
     [Authorize]
-    public class UserServices : LagoVistaBaseController
+    public class UserServicesController : LagoVistaBaseController
     {
         IAppUserManager _appUserManager;
         IOrganizationManager _orgManager;
-        public UserServices(IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, ILogger logger) : base(userManager, logger)
+        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, ILogger logger) : base(userManager, logger)
         {
             _appUserManager = appUserManager;
             _orgManager = orgManager;
@@ -43,7 +43,6 @@ namespace LagoVista.UserManagement.Rest
         /// User Service - Get by User Name (generally email)
         /// </summary>
         /// <returns></returns>
-        [HttpGet()]
         [HttpGet("/api/user")]
         public async Task<DetailResponse<AppUser>> GetCurrentUser()
         {
