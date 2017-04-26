@@ -12,9 +12,6 @@
     <releaseNotes>Initial Unstable Release</releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>HomeAutomation IoT</tags>
-    <dependencies>
-      <dependency id="LagoVista.CloudStorage" version="0.8.120-alpha01149" />
-    </dependencies>
   </metadata>
   <files>
     <file src="bin\release\netstandard1.6\LagoVista.UserAdmin.Rest.xml" target="contentFiles\wwwroot\xmldocs" />

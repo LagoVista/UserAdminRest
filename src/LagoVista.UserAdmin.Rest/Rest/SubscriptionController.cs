@@ -98,7 +98,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/subscription/{key}/keyinuse")]
         public Task<bool> HostKeyInUse(String key)
         {
-            return _subscriptionManager.QueryKeyInUse(key, OrgEntityHeader);
+            return _subscriptionManager.QueryKeyInUseAsync(key, OrgEntityHeader);
         }
 
         /// <summary>

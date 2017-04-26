@@ -18,11 +18,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LagoVista.AspNetCore.Identity" Version="0.8.144-alpha00892" />
-    <PackageReference Include="LagoVista.Core" Version="0.8.144-alpha00856" />
-    <PackageReference Include="LagoVista.Core.Authentication" Version="0.8.144-alpha00856" />
+    <PackageReference Include="LagoVista.AspNetCore.Identity" Version="0.8.146-alpha01244" />
+    <PackageReference Include="LagoVista.Core" Version="0.8.146-alpha01178" />
+    <PackageReference Include="LagoVista.Core.Authentication" Version="0.8.146-alpha01178" />
     <PackageReference Include="LagoVista.IoT.Web.Common" Version="0.8.144-alpha00967" />
-    <PackageReference Include="LagoVista.UserAdmin" Version="0.8.144-alpha00892" />
+    <PackageReference Include="LagoVista.UserAdmin" Version="0.8.146-alpha01244" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="1.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="1.1.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.1.3" />
