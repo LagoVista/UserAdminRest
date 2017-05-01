@@ -26,7 +26,6 @@ namespace LagoVista.UserAdmin.Rest
     /// Authentication Services
     /// </summary>
     [AllowAnonymous]
-    [Route("api/v1/auth")]
     public class AuthServices : LagoVistaBaseController
     {
         private readonly TokenAuthOptions _tokenOptions;
@@ -140,7 +139,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
-        [HttpPost]
+        [HttpPost("/api/v1/auth")]
         public Task<APIResponse<AuthResponse>> PostFromBody([FromBody] AuthRequest req)
         {
             return Auth(req);
@@ -151,7 +150,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
-        [HttpPost("form")]
+        [HttpPost("/api/v1/auth/form")]
         public Task<APIResponse<AuthResponse>> PostFromForm([FromForm] AuthRequest req)
         {
             return Auth(req);
