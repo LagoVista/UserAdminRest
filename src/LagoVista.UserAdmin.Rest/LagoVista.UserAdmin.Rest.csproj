@@ -1,31 +1,26 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
     <RootNamespace>LagoVista.UserAdmin</RootNamespace>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\netstandard1.6\LagoVista.UserManagement.Rest.xml</DocumentationFile>
     <NoWarn>1701;1702;1705;1591</NoWarn>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>bin\Release\netstandard1.6\LagoVista.UserAdmin.Rest.xml</DocumentationFile>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <NoWarn>1701;1702;1705;1591</NoWarn>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="LagoVista.AspNetCore.Identity" Version="0.8.146-alpha01244" />
-    <PackageReference Include="LagoVista.Core" Version="0.8.146-alpha01178" />
-    <PackageReference Include="LagoVista.Core.Authentication" Version="0.8.146-alpha01178" />
-    <PackageReference Include="LagoVista.IoT.Web.Common" Version="0.8.144-alpha00967" />
-    <PackageReference Include="LagoVista.UserAdmin" Version="0.8.146-alpha01244" />
+    <PackageReference Include="LagoVista.AspNetCore.Identity" Version="0.8.155-alpha1646" />
+    <PackageReference Include="LagoVista.Core" Version="0.8.155-alpha1646" />
+    <PackageReference Include="LagoVista.Core.Authentication" Version="0.8.155-alpha1646" />
+    <PackageReference Include="LagoVista.IoT.Web.Common" Version="0.8.155-alpha1646" />
+    <PackageReference Include="LagoVista.UserAdmin" Version="0.8.155-alpha1646" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="1.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="1.1.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.1.3" />
   </ItemGroup>
-
 </Project>
