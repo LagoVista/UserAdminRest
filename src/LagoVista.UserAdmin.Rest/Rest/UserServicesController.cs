@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using LagoVista.UserAdmin.Managers;
+using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.UserAdmin.Models.Account;
 using LagoVista.UserAdmin.Interfaces.Managers;
@@ -32,11 +33,10 @@ namespace LagoVista.UserManagement.Rest
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/user/{id}")]
-        public async Task<DetailResponse<AppUser>> GetUserAsync(String id)
+        public async Task<DetailResponse<UserInfo>> GetUserAsync(String id)
         {
             var appUser = await _appUserManager.GetUserByIdAsync(id, UserEntityHeader);
-            appUser.PasswordHash = null;
-            return DetailResponse<AppUser>.Create(appUser);
+            return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
         }
 
         /// <summary>
@@ -44,11 +44,11 @@ namespace LagoVista.UserManagement.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/user")]
-        public async Task<DetailResponse<AppUser>> GetCurrentUser()
+        public async Task<DetailResponse<UserInfo>> GetCurrentUser()
         {
             var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, UserEntityHeader);
             appUser.PasswordHash = null;
-            return DetailResponse<AppUser>.Create(appUser);
+            return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
         }
 
     }
