@@ -89,7 +89,6 @@ namespace LagoVista.UserAdmin.Rest
                 new Claim(System.Security.Claims.ClaimTypes.Surname, user.LastName),
                 new Claim(System.Security.Claims.ClaimTypes.Email, user.Email),
                 new Claim(ClaimsPrincipalFactory.CurrentUserId, user.Id),
-                new Claim(ClaimsPrincipalFactory.CurrentOrgId, user.Email),
                 new Claim(ClaimsPrincipalFactory.EmailVerified, user.EmailConfirmed.ToString()),
                 new Claim(ClaimsPrincipalFactory.PhoneVerfiied, user.PhoneNumberConfirmed.ToString()),
                 new Claim(ClaimsPrincipalFactory.IsSystemAdmin, user.IsSystemAdmin.ToString()),
