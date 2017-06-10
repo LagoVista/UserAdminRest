@@ -19,6 +19,7 @@ using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text;
 using LagoVista.IoT.Web.Common.Claims;
+using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -38,7 +39,7 @@ namespace LagoVista.UserAdmin.Rest
         public const string Surname = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname";
         public const string NameIdentifier = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
 
-        public AuthServices(TokenAuthOptions tokenOptions, ILogger logger, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager) : base(userManager, logger)
+        public AuthServices(TokenAuthOptions tokenOptions, IAdminLogger logger, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager) : base(userManager, logger)
         {
             _tokenOptions = tokenOptions;
             _logger = logger;

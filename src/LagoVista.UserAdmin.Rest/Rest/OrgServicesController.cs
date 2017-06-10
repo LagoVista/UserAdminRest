@@ -1,5 +1,6 @@
 ﻿using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.PlatformSupport;
+using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Managers;
@@ -23,7 +24,7 @@ namespace LagoVista.UserAdmin.Rest
         IAppUserManager _appUserManager;
         IOrganizationManager _orgManager;
 
-        public OrgServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, ILogger logger) : base(userManager, logger)
+        public OrgServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _appUserManager = appUserManager;
             _orgManager = orgManager;

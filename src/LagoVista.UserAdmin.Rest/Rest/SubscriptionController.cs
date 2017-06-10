@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using LagoVista.Core.Models;
+using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -24,7 +25,7 @@ namespace LagoVista.UserAdmin.Rest
     public class SubscriptionController : LagoVistaBaseController
     {
         ISubscriptionManager _subscriptionManager;
-        public SubscriptionController(ISubscriptionManager appUserManager, UserManager<AppUser> userManager, ILogger logger) : base(userManager, logger)
+        public SubscriptionController(ISubscriptionManager appUserManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _subscriptionManager = appUserManager;
         }
