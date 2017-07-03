@@ -42,10 +42,23 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/user/{userid}/orgs")]
         public async Task<ListResponse<OrganizationAccount>> GetOrgForAccountAsync(String userid)
         {
-            var orgAccount = await _orgManager.GetOrganizationsForAccountAsync(userid);
+            var orgAccount = await _orgManager.GetOrganizationsForAccountAsync(userid, OrgEntityHeader, UserEntityHeader);
 
             return ListResponse<OrganizationAccount>.Create(orgAccount);
         }
+
+        /// <summary>
+        /// Orgs Service - Add User to Org
+        /// </summary>
+        /// <param name="orgid"></param>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/org/{orgid}/{userid}/orgs")]
+        public async Task<InvokeResult> AddAccountToOrgAsync(string orgid, String userid)
+        {
+            return await _orgManager.AddAccountToOrgAsync(orgid, userid,OrgEntityHeader, UserEntityHeader);
+        }
+
 
         /// <summary>
         /// Orgs Service - Get Users for Org
@@ -55,7 +68,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/org/{orgid}/users")]
         public async Task<ListResponse<OrganizationAccount>> GetUserForOrgAsync(String orgid)
         {
-            var orgAccount = await _orgManager.GetAccountsForOrganizationsAsync(orgid);
+            var orgAccount = await _orgManager.GetAccountsForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
 
             return ListResponse<OrganizationAccount>.Create(orgAccount);
         }
