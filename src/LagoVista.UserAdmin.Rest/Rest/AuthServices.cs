@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
-using LagoVista.UserAdmin.Models.Account;
+using LagoVista.UserAdmin.Models.Users;
 using LagoVista.Core.Authentication.Models;
 using LagoVista.Core.Networking.Models;
 using LagoVista.AspNetCore.Identity.Models;

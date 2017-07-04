@@ -5,7 +5,7 @@ using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Managers;
-using LagoVista.UserAdmin.Models.Account;
+using LagoVista.UserAdmin.Models.Users;
 using LagoVista.UserAdmin.Models.Orgs;
 using LagoVista.UserAdmin.ViewModels.Organization;
 using Microsoft.AspNetCore.Authorization;
@@ -40,11 +40,11 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="userid"></param>
         /// <returns></returns>
         [HttpGet("/api/user/{userid}/orgs")]
-        public async Task<ListResponse<OrganizationAccount>> GetOrgForAccountAsync(String userid)
+        public async Task<ListResponse<OrgUser>> GetOrgForAccountAsync(String userid)
         {
-            var orgAccount = await _orgManager.GetOrganizationsForAccountAsync(userid, OrgEntityHeader, UserEntityHeader);
+            var orgAccount = await _orgManager.GetOrganizationsForUserAsync(userid, OrgEntityHeader, UserEntityHeader);
 
-            return ListResponse<OrganizationAccount>.Create(orgAccount);
+            return ListResponse<OrgUser>.Create(orgAccount);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/org/{orgid}/{userid}/orgs")]
         public async Task<InvokeResult> AddAccountToOrgAsync(string orgid, String userid)
         {
-            return await _orgManager.AddAccountToOrgAsync(orgid, userid,OrgEntityHeader, UserEntityHeader);
+            return await _orgManager.AddUserToOrgAsync(orgid, userid,OrgEntityHeader, UserEntityHeader);
         }
 
 
@@ -66,11 +66,11 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="orgid"></param>
         /// <returns></returns>
         [HttpGet("/api/org/{orgid}/users")]
-        public async Task<ListResponse<OrganizationAccount>> GetUserForOrgAsync(String orgid)
+        public async Task<ListResponse<OrgUser>> GetUserForOrgAsync(String orgid)
         {
-            var orgAccount = await _orgManager.GetAccountsForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
+            var orgAccount = await _orgManager.GetUsersForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
 
-            return ListResponse<OrganizationAccount>.Create(orgAccount);
+            return ListResponse<OrgUser>.Create(orgAccount);
         }
 
         /// <summary>

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using LagoVista.UserAdmin.Managers;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
-using LagoVista.UserAdmin.Models.Account;
+using LagoVista.UserAdmin.Models.Users;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.IoT.Logging.Loggers;
 
@@ -36,7 +36,7 @@ namespace LagoVista.UserManagement.Rest
         [HttpGet("/api/user/{id}")]
         public async Task<DetailResponse<UserInfo>> GetUserAsync(String id)
         {
-            var appUser = await _appUserManager.GetUserByIdAsync(id, UserEntityHeader);
+            var appUser = await _appUserManager.GetUserByIdAsync(id,OrgEntityHeader, UserEntityHeader);
             return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
         }
 
@@ -47,7 +47,7 @@ namespace LagoVista.UserManagement.Rest
         [HttpGet("/api/user")]
         public async Task<DetailResponse<UserInfo>> GetCurrentUser()
         {
-            var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, UserEntityHeader);
+            var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
             appUser.PasswordHash = null;
             return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
         }
