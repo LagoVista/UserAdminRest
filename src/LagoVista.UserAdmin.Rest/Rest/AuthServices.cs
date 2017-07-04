@@ -49,9 +49,33 @@ namespace LagoVista.UserAdmin.Rest
 
         private async Task<APIResponse<AuthResponse>> Auth(AuthRequest req)
         {
-            var result = await _signInManager.PasswordSignInAsync(req.UserName, req.Password, true, false);
-            if (result.Succeeded)
+            if (req.GrantType == "password")
             {
+                var result = await _signInManager.PasswordSignInAsync(req.UserName, req.Password, true, false);
+                if (result.Succeeded)
+                {
+                    var appUser = await _userManager.FindByNameAsync(req.UserName);
+
+                    var expires = DateTime.UtcNow.AddDays(_tokenOptions.Expiration.TotalDays);
+                    var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                    var offset = DateTimeOffset.Now;
+
+                    var token = GetToken(appUser, expires);
+                    var authResponse = new AuthResponse()
+                    {
+                        AuthToken = token,
+                        TokenType = "auth",
+                        AuthTokenExpiration = offset.ToUnixTimeSeconds()
+                    };
+
+                    return APIResponse<AuthResponse>.Create(authResponse);
+                }
+
+                return APIResponse<AuthResponse>.FromFailedStatusCode(System.Net.HttpStatusCode.Unauthorized);
+            }
+            else if(req.GrantType == "refresh")
+            {
+                //TODO: (and VERY important need to add logic for refresh tokens and auth that, not just blindly accept requests.
                 var appUser = await _userManager.FindByNameAsync(req.UserName);
 
                 var expires = DateTime.UtcNow.AddDays(_tokenOptions.Expiration.TotalDays);
@@ -68,8 +92,10 @@ namespace LagoVista.UserAdmin.Rest
 
                 return APIResponse<AuthResponse>.Create(authResponse);
             }
-
-            return APIResponse<AuthResponse>.FromFailedStatusCode(System.Net.HttpStatusCode.Unauthorized);
+            else
+            {
+                return APIResponse<AuthResponse>.FromFailedStatusCode(System.Net.HttpStatusCode.Unauthorized);
+            }
         }
 
 
