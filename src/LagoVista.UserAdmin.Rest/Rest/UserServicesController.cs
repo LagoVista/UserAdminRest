@@ -68,7 +68,7 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("/api/user/register")]
-        public async Task<InvokeResult<AppUser>> CreateNewAsync(RegisterViewModel newUser)
+        public async Task<InvokeResult<AppUser>> CreateNewAsync([FromBody] RegisterViewModel newUser)
         {
             var validationResult = Validator.Validate(newUser, Actions.Create);
             if(!validationResult.Successful)
@@ -108,7 +108,7 @@ namespace LagoVista.UserManagement.Rest
         /// <param name="inviteViewModel"></param>
         /// <returns></returns>
         [HttpPost("/api/user/invite")]
-        public Task<InvokeResult<Invitation>> InviteUser(InviteUserViewModel inviteViewModel)
+        public Task<InvokeResult<Invitation>> InviteUser([FromBody] InviteUserViewModel inviteViewModel)
         {
             return _orgManager.InviteUserAsync(inviteViewModel, OrgEntityHeader, UserEntityHeader);
         }
