@@ -62,8 +62,9 @@ namespace LagoVista.UserAdmin.Rest
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             code = System.Net.WebUtility.UrlEncode(code);
             var callbackUrl = Url.Action(nameof(ConfirmEmailLink), "VerifyIdentity", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+            var mobileCallbackUrl = Url.Action(nameof(ConfirmEmailLink), "VerifyIdentity", new { userId = user.Id, code = code }, protocol: "nuviot");
             var subject = UserAdminRestResources.Email_Verification_Subject.Replace("[APP_NAME]", UserAdminRestResources.Common_AppName);
-            var body = UserAdminRestResources.Email_Verification_Body.Replace("[CALLBACK_URL]", callbackUrl);
+            var body = UserAdminRestResources.Email_Verification_Body.Replace("[CALLBACK_URL]", callbackUrl).Replace("[MOBILE_CALLBACK_URL]", mobileCallbackUrl);
             await _emailSender.SendAsync(user.Email, subject, body);
 
             return InvokeResult.Success;

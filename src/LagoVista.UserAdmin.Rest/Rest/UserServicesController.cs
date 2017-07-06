@@ -103,6 +103,18 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
+        /// User Service - Register a new user (sign-up)
+        /// </summary>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet("/api/user/register/factory")]
+        public DetailResponse<RegisterViewModel> GetCreateUserViewModel()
+        {
+            return DetailResponse<RegisterViewModel>.Create();
+        }
+
+
+        /// <summary>
         /// Invite User - Invite New User
         /// </summary>
         /// <param name="inviteViewModel"></param>
