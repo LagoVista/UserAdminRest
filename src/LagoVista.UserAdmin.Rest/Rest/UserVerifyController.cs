@@ -32,12 +32,13 @@ namespace LagoVista.UserAdmin.Rest
         private const string ConfirmEmailLink = "ConfirmEmailLink";
 
 
-        public UserVerifyController(IAppUserManager appUserManager, IOrganizationManager orgManager, ISmsSender smsSender, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IAdminLogger logger) : base(userManager, logger)
+        public UserVerifyController(IAppUserManager appUserManager, IOrganizationManager orgManager, IEmailSender emailSender, ISmsSender smsSender, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IAdminLogger logger) : base(userManager, logger)
         {
             _appUserManager = appUserManager;
             _orgManager = orgManager;
             _signInManager = signInManager;
             _userManager = userManager;
+            _emailSender = emailSender;
             _smsSender = smsSender;
         }
 
