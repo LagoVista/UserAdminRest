@@ -15,6 +15,9 @@ using LagoVista.Core.Validation;
 using LagoVista.UserAdmin.ViewModels.Users;
 using LagoVista.UserAdmin.ViewModels.Organization;
 using LagoVista.UserAdmin.Models.Orgs;
+using LagoVista.UserAdmin.Interfaces.Repos.Security;
+using LagoVista.Core.Authentication.Models;
+using LagoVista.UserAdmin.Resources;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -26,15 +29,19 @@ namespace LagoVista.UserManagement.Rest
     {
         private readonly IAppUserManager _appUserManager;
         private readonly IOrganizationManager _orgManager;
+        private readonly IAuthTokenManager _authTokenManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IAdminLogger _adminLogger;
 
-        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager,  IAdminLogger logger) : base(userManager, logger)
+        public UserServicesController(IAppUserManager appUserManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
             _orgManager = orgManager;
+            _authTokenManager = authTokenManager;
             _signInManager = signInManager;
             _userManager = userManager;
+            _adminLogger = adminLogger;
         }
 
         /// <summary>
@@ -68,14 +75,32 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("/api/user/register")]
-        public async Task<InvokeResult<AppUser>> CreateNewAsync([FromBody] RegisterViewModel newUser)
+        public async Task<InvokeResult<AuthResponse>> CreateNewAsync([FromBody] RegisterViewModel newUser)
         {
             var validationResult = Validator.Validate(newUser, Actions.Create);
-            if(!validationResult.Successful)
+            if (!validationResult.Successful)
             {
-                var failedValidationResult = new InvokeResult<AppUser>();
+                var failedValidationResult = new InvokeResult<AuthResponse>();
                 failedValidationResult.Concat(validationResult);
                 return failedValidationResult;
+            }
+
+            if (String.IsNullOrEmpty(newUser.AppId))
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingAppId.Message);
+                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingAppId.ToErrorMessage());
+            }
+
+            if (String.IsNullOrEmpty(newUser.InstallationId))
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingInstallationId.Message);
+                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingInstallationId.ToErrorMessage());
+            }
+
+            if (String.IsNullOrEmpty(newUser.ClientType))
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingClientType.Message);
+                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingClientType.ToErrorMessage());
             }
 
             var lagoVistaUser = new AppUser(newUser.Email, $"{newUser.FirstName} {newUser.LastName}")
@@ -88,12 +113,34 @@ namespace LagoVista.UserManagement.Rest
             if (identityResult.Succeeded)
             {
                 await _signInManager.SignInAsync(lagoVistaUser, isPersistent: false);
-                return new InvokeResult<AppUser>() { Result = lagoVistaUser };
+                var authRequest = new AuthRequest()
+                {
+                    AppId = newUser.AppId,
+                    DeviceId = newUser.DeviceId,
+                    InstallationId = newUser.InstallationId,
+                    ClientType = newUser.ClientType,
+                    GrantType = "password",
+                    Email = newUser.Email,
+                    UserName = newUser.Email,
+                    Password = newUser.Password,
+                };
+
+                var tokenResponse = await _authTokenManager.AuthAsync(authRequest);
+                if (tokenResponse.Successful)
+                {
+                    return InvokeResult<AuthResponse>.Create(tokenResponse.Result);
+                }
+                else
+                {
+                    var failedValidationResult = new InvokeResult<AuthResponse>();
+                    failedValidationResult.Concat(tokenResponse);
+                    return failedValidationResult;
+                }
             }
             else
             {
-                var result = new InvokeResult<AppUser>();
-                foreach(var err in identityResult.Errors)
+                var result = new InvokeResult<AuthResponse>();
+                foreach (var err in identityResult.Errors)
                 {
                     result.Errors.Add(new ErrorMessage(err.Code, err.Description));
                 }

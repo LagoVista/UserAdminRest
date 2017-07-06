@@ -20,6 +20,7 @@ using System.Security.Cryptography;
 using System.Text;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.UserAdmin.Interfaces.Repos.Security;
+using LagoVista.Core.Validation;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -42,10 +43,9 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="req"></param>
         /// <returns></returns>
         [HttpPost("/api/v1/auth")]
-        public async Task<APIResponse<AuthResponse>> PostFromBody([FromBody] AuthRequest req)
+        public Task<InvokeResult<AuthResponse>> PostFromBody([FromBody] AuthRequest req)
         {
-            var response = await _tokenManage.AuthAsync(req, OrgEntityHeader, UserEntityHeader);
-            return APIResponse<AuthResponse>.Create(response);
+            return _tokenManage.AuthAsync(req, OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>
@@ -54,11 +54,9 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="req"></param>
         /// <returns></returns>
         [HttpPost("/api/v1/auth/form")]
-        public async Task<APIResponse<AuthResponse>> PostFromForm([FromForm] AuthRequest req)
+        public Task<InvokeResult<AuthResponse>> PostFromForm([FromForm] AuthRequest req)
         {
-            var response = await _tokenManage.AuthAsync(req, OrgEntityHeader, UserEntityHeader);
-
-            return APIResponse<AuthResponse>.Create(response);
+            return _tokenManage.AuthAsync(req, OrgEntityHeader, UserEntityHeader);
         }
     }
 
