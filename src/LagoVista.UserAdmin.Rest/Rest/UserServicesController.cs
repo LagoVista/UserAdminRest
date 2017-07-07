@@ -91,10 +91,10 @@ namespace LagoVista.UserManagement.Rest
                 return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingAppId.ToErrorMessage());
             }
 
-            if (String.IsNullOrEmpty(newUser.InstallationId))
+            if (String.IsNullOrEmpty(newUser.AppInstanceId))
             {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingInstallationId.Message);
-                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingInstallationId.ToErrorMessage());
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingAppInstanceId.Message);
+                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingAppInstanceId.ToErrorMessage());
             }
 
             if (String.IsNullOrEmpty(newUser.ClientType))
@@ -102,6 +102,13 @@ namespace LagoVista.UserManagement.Rest
                 _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingClientType.Message);
                 return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingClientType.ToErrorMessage());
             }
+
+            if (String.IsNullOrEmpty(newUser.DeviceId))
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "AuthTokenManager_AuthAsync", UserAdminErrorCodes.AuthMissingDeviceId.Message);
+                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingDeviceId.ToErrorMessage());
+            }
+
 
             var lagoVistaUser = new AppUser(newUser.Email, $"{newUser.FirstName} {newUser.LastName}")
             {
@@ -117,7 +124,7 @@ namespace LagoVista.UserManagement.Rest
                 {
                     AppId = newUser.AppId,
                     DeviceId = newUser.DeviceId,
-                    InstallationId = newUser.InstallationId,
+                    AppInstanceId = newUser.AppInstanceId,
                     ClientType = newUser.ClientType,
                     GrantType = "password",
                     Email = newUser.Email,
