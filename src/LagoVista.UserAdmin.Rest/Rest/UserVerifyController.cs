@@ -8,10 +8,10 @@ using LagoVista.UserAdmin.ViewModels.VerifyIdentity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using LagoVista.UserAdmin.Models.DTOs;
 using System.Threading.Tasks;
+using LagoVista.UserAdmin.Resources;
+using System;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -24,7 +24,7 @@ namespace LagoVista.UserAdmin.Rest
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ISmsSender _smsSender;
         private readonly UserManager<AppUser> _userManager;
-
+        private readonly IAdminLogger _adminLogger;
         /* 
          * Note this MUCH match the name of the action on the VerifyIdentityController in the Web project
          * this should likely all be refactored into the User Admin project, but not today....KDW 7/4/2017
@@ -40,6 +40,7 @@ namespace LagoVista.UserAdmin.Rest
             _userManager = userManager;
             _emailSender = emailSender;
             _smsSender = smsSender;
+            _adminLogger = Logger;
         }
 
         /// <summary>
@@ -59,16 +60,24 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/verify/sendconfirmationemail")]
         public async Task<InvokeResult> SendConfirmationEmailAsync()
         {
-            var user = await GetCurrentUserAsync();
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            code = System.Net.WebUtility.UrlEncode(code);
-            var callbackUrl = Url.Action(nameof(ConfirmEmailLink), "VerifyIdentity", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-            var mobileCallbackUrl = Url.Action(nameof(ConfirmEmailLink), "VerifyIdentity", new { userId = user.Id, code = code }, protocol: "nuviot");
-            var subject = UserAdminRestResources.Email_Verification_Subject.Replace("[APP_NAME]", UserAdminRestResources.Common_AppName);
-            var body = UserAdminRestResources.Email_Verification_Body.Replace("[CALLBACK_URL]", callbackUrl).Replace("[MOBILE_CALLBACK_URL]", mobileCallbackUrl);
-            await _emailSender.SendAsync(user.Email, subject, body);
+            try
+            {
+                var user = await GetCurrentUserAsync();
+                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                code = System.Net.WebUtility.UrlEncode(code);
+                var callbackUrl = Url.Action(nameof(ConfirmEmailLink), "VerifyIdentity", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+                var mobileCallbackUrl = Url.Action(nameof(ConfirmEmailLink), "VerifyIdentity", new { userId = user.Id, code = code }, protocol: "nuviot");
+                var subject = UserAdminRestResources.Email_Verification_Subject.Replace("[APP_NAME]", UserAdminRestResources.Common_AppName);
+                var body = UserAdminRestResources.Email_Verification_Body.Replace("[CALLBACK_URL]", callbackUrl).Replace("[MOBILE_CALLBACK_URL]", mobileCallbackUrl);
+                await _emailSender.SendAsync(user.Email, subject, body);
 
-            return InvokeResult.Success;
+                return InvokeResult.Success;
+            }
+            catch (Exception ex)
+            {
+                _adminLogger.AddException("UserVerifyController_SendConfirmationEmailAsync", ex);
+                return InvokeResult.FromErrors(UserAdminErrorCodes.RegErrorSendingEmail.ToErrorMessage());
+            }
         }
 
         /// <summary>
@@ -76,14 +85,28 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/verify/sendsmscode")]
-        public async Task<InvokeResult> SendSMSCode([FromBody] VerifyPhoneNumberViewModel verifyPhoneNumberViewModel)
+        public async Task<InvokeResult> SendSMSCodeAsync([FromBody] VerfiyPhoneNumberDTO verifyPhoneNumberViewModel)
         {
-            var user = await GetCurrentUserAsync();
-            var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, verifyPhoneNumberViewModel.PhoneNumber);
-            ViewData["code"] = code;
-            await _smsSender.SendAsync(verifyPhoneNumberViewModel.PhoneNumber, UserAdminRestResources.SMS_Verification_Body.Replace("[CODE]", code).Replace("[APP_NAME]", UserAdminRestResources.Common_AppName));
+            if (String.IsNullOrEmpty(verifyPhoneNumberViewModel.PhoneNumber))
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_SendSMSCodeAsync", UserAdminErrorCodes.RegMissingEmail.Message);
+                return InvokeResult.FromErrors(UserAdminErrorCodes.RegMissingPhoneNumber.ToErrorMessage());
+            }
 
-            return InvokeResult.Success;
+            try
+            {
+                var user = await GetCurrentUserAsync();
+                var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, verifyPhoneNumberViewModel.PhoneNumber);
+                ViewData["code"] = code;
+                await _smsSender.SendAsync(verifyPhoneNumberViewModel.PhoneNumber, UserAdminRestResources.SMS_Verification_Body.Replace("[CODE]", code).Replace("[APP_NAME]", UserAdminRestResources.Common_AppName));
+
+                return InvokeResult.Success;
+            }
+            catch (Exception ex)
+            {
+                _adminLogger.AddException("UserVerifyController_SendSMSCodeAsync", ex);
+                return InvokeResult.FromErrors(UserAdminErrorCodes.RegErrorSendingSMS.ToErrorMessage());
+            }
         }
 
         /// <summary>
@@ -92,10 +115,10 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="verifyViewModel"></param>
         /// <returns></returns>
         [HttpPost("/api/verify/sms")]
-        public async Task<InvokeResult> ValidateSMSAsync([FromBody] VerifyPhoneNumberViewModel verifyViewModel)
+        public async Task<InvokeResult> ValidateSMSAsync([FromBody] VerfiyPhoneNumberDTO verifyViewModel)
         {
             var user = await GetCurrentUserAsync();
-            var result = await _userManager.ChangePhoneNumberAsync(user, verifyViewModel.PhoneNumber, verifyViewModel.Code);
+            var result = await _userManager.ChangePhoneNumberAsync(user, verifyViewModel.PhoneNumber, verifyViewModel.SMSCode);
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, isPersistent: false);

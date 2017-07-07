@@ -18,6 +18,8 @@ using LagoVista.UserAdmin.Models.Orgs;
 using LagoVista.UserAdmin.Interfaces.Repos.Security;
 using LagoVista.Core.Authentication.Models;
 using LagoVista.UserAdmin.Resources;
+using LagoVista.UserAdmin.Models.DTOs;
+using System.Text.RegularExpressions;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -75,16 +77,8 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("/api/user/register")]
-        public async Task<InvokeResult<AuthResponse>> CreateNewAsync([FromBody] RegisterViewModel newUser)
+        public async Task<InvokeResult<AuthResponse>> CreateNewAsync([FromBody] RegisterUserDTO newUser)
         {
-            var validationResult = Validator.Validate(newUser, Actions.Create);
-            if (!validationResult.Successful)
-            {
-                var failedValidationResult = new InvokeResult<AuthResponse>();
-                failedValidationResult.Concat(validationResult);
-                return failedValidationResult;
-            }
-
             if (String.IsNullOrEmpty(newUser.AppId))
             {
                 _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingAppId.Message);
@@ -105,10 +99,34 @@ namespace LagoVista.UserManagement.Rest
 
             if (String.IsNullOrEmpty(newUser.DeviceId))
             {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "AuthTokenManager_AuthAsync", UserAdminErrorCodes.AuthMissingDeviceId.Message);
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingDeviceId.Message);
                 return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingDeviceId.ToErrorMessage());
             }
 
+            if (String.IsNullOrEmpty(newUser.FirstName))
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.RegMissingFirstLastName.Message);
+                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegMissingFirstLastName.ToErrorMessage());
+            }
+
+            if (String.IsNullOrEmpty(newUser.LastName))
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.RegMissingLastName.Message);
+                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegMissingLastName.ToErrorMessage());
+            }
+
+            if (String.IsNullOrEmpty(newUser.Email))
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.RegMissingEmail.Message);
+                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegMissingEmail.ToErrorMessage());
+            }
+
+            var emailRegEx = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+            if (!emailRegEx.Match(newUser.Email).Success)
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.RegInvalidEmailAddress.Message);
+                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegInvalidEmailAddress.ToErrorMessage());
+            }
 
             var lagoVistaUser = new AppUser(newUser.Email, $"{newUser.FirstName} {newUser.LastName}")
             {
