@@ -85,12 +85,7 @@ namespace LagoVista.UserManagement.Rest
                 return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingAppId.ToErrorMessage());
             }
 
-            if (String.IsNullOrEmpty(newUser.AppInstanceId))
-            {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingAppInstanceId.Message);
-                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingAppInstanceId.ToErrorMessage());
-            }
-
+        
             if (String.IsNullOrEmpty(newUser.ClientType))
             {
                 _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingClientType.Message);
