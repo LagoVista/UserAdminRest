@@ -121,7 +121,7 @@
     <value>NuvIoT</value>
   </data>
   <data name="Email_Verification_Body" xml:space="preserve">
-    <value>Please confirm your account by clicking this &lt;a href='[CALLBACK_URL]'&gt;desktop link&lt;/a&gt; on your desktop or &lt;a href="[MOBILE_CALLBACK_URL]"&gt;mobile link&lt;/a&gt; on your mobile phone.</value>
+    <value>Please confirm your account by clicking this &lt;a href='[CALLBACK_URL]'&gt;browser link&lt;/a&gt; on your desktop or &lt;a href='[MOBILE_CALLBACK_URL]'&gt;mobile link&lt;/a&gt; on your mobile phone.</value>
   </data>
   <data name="Email_Verification_Subject" xml:space="preserve">
     <value>Confirm your [APP_NAME] account</value>

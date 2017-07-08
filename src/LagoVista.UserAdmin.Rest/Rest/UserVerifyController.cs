@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using LagoVista.UserAdmin.Resources;
 using System;
 using System.Collections.Generic;
+using LagoVista.Core.Interfaces;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -26,6 +27,9 @@ namespace LagoVista.UserAdmin.Rest
         private readonly ISmsSender _smsSender;
         private readonly UserManager<AppUser> _userManager;
         private readonly IAdminLogger _adminLogger;
+        private readonly IAppConfig _appConfig;
+
+
         /* 
          * Note this MUCH match the name of the action on the VerifyIdentityController in the Web project
          * this should likely all be refactored into the User Admin project, but not today....KDW 7/4/2017
@@ -33,7 +37,9 @@ namespace LagoVista.UserAdmin.Rest
         private const string ConfirmEmailLink = "ConfirmEmailLink";
 
 
-        public UserVerifyController(IAppUserManager appUserManager, IOrganizationManager orgManager, IEmailSender emailSender, ISmsSender smsSender, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IAdminLogger logger) : base(userManager, logger)
+        public UserVerifyController(IAppUserManager appUserManager, IOrganizationManager orgManager, IEmailSender emailSender, 
+                                ISmsSender smsSender, UserManager<AppUser> userManager,
+                                SignInManager<AppUser> signInManager, IAdminLogger logger, IAppConfig appConfig) : base(userManager, logger)
         {
             _appUserManager = appUserManager;
             _orgManager = orgManager;
@@ -42,6 +48,7 @@ namespace LagoVista.UserAdmin.Rest
             _emailSender = emailSender;
             _smsSender = smsSender;
             _adminLogger = Logger;
+            _appConfig = appConfig;
         }
 
         /// <summary>
@@ -98,10 +105,16 @@ namespace LagoVista.UserAdmin.Rest
             {
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 code = System.Net.WebUtility.UrlEncode(code);
-                var callbackUrl = Url.Action(nameof(ConfirmEmailLink), "VerifyIdentity", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-                var mobileCallbackUrl = Url.Action(nameof(ConfirmEmailLink), "VerifyIdentity", new { userId = user.Id, code = code }, protocol: "nuviot");
+                var callbackUrl =   $"{_appConfig.WebAddress}/VerifyIdentity/{ConfirmEmailLink}?userId={user.Id}&code={code}";
+                var mobileCallbackUrl = $"nuviot://confirmemail?userId={user.Id}&code={code}";
+                Console.WriteLine(callbackUrl);
+                Console.WriteLine(mobileCallbackUrl);
+
                 var subject = UserAdminRestResources.Email_Verification_Subject.Replace("[APP_NAME]", UserAdminRestResources.Common_AppName);
                 var body = UserAdminRestResources.Email_Verification_Body.Replace("[CALLBACK_URL]", callbackUrl).Replace("[MOBILE_CALLBACK_URL]", mobileCallbackUrl);
+
+                Console.WriteLine(body);
+
                 var result = await _emailSender.SendAsync(user.Email, subject, body);
 
                 _adminLogger.LogInvokeResult("UserVerifyController_SendConfirmationEmailAsync", result,
