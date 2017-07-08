@@ -71,7 +71,7 @@ namespace LagoVista.UserAdmin {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please confirm your account by clicking this &lt;a href=&apos;[CALLBACK_URL]&apos;&gt;desktop link&lt;/a&gt; on your desktop or &lt;a href=&quot;[MOBILE_CALLBACK_UR]&quot;&gt;mobile link&lt;/a&gt; on your mobile phone..
+        ///   Looks up a localized string similar to Please confirm your account by clicking this &lt;a href=&apos;[CALLBACK_URL]&apos;&gt;desktop link&lt;/a&gt; on your desktop or &lt;a href=&quot;[MOBILE_CALLBACK_URL]&quot;&gt;mobile link&lt;/a&gt; on your mobile phone..
         /// </summary>
         internal static string Email_Verification_Body {
             get {

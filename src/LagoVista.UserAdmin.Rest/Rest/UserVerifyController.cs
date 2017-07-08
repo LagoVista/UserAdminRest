@@ -105,7 +105,7 @@ namespace LagoVista.UserAdmin.Rest
                 var result = await _emailSender.SendAsync(user.Email, subject, body);
 
                 _adminLogger.LogInvokeResult("UserVerifyController_SendConfirmationEmailAsync", result,
-                    new System.Collections.Generic.KeyValuePair<string, string>("phone", user.Email));
+                    new System.Collections.Generic.KeyValuePair<string, string>("toAddress", user.Email));
 
                 return result;
             }
