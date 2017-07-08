@@ -45,10 +45,10 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
-        /// Verify User Opened Email
+        /// Verify User - Is Email Confirmed
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/verify/checkemailconfirmed")]
+        [HttpGet("/api/verify/isemailconfirmed")]
         public async Task<InvokeResult> CheckConfirmedAsync()
         {
             if (User == null || !User.Identity.IsAuthenticated)
@@ -117,7 +117,7 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
-        /// Verify User - Send SMS Code
+        /// Verify User - Send Confirmation SMS Code
         /// </summary>
         /// <returns></returns>
         [HttpPost("/api/verify/sendsmscode")]
@@ -125,7 +125,7 @@ namespace LagoVista.UserAdmin.Rest
         {
             if (User == null || !User.Identity.IsAuthenticated)
             {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_SendConfirmationEmailAsync", "User Not Logged In, Not Available.");
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_SendSMSCodeAsync", "User Not Logged In, Not Available.");
                 return InvokeResult.FromErrors(UserAdminErrorCodes.AuthCouldNotFindUserAccount.ToErrorMessage());
             }
 
@@ -138,7 +138,7 @@ namespace LagoVista.UserAdmin.Rest
             var user = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
             if (user == null)
             {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_SendConfirmationEmailAsync", "Could not get current user.");
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_SendSMSCodeAsync", "Could not get current user.");
                 return InvokeResult.FromErrors(UserAdminErrorCodes.AuthCouldNotFindUserAccount.ToErrorMessage());
             }
 
@@ -147,7 +147,7 @@ namespace LagoVista.UserAdmin.Rest
                 var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, sendSMSCode.PhoneNumber);
                 var result = await _smsSender.SendAsync(sendSMSCode.PhoneNumber, UserAdminRestResources.SMS_Verification_Body.Replace("[CODE]", code).Replace("[APP_NAME]", UserAdminRestResources.Common_AppName));
 
-                _adminLogger.LogInvokeResult("UserVerifyController_SendSMSCodeAsync", result, 
+                _adminLogger.LogInvokeResult("UserVerifyController_SendSMSCodeAsync", result,
                     new KeyValuePair<string, string>("phone", sendSMSCode.PhoneNumber),
                     new KeyValuePair<string, string>("code", code));
 
@@ -161,7 +161,7 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
-        /// Verify User - SMS
+        /// Verify User - Confirm SMS
         /// </summary>
         /// <param name="verifyRequest"></param>
         /// <returns></returns>
@@ -170,21 +170,21 @@ namespace LagoVista.UserAdmin.Rest
         {
             if (User == null || !User.Identity.IsAuthenticated)
             {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_SendConfirmationEmailAsync", "User Not Logged In, Not Available.");
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_ValidateSMSAsync", "User Not Logged In, Not Available.");
                 return InvokeResult.FromErrors(UserAdminErrorCodes.AuthCouldNotFindUserAccount.ToErrorMessage());
             }
 
             var user = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
             if (user == null)
             {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_SendConfirmationEmailAsync", "Could not get current user.");
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_ValidateSMSAsync", "Could not get current user.");
                 return InvokeResult.FromErrors(UserAdminErrorCodes.AuthCouldNotFindUserAccount.ToErrorMessage());
             }
 
             var result = await _userManager.ChangePhoneNumberAsync(user, verifyRequest.PhoneNumber, verifyRequest.SMSCode);
             if (result.Succeeded)
             {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Verbose,"UserVerifyController_ValidateSMSAsync", "Success",
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Verbose, "UserVerifyController_ValidateSMSAsync", "Success_ConfirmSMS",
                     new KeyValuePair<string, string>("phone", verifyRequest.PhoneNumber),
                     new KeyValuePair<string, string>("code", verifyRequest.SMSCode));
 
@@ -206,6 +206,58 @@ namespace LagoVista.UserAdmin.Rest
                 errs.Add(new KeyValuePair<string, string>("code", verifyRequest.SMSCode));
 
                 _adminLogger.AddError("UserVerifyController_ValidateSMSAsync", "Failed", errs.ToArray());
+
+                couldNotVerifyResult.Errors.Add(new ErrorMessage(UserAdminRestResources.SMS_CouldNotVerify));
+                return couldNotVerifyResult;
+            }
+        }
+
+        /// <summary>
+        /// Verify User - Confirm Email
+        /// </summary>
+        /// <param name="confirmemaildto"></param>
+        /// <returns></returns>
+        [HttpPost("/api/verify/email")]
+        public async Task<InvokeResult> ValidateEmailAsync([FromBody] ConfirmEmailDTO confirmemaildto)
+        {
+            if (User == null || !User.Identity.IsAuthenticated)
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_ValidateEmailAsync", "User Not Logged In, Not Available.");
+                return InvokeResult.FromErrors(UserAdminErrorCodes.AuthCouldNotFindUserAccount.ToErrorMessage());
+            }
+
+            var user = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            if (user == null)
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_ValidateEmailAsync", "Could not get current user.");
+                return InvokeResult.FromErrors(UserAdminErrorCodes.AuthCouldNotFindUserAccount.ToErrorMessage());
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, confirmemaildto.ReceivedCode);
+            if (result.Succeeded)
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Verbose, "UserVerifyController_ValidateEmailAsync", "Success_ConfirmEmail",
+                    new KeyValuePair<string, string>("toEmail", user.Email),
+                    new KeyValuePair<string, string>("code", confirmemaildto.ReceivedCode));
+
+                return InvokeResult.Success;
+            }
+            else
+            {
+                var couldNotVerifyResult = new InvokeResult();
+
+                var errs = new List<KeyValuePair<string, string>>();
+                var idx = 1;
+                foreach (var identityError in result.Errors)
+                {
+                    errs.Add(new KeyValuePair<string, string>($"Err{idx++}", $"{identityError.Code} - {identityError.Description}"));
+                    couldNotVerifyResult.Errors.Add(new ErrorMessage(identityError.Code, identityError.Description));
+                }
+
+                errs.Add(new KeyValuePair<string, string>("toEmail", user.Email));
+                errs.Add(new KeyValuePair<string, string>("code", confirmemaildto.ReceivedCode));
+
+                _adminLogger.AddError("UserVerifyController_ValidateEmailAsync", "Failed", errs.ToArray());
 
                 couldNotVerifyResult.Errors.Add(new ErrorMessage(UserAdminRestResources.SMS_CouldNotVerify));
                 return couldNotVerifyResult;
