@@ -116,6 +116,12 @@ namespace LagoVista.UserManagement.Rest
                 return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegMissingEmail.ToErrorMessage());
             }
 
+            if (String.IsNullOrEmpty(newUser.Password))
+            {
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.RegMissingEmail.Message);
+                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegMissingEmail.ToErrorMessage());
+            }
+
             var emailRegEx = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
             if (!emailRegEx.Match(newUser.Email).Success)
             {

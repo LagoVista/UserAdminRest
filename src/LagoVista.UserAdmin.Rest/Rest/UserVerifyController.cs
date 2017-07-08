@@ -246,7 +246,8 @@ namespace LagoVista.UserAdmin.Rest
                 return InvokeResult.FromErrors(UserAdminErrorCodes.AuthCouldNotFindUserAccount.ToErrorMessage());
             }
 
-            var result = await _userManager.ConfirmEmailAsync(user, confirmemaildto.ReceivedCode);
+            var code = System.Net.WebUtility.UrlDecode(confirmemaildto.ReceivedCode);
+            var result = await _userManager.ConfirmEmailAsync(user, code);
             if (result.Succeeded)
             {
                 _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Verbose, "UserVerifyController_ValidateEmailAsync", "Success_ConfirmEmail",
