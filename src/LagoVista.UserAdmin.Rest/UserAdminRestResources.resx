@@ -117,14 +117,44 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Common_AppName" xml:space="preserve">
-    <value>NuvIoT</value>
+  <data name="Email_ResetPassword_Body" xml:space="preserve">
+    <value>&lt;p&gt;You have requested to have your password reset.&lt;/p&gt;
+
+&lt;p&gt;Please Reset your Password by clicking this &lt;a href='[CALLBACK_URL]'&gt;browser link&lt;/a&gt; on your desktop or &lt;a href='[MOBILE_CALLBACK_URL]'&gt;mobile link&lt;/a&gt; on your mobile phone.&lt;/p&gt;
+
+&lt;p&gt;If you did not request your password to be changed, you can safely ignore this email.&lt;/p&gt;</value>
+  </data>
+  <data name="Email_ResetPassword_Subject" xml:space="preserve">
+    <value>Reset Password on your [APP_NAME] account.</value>
+  </data>
+  <data name="Email_RestPassword_ErrorSending" xml:space="preserve">
+    <value>Sorry, there was an error sending your reset password link, please try again later.</value>
   </data>
   <data name="Email_Verification_Body" xml:space="preserve">
-    <value>Please confirm your account by clicking this &lt;a href='[CALLBACK_URL]'&gt;browser link&lt;/a&gt; on your desktop or &lt;a href='[MOBILE_CALLBACK_URL]'&gt;mobile link&lt;/a&gt; on your mobile phone.</value>
+    <value>&lt;p&gt;Thank you for signing up, for your added security we need you to please confirm your email address&lt;/p&gt;
+
+&lt;p&gt;Please confirm your account by clicking this &lt;a href='[CALLBACK_URL]'&gt;browser link&lt;/a&gt; on your desktop or &lt;a href='[MOBILE_CALLBACK_URL]'&gt;mobile link&lt;/a&gt; on your mobile phone.&lt;/p&gt;</value>
   </data>
   <data name="Email_Verification_Subject" xml:space="preserve">
     <value>Confirm your [APP_NAME] account</value>
+  </data>
+  <data name="Err_PwdChange_CouldNotFindUser" xml:space="preserve">
+    <value>Could not find a user with that User Id</value>
+  </data>
+  <data name="Err_PwdChange_NewPassword_Missing" xml:space="preserve">
+    <value>New Password is Required.</value>
+  </data>
+  <data name="Err_PwdChange_OldPassword_Missing" xml:space="preserve">
+    <value>Old Password is Required.</value>
+  </data>
+  <data name="Err_PwdChange_UserId_Missing" xml:space="preserve">
+    <value>You must pass in the Id (not user name) of the user that is requesting to change the password.</value>
+  </data>
+  <data name="Err_ResetPwd_CouldNotFindUser" xml:space="preserve">
+    <value>Sorry, we could not find a user with that email address.</value>
+  </data>
+  <data name="Err_UserId_DoesNotMatch" xml:space="preserve">
+    <value>Sorry, you can not change your password at this time.  Please logout, then log back in to change your password.</value>
   </data>
   <data name="SMS_CouldNotVerify" xml:space="preserve">
     <value>Sorry, the code you entered was not the code that was sent to the phone, please try again.</value>

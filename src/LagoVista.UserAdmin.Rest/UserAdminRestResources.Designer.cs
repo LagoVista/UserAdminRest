@@ -62,16 +62,40 @@ namespace LagoVista.UserAdmin {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to NuvIoT.
+        ///   Looks up a localized string similar to &lt;p&gt;You have requested to have your password reset.&lt;/p&gt;
+        ///
+        ///&lt;p&gt;Please Reset your Password by clicking this &lt;a href=&apos;[CALLBACK_URL]&apos;&gt;browser link&lt;/a&gt; on your desktop or &lt;a href=&apos;[MOBILE_CALLBACK_URL]&apos;&gt;mobile link&lt;/a&gt; on your mobile phone.&lt;/p&gt;
+        ///
+        ///&lt;p&gt;If you did not request your password to be changed, you can safely ignore this email.&lt;/p&gt;.
         /// </summary>
-        internal static string Common_AppName {
+        internal static string Email_ResetPassword_Body {
             get {
-                return ResourceManager.GetString("Common_AppName", resourceCulture);
+                return ResourceManager.GetString("Email_ResetPassword_Body", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please confirm your account by clicking this &lt;a href=&apos;[CALLBACK_URL]&apos;&gt;browser link&lt;/a&gt; on your desktop or &lt;a href=&apos;[MOBILE_CALLBACK_URL]&apos;&gt;mobile link&lt;/a&gt; on your mobile phone..
+        ///   Looks up a localized string similar to Reset Password on your [APP_NAME] account..
+        /// </summary>
+        internal static string Email_ResetPassword_Subject {
+            get {
+                return ResourceManager.GetString("Email_ResetPassword_Subject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorry, there was an error sending your reset password link, please try again later..
+        /// </summary>
+        internal static string Email_RestPassword_ErrorSending {
+            get {
+                return ResourceManager.GetString("Email_RestPassword_ErrorSending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;p&gt;Thank you for signing up, for your added security we need you to please confirm your email address&lt;/p&gt;
+        ///
+        ///&lt;p&gt;Please confirm your account by clicking this &lt;a href=&apos;[CALLBACK_URL]&apos;&gt;browser link&lt;/a&gt; on your desktop or &lt;a href=&apos;[MOBILE_CALLBACK_URL]&apos;&gt;mobile link&lt;/a&gt; on your mobile phone.&lt;/p&gt;.
         /// </summary>
         internal static string Email_Verification_Body {
             get {
@@ -85,6 +109,60 @@ namespace LagoVista.UserAdmin {
         internal static string Email_Verification_Subject {
             get {
                 return ResourceManager.GetString("Email_Verification_Subject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find a user with that User Id.
+        /// </summary>
+        internal static string Err_PwdChange_CouldNotFindUser {
+            get {
+                return ResourceManager.GetString("Err_PwdChange_CouldNotFindUser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Password is Required..
+        /// </summary>
+        internal static string Err_PwdChange_NewPassword_Missing {
+            get {
+                return ResourceManager.GetString("Err_PwdChange_NewPassword_Missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Old Password is Required..
+        /// </summary>
+        internal static string Err_PwdChange_OldPassword_Missing {
+            get {
+                return ResourceManager.GetString("Err_PwdChange_OldPassword_Missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must pass in the Id (not user name) of the user that is requesting to change the password..
+        /// </summary>
+        internal static string Err_PwdChange_UserId_Missing {
+            get {
+                return ResourceManager.GetString("Err_PwdChange_UserId_Missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorry, we could not find a user with that email address..
+        /// </summary>
+        internal static string Err_ResetPwd_CouldNotFindUser {
+            get {
+                return ResourceManager.GetString("Err_ResetPwd_CouldNotFindUser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorry, you can not change your password at this time.  Please logout, then log back in to change your password..
+        /// </summary>
+        internal static string Err_UserId_DoesNotMatch {
+            get {
+                return ResourceManager.GetString("Err_UserId_DoesNotMatch", resourceCulture);
             }
         }
         

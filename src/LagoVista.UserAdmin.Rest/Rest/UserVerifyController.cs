@@ -110,7 +110,7 @@ namespace LagoVista.UserAdmin.Rest
                 Console.WriteLine(callbackUrl);
                 Console.WriteLine(mobileCallbackUrl);
 
-                var subject = UserAdminRestResources.Email_Verification_Subject.Replace("[APP_NAME]", UserAdminRestResources.Common_AppName);
+                var subject = UserAdminRestResources.Email_Verification_Subject.Replace("[APP_NAME]", _appConfig.AppName);
                 var body = UserAdminRestResources.Email_Verification_Body.Replace("[CALLBACK_URL]", callbackUrl).Replace("[MOBILE_CALLBACK_URL]", mobileCallbackUrl);
 
                 Console.WriteLine(body);
@@ -158,7 +158,7 @@ namespace LagoVista.UserAdmin.Rest
             try
             {
                 var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, sendSMSCode.PhoneNumber);
-                var result = await _smsSender.SendAsync(sendSMSCode.PhoneNumber, UserAdminRestResources.SMS_Verification_Body.Replace("[CODE]", code).Replace("[APP_NAME]", UserAdminRestResources.Common_AppName));
+                var result = await _smsSender.SendAsync(sendSMSCode.PhoneNumber, UserAdminRestResources.SMS_Verification_Body.Replace("[CODE]", code).Replace("[APP_NAME]", _appConfig.AppName));
 
                 _adminLogger.LogInvokeResult("UserVerifyController_SendSMSCodeAsync", result,
                     new KeyValuePair<string, string>("phone", sendSMSCode.PhoneNumber),
