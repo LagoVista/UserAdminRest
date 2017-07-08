@@ -12,6 +12,7 @@ using LagoVista.UserAdmin.Models.DTOs;
 using System.Threading.Tasks;
 using LagoVista.UserAdmin.Resources;
 using System;
+using System.Collections.Generic;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -101,12 +102,12 @@ namespace LagoVista.UserAdmin.Rest
                 var mobileCallbackUrl = Url.Action(nameof(ConfirmEmailLink), "VerifyIdentity", new { userId = user.Id, code = code }, protocol: "nuviot");
                 var subject = UserAdminRestResources.Email_Verification_Subject.Replace("[APP_NAME]", UserAdminRestResources.Common_AppName);
                 var body = UserAdminRestResources.Email_Verification_Body.Replace("[CALLBACK_URL]", callbackUrl).Replace("[MOBILE_CALLBACK_URL]", mobileCallbackUrl);
-                await _emailSender.SendAsync(user.Email, subject, body);
+                var result = await _emailSender.SendAsync(user.Email, subject, body);
 
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Verbose, "UserVerifyController_SendSMSCodeAsync", "SendEmailConfirmation",
+                _adminLogger.LogInvokeResult("UserVerifyController_SendConfirmationEmailAsync", result,
                     new System.Collections.Generic.KeyValuePair<string, string>("phone", user.Email));
 
-                return InvokeResult.Success;
+                return result;
             }
             catch (Exception ex)
             {
@@ -120,7 +121,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpPost("/api/verify/sendsmscode")]
-        public async Task<InvokeResult> SendSMSCodeAsync([FromBody] VerfiyPhoneNumberDTO verifyPhoneNumberViewModel)
+        public async Task<InvokeResult> SendSMSCodeAsync([FromBody] VerfiyPhoneNumberDTO sendSMSCode)
         {
             if (User == null || !User.Identity.IsAuthenticated)
             {
@@ -128,7 +129,7 @@ namespace LagoVista.UserAdmin.Rest
                 return InvokeResult.FromErrors(UserAdminErrorCodes.AuthCouldNotFindUserAccount.ToErrorMessage());
             }
 
-            if (String.IsNullOrEmpty(verifyPhoneNumberViewModel.PhoneNumber))
+            if (String.IsNullOrEmpty(sendSMSCode.PhoneNumber))
             {
                 _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserVerifyController_SendSMSCodeAsync", UserAdminErrorCodes.RegMissingEmail.Message);
                 return InvokeResult.FromErrors(UserAdminErrorCodes.RegMissingPhoneNumber.ToErrorMessage());
@@ -143,12 +144,14 @@ namespace LagoVista.UserAdmin.Rest
 
             try
             {
-                var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, verifyPhoneNumberViewModel.PhoneNumber);
-                await _smsSender.SendAsync(verifyPhoneNumberViewModel.PhoneNumber, UserAdminRestResources.SMS_Verification_Body.Replace("[CODE]", code).Replace("[APP_NAME]", UserAdminRestResources.Common_AppName));
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Verbose, "UserVerifyController_SendSMSCodeAsync", "SendSMSCode",
-                    new System.Collections.Generic.KeyValuePair<string, string>("phone", verifyPhoneNumberViewModel.PhoneNumber),
-                    new System.Collections.Generic.KeyValuePair<string, string>("code", code));
-                return InvokeResult.Success;
+                var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, sendSMSCode.PhoneNumber);
+                var result = await _smsSender.SendAsync(sendSMSCode.PhoneNumber, UserAdminRestResources.SMS_Verification_Body.Replace("[CODE]", code).Replace("[APP_NAME]", UserAdminRestResources.Common_AppName));
+
+                _adminLogger.LogInvokeResult("UserVerifyController_SendSMSCodeAsync", result, 
+                    new KeyValuePair<string, string>("phone", sendSMSCode.PhoneNumber),
+                    new KeyValuePair<string, string>("code", code));
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -160,10 +163,10 @@ namespace LagoVista.UserAdmin.Rest
         /// <summary>
         /// Verify User - SMS
         /// </summary>
-        /// <param name="verifyViewModel"></param>
+        /// <param name="verifyRequest"></param>
         /// <returns></returns>
         [HttpPost("/api/verify/sms")]
-        public async Task<InvokeResult> ValidateSMSAsync([FromBody] VerfiyPhoneNumberDTO verifyViewModel)
+        public async Task<InvokeResult> ValidateSMSAsync([FromBody] VerfiyPhoneNumberDTO verifyRequest)
         {
             if (User == null || !User.Identity.IsAuthenticated)
             {
@@ -178,18 +181,32 @@ namespace LagoVista.UserAdmin.Rest
                 return InvokeResult.FromErrors(UserAdminErrorCodes.AuthCouldNotFindUserAccount.ToErrorMessage());
             }
 
-            var result = await _userManager.ChangePhoneNumberAsync(user, verifyViewModel.PhoneNumber, verifyViewModel.SMSCode);
+            var result = await _userManager.ChangePhoneNumberAsync(user, verifyRequest.PhoneNumber, verifyRequest.SMSCode);
             if (result.Succeeded)
             {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Verbose, "UserVerifyController_ValidateSMSAsync", "SuccessValidatePhone",
-                    new System.Collections.Generic.KeyValuePair<string, string>("phone", verifyViewModel.PhoneNumber),
-                    new System.Collections.Generic.KeyValuePair<string, string>("code", verifyViewModel.SMSCode));
+                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Verbose,"UserVerifyController_ValidateSMSAsync", "Success",
+                    new KeyValuePair<string, string>("phone", verifyRequest.PhoneNumber),
+                    new KeyValuePair<string, string>("code", verifyRequest.SMSCode));
 
                 return InvokeResult.Success;
             }
             else
             {
                 var couldNotVerifyResult = new InvokeResult();
+
+                var errs = new List<KeyValuePair<string, string>>();
+                var idx = 1;
+                foreach (var identityError in result.Errors)
+                {
+                    errs.Add(new KeyValuePair<string, string>($"Err{idx++}", $"{identityError.Code} - {identityError.Description}"));
+                    couldNotVerifyResult.Errors.Add(new ErrorMessage(identityError.Code, identityError.Description));
+                }
+
+                errs.Add(new KeyValuePair<string, string>("phone", verifyRequest.PhoneNumber));
+                errs.Add(new KeyValuePair<string, string>("code", verifyRequest.SMSCode));
+
+                _adminLogger.AddError("UserVerifyController_ValidateSMSAsync", "Failed", errs.ToArray());
+
                 couldNotVerifyResult.Errors.Add(new ErrorMessage(UserAdminRestResources.SMS_CouldNotVerify));
                 return couldNotVerifyResult;
             }
