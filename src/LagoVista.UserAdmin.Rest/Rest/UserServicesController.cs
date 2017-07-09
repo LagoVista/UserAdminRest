@@ -1,7 +1,6 @@
 ﻿using LagoVista.IoT.Web.Common.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using System;
-using LagoVista.Core.PlatformSupport;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -9,17 +8,10 @@ using LagoVista.UserAdmin.Managers;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.UserAdmin.Models.Users;
-using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.Core.Validation;
-using LagoVista.UserAdmin.ViewModels.Users;
-using LagoVista.UserAdmin.ViewModels.Organization;
-using LagoVista.UserAdmin.Models.Orgs;
-using LagoVista.UserAdmin.Interfaces.Repos.Security;
 using LagoVista.Core.Authentication.Models;
-using LagoVista.UserAdmin.Resources;
 using LagoVista.UserAdmin.Models.DTOs;
-using System.Text.RegularExpressions;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -37,7 +29,7 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
-        /// User Service - Get by Id
+        /// User Service - Get a User By ID
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -49,16 +41,18 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
-        /// User Service - Get by User Name (generally email)
+        /// User Service - Get Currently Logged In User.
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/user")]
         public async Task<DetailResponse<UserInfo>> GetCurrentUser()
         {
             var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            //No need to send the password has down there, need to be careful when doing an update...
             appUser.PasswordHash = null;
             return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
         }
+
 
         /// <summary>
         /// User Service - Register a new user (sign-up)

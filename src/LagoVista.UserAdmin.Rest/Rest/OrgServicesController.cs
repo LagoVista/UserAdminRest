@@ -30,12 +30,14 @@ namespace LagoVista.UserAdmin.Rest
         IAppUserManager _appUserManager;
         IOrganizationManager _orgManager;
         IAuthTokenManager _authTokenManager;
+        ISignInManager _signInManager;
 
-        public OrgServicesController(IAppUserManager appUserManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public OrgServicesController(IAppUserManager appUserManager, ISignInManager signInManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _appUserManager = appUserManager;
             _orgManager = orgManager;
             _authTokenManager = authTokenManager;
+            _signInManager = signInManager;
         }
 
 
@@ -45,11 +47,22 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="userid"></param>
         /// <returns></returns>
         [HttpGet("/api/user/{userid}/orgs")]
-        public async Task<ListResponse<OrgUser>> GetOrgsForAccountAsync(String userid)
+        public async Task<ListResponse<OrgUser>> GetOrgsForUserAsync(string userid)
         {
-            var orgAccount = await _orgManager.GetOrganizationsForUserAsync(userid, OrgEntityHeader, UserEntityHeader);
+            var orgsForUser = await _orgManager.GetOrganizationsForUserAsync(userid, OrgEntityHeader, UserEntityHeader);
+            return ListResponse<OrgUser>.Create(orgsForUser);
+        }
 
-            return ListResponse<OrgUser>.Create(orgAccount);
+        /// <summary>
+        /// Orgs Service - Get Users for Org
+        /// </summary>
+        /// <param name="orgid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/org/{orgid}/users")]
+        public async Task<ListResponse<OrgUser>> GetUserForOrgAsync(string orgid)
+        {
+            var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
+            return ListResponse<OrgUser>.Create(orgUsers);
         }
 
         /// <summary>
@@ -59,23 +72,9 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="userid"></param>
         /// <returns></returns>
         [HttpGet("/api/org/{orgid}/{userid}/orgs")]
-        public async Task<InvokeResult> AddAccountToOrgAsync(string orgid, String userid)
+        public async Task<InvokeResult> AddAccountToOrgAsync(string orgid, string userid)
         {
             return await _orgManager.AddUserToOrgAsync(orgid, userid,OrgEntityHeader, UserEntityHeader);
-        }
-
-
-        /// <summary>
-        /// Orgs Service - Get Users for Org
-        /// </summary>
-        /// <param name="orgid"></param>
-        /// <returns></returns>
-        [HttpGet("/api/org/{orgid}/users")]
-        public async Task<ListResponse<OrgUser>> GetUserForOrgAsync(String orgid)
-        {
-            var orgAccount = await _orgManager.GetUsersForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
-
-            return ListResponse<OrgUser>.Create(orgAccount);
         }
 
         /// <summary>
@@ -84,10 +83,9 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="orgVM"></param>
         /// <returns></returns>
         [HttpPost("/api/org")]
-        public async Task<InvokeResult> CreateOrgAsync([FromBody] CreateOrganizationViewModel orgVM)
+        public Task<InvokeResult> CreateOrgAsync([FromBody] CreateOrganizationViewModel orgVM)
         {
-            await _orgManager.CreateNewOrganizationAsync(orgVM, UserEntityHeader);
-            return InvokeResult.Success;
+            return _orgManager.CreateNewOrganizationAsync(orgVM, UserEntityHeader);
         }
 
         /// <summary>
@@ -97,9 +95,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/org/factory")]
         public DetailResponse<CreateOrganizationViewModel> CreateOrgFactory()
         {
-            var createOrgVM = new CreateOrganizationViewModel();
-
-            return DetailResponse<CreateOrganizationViewModel>.Create(createOrgVM);
+            return DetailResponse<CreateOrganizationViewModel>.Create();
         }
 
         /// <summary>
@@ -108,23 +104,20 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="inviteUser"></param>
         /// <returns></returns>
         [HttpPost("/api/org/inviteuser/send")]
-        public async Task<InvokeResult> InviteToOrgAsync([FromBody] InviteUser inviteUser)
+        public  Task<InvokeResult<Invitation>> InviteToOrgAsync([FromBody] InviteUser inviteUser)
         {
-            var invite = await _orgManager.InviteUserAsync(inviteUser, OrgEntityHeader, UserEntityHeader);
-
-            throw new NotImplementedException();
-        }
+            return _orgManager.InviteUserAsync(inviteUser, OrgEntityHeader, UserEntityHeader);
+        }       
 
         /// <summary>
         /// Orgs Services - Accpet Invitation
         /// </summary>
-        /// <param name="inviteUser"></param>
+        /// <param name="inviteid"></param>
         /// <returns></returns>
-        [HttpPost("/api/org/inviteuser/accept")]
-        public async Task<AuthResponse> AcceptInvitationAsync([FromBody] AcceptInviteViewModel inviteUser)
+        [HttpPost("/api/org/inviteuser/accept/inviteid}")]
+        public async Task<InvokeResult> AcceptInvitationAsync(string inviteid)
         {
-            throw new NotImplementedException();
-
+            return await _orgManager.AcceptInvitationAsync(inviteid, OrgEntityHeader, UserEntityHeader);
         }
 
 

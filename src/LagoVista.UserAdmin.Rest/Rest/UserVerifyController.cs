@@ -4,7 +4,6 @@ using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Managers;
 using LagoVista.UserAdmin.Models.Users;
-using LagoVista.UserAdmin.ViewModels.VerifyIdentity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

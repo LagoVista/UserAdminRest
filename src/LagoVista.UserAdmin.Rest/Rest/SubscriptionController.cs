@@ -12,8 +12,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using LagoVista.Core;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using LagoVista.Core.Models;
 using LagoVista.IoT.Logging.Loggers;
@@ -62,7 +60,6 @@ namespace LagoVista.UserAdmin.Rest
         public async Task<DetailResponse<Subscription>> GetSubscriptionAsync(string id)
         {
             var subscription = await _subscriptionManager.GetSubscriptionAsync(id, OrgEntityHeader, UserEntityHeader);
-
             return DetailResponse<Subscription>.Create(subscription);
         }
 
@@ -76,9 +73,7 @@ namespace LagoVista.UserAdmin.Rest
         public async Task<ListResponse<SubscriptionSummary>> GetSubscriptionsForOrgAsync(String orgId)
         {
             var hostSummaries = await _subscriptionManager.GetSubscriptionsForOrgAsync(orgId, UserEntityHeader);
-            var response = ListResponse<SubscriptionSummary>.Create(hostSummaries);
-
-            return response;
+            return ListResponse<SubscriptionSummary>.Create(hostSummaries);
         }
 
         /// <summary>
@@ -123,7 +118,6 @@ namespace LagoVista.UserAdmin.Rest
             response.Model.Id = Guid.NewGuid().ToId();
             SetAuditProperties(response.Model);
             SetOwnedProperties(response.Model);
-
             return response;
         }
     }
