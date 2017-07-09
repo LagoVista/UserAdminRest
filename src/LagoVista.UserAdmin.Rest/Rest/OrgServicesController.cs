@@ -121,7 +121,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="inviteUser"></param>
         /// <returns></returns>
         [HttpPost("/api/org/inviteuser/accept")]
-        public async Task<AuthResponse> InviteToOrgAsync([FromBody] AcceptInviteViewModel inviteUser)
+        public async Task<AuthResponse> AcceptInvitationAsync([FromBody] AcceptInviteViewModel inviteUser)
         {
             throw new NotImplementedException();
 
@@ -131,12 +131,12 @@ namespace LagoVista.UserAdmin.Rest
         /// <summary>
         /// Orgs Services - Switch To New Org
         /// </summary>
-        /// <param name="orgid"></param>
+        /// <param name="authRequest"></param>
         /// <returns></returns>
-        [HttpGet("/api/org/change/{orgid}")]
-        public async Task<InvokeResult<AuthResponse>> SwitchOrgs(string orgid)
+        [HttpPost("/api/org/change")]
+        public Task<InvokeResult<AuthResponse>> SwitchOrgs(AuthRequest authRequest)
         {
-            throw new NotImplementedException();
+            return _authTokenManager.RefreshTokenGrantAsync(authRequest, OrgEntityHeader, UserEntityHeader);
         }
     }
 }

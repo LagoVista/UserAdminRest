@@ -30,20 +30,10 @@ namespace LagoVista.UserManagement.Rest
     public class UserServicesController : LagoVistaBaseController
     {
         private readonly IAppUserManager _appUserManager;
-        private readonly IOrganizationManager _orgManager;
-        private readonly IAuthTokenManager _authTokenManager;
-        private readonly SignInManager<AppUser> _signInManager;
-        private readonly UserManager<AppUser> _userManager;
-        private readonly IAdminLogger _adminLogger;
 
-        public UserServicesController(IAppUserManager appUserManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
+        public UserServicesController(IAppUserManager appUserManager,  UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
-            _orgManager = orgManager;
-            _authTokenManager = authTokenManager;
-            _signInManager = signInManager;
-            _userManager = userManager;
-            _adminLogger = adminLogger;
         }
 
         /// <summary>
@@ -77,102 +67,9 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("/api/user/register")]
-        public async Task<InvokeResult<AuthResponse>> CreateNewAsync([FromBody] RegisterUser newUser)
+        public Task<InvokeResult<AuthResponse>> CreateNewAsync([FromBody] RegisterUser newUser)
         {
-            if (String.IsNullOrEmpty(newUser.AppId))
-            {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingAppId.Message);
-                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingAppId.ToErrorMessage());
-            }
-
-        
-            if (String.IsNullOrEmpty(newUser.ClientType))
-            {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingClientType.Message);
-                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingClientType.ToErrorMessage());
-            }
-
-            if (String.IsNullOrEmpty(newUser.DeviceId))
-            {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.AuthMissingDeviceId.Message);
-                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.AuthMissingDeviceId.ToErrorMessage());
-            }
-
-            if (String.IsNullOrEmpty(newUser.FirstName))
-            {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.RegMissingFirstLastName.Message);
-                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegMissingFirstLastName.ToErrorMessage());
-            }
-
-            if (String.IsNullOrEmpty(newUser.LastName))
-            {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.RegMissingLastName.Message);
-                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegMissingLastName.ToErrorMessage());
-            }
-
-            if (String.IsNullOrEmpty(newUser.Email))
-            {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.RegMissingEmail.Message);
-                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegMissingEmail.ToErrorMessage());
-            }
-
-            if (String.IsNullOrEmpty(newUser.Password))
-            {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.RegMissingEmail.Message);
-                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegMissingEmail.ToErrorMessage());
-            }
-
-            var emailRegEx = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
-            if (!emailRegEx.Match(newUser.Email).Success)
-            {
-                _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "UserServicesController_CreateNewAsync", UserAdminErrorCodes.RegInvalidEmailAddress.Message);
-                return InvokeResult<AuthResponse>.FromErrors(UserAdminErrorCodes.RegInvalidEmailAddress.ToErrorMessage());
-            }
-
-            var lagoVistaUser = new AppUser(newUser.Email, $"{newUser.FirstName} {newUser.LastName}")
-            {
-                FirstName = newUser.FirstName,
-                LastName = newUser.LastName,
-            };
-
-            var identityResult = await base.UserManager.CreateAsync(lagoVistaUser, newUser.Password);
-            if (identityResult.Succeeded)
-            {
-                await _signInManager.SignInAsync(lagoVistaUser, isPersistent: false);
-                var authRequest = new AuthRequest()
-                {
-                    AppId = newUser.AppId,
-                    DeviceId = newUser.DeviceId,
-                    AppInstanceId = newUser.AppInstanceId,
-                    ClientType = newUser.ClientType,
-                    GrantType = "password",
-                    Email = newUser.Email,
-                    UserName = newUser.Email,
-                    Password = newUser.Password,
-                };
-
-                var tokenResponse = await _authTokenManager.AuthAsync(authRequest);
-                if (tokenResponse.Successful)
-                {
-                    return InvokeResult<AuthResponse>.Create(tokenResponse.Result);
-                }
-                else
-                {
-                    var failedValidationResult = new InvokeResult<AuthResponse>();
-                    failedValidationResult.Concat(tokenResponse);
-                    return failedValidationResult;
-                }
-            }
-            else
-            {
-                var result = new InvokeResult<AuthResponse>();
-                foreach (var err in identityResult.Errors)
-                {
-                    result.Errors.Add(new ErrorMessage(err.Code, err.Description));
-                }
-
-                return result;
-            }
+            return _appUserManager.CreateUserAsync(newUser);
         }
     }
 }

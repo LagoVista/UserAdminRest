@@ -23,6 +23,7 @@ using LagoVista.UserAdmin.Interfaces.Repos.Security;
 using LagoVista.Core.Validation;
 using LagoVista.UserAdmin.Models.DTOs;
 using LagoVista.UserAdmin.Managers;
+using LagoVista.AspNetCore.Identity.Managers;
 using LagoVista.Core.Interfaces;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Resources;
@@ -70,7 +71,18 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/v1/auth")]
         public Task<InvokeResult<AuthResponse>> PostFromBody([FromBody] AuthRequest req)
         {
-            return _tokenManage.AuthAsync(req, OrgEntityHeader, UserEntityHeader);
+            if(req.GrantType == AuthTokenManager.GRANT_TYPE_PASSWORD)
+            {
+                return _tokenManage.AccessTokenGrantAsync(req);
+            }
+            else if (req.GrantType == AuthTokenManager.GRANT_TYPE_REFRESHTOKEN)
+            {
+                return _tokenManage.RefreshTokenGrantAsync(req, OrgEntityHeader, UserEntityHeader);
+            }
+            else            
+            {
+                throw new Exception("Invalid Grant Type.");
+            }            
         }
 
         /// <summary>
@@ -81,7 +93,18 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/v1/auth/form")]
         public Task<InvokeResult<AuthResponse>> PostFromForm([FromForm] AuthRequest req)
         {
-            return _tokenManage.AuthAsync(req, OrgEntityHeader, UserEntityHeader);
+            if (req.GrantType == AuthTokenManager.GRANT_TYPE_PASSWORD)
+            {
+                return _tokenManage.AccessTokenGrantAsync(req);
+            }
+            else if (req.GrantType == AuthTokenManager.GRANT_TYPE_REFRESHTOKEN)
+            {
+                return _tokenManage.RefreshTokenGrantAsync(req, OrgEntityHeader, UserEntityHeader);
+            }
+            else
+            {
+                throw new Exception("Invalid Grant Type.");
+            }
         }
 
 
