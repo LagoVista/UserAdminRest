@@ -174,17 +174,5 @@ namespace LagoVista.UserManagement.Rest
                 return result;
             }
         }
-
-
-        /// <summary>
-        /// Invite User - Invite New User
-        /// </summary>
-        /// <param name="inviteViewModel"></param>
-        /// <returns></returns>
-        [HttpPost("/api/user/invite")]
-        public Task<InvokeResult<Invitation>> InviteUser([FromBody] InviteUserViewModel inviteViewModel)
-        {
-            return _orgManager.InviteUserAsync(inviteViewModel, OrgEntityHeader, UserEntityHeader);
-        }
     }
 }

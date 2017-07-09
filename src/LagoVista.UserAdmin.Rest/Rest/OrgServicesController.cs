@@ -7,6 +7,7 @@ using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Managers;
 using LagoVista.UserAdmin.Models.Users;
 using LagoVista.UserAdmin.Models.Orgs;
+using LagoVista.UserAdmin.Models.DTOs;
 using LagoVista.UserAdmin.ViewModels.Organization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using LagoVista.Core.Authentication.Models;
+using LagoVista.UserAdmin.Interfaces.Repos.Security;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -26,11 +29,13 @@ namespace LagoVista.UserAdmin.Rest
     {
         IAppUserManager _appUserManager;
         IOrganizationManager _orgManager;
+        IAuthTokenManager _authTokenManager;
 
-        public OrgServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public OrgServicesController(IAppUserManager appUserManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _appUserManager = appUserManager;
             _orgManager = orgManager;
+            _authTokenManager = authTokenManager;
         }
 
 
@@ -40,7 +45,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="userid"></param>
         /// <returns></returns>
         [HttpGet("/api/user/{userid}/orgs")]
-        public async Task<ListResponse<OrgUser>> GetOrgForAccountAsync(String userid)
+        public async Task<ListResponse<OrgUser>> GetOrgsForAccountAsync(String userid)
         {
             var orgAccount = await _orgManager.GetOrganizationsForUserAsync(userid, OrgEntityHeader, UserEntityHeader);
 
@@ -97,7 +102,39 @@ namespace LagoVista.UserAdmin.Rest
             return DetailResponse<CreateOrganizationViewModel>.Create(createOrgVM);
         }
 
-        public async Task<InvokeResult> InviteToOrgAsync()
+        /// <summary>
+        /// Orgs Services - Invite User to Join Org
+        /// </summary>
+        /// <param name="inviteUser"></param>
+        /// <returns></returns>
+        [HttpPost("/api/org/inviteuser/send")]
+        public async Task<InvokeResult> InviteToOrgAsync([FromBody] InviteUser inviteUser)
+        {
+            var invite = await _orgManager.InviteUserAsync(inviteUser, OrgEntityHeader, UserEntityHeader);
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Orgs Services - Accpet Invitation
+        /// </summary>
+        /// <param name="inviteUser"></param>
+        /// <returns></returns>
+        [HttpPost("/api/org/inviteuser/accept")]
+        public async Task<AuthResponse> InviteToOrgAsync([FromBody] AcceptInviteViewModel inviteUser)
+        {
+            throw new NotImplementedException();
+
+        }
+
+
+        /// <summary>
+        /// Orgs Services - Switch To New Org
+        /// </summary>
+        /// <param name="orgid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/org/change/{orgid}")]
+        public async Task<InvokeResult<AuthResponse>> SwitchOrgs(string orgid)
         {
             throw new NotImplementedException();
         }
