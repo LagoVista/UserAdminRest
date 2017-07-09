@@ -134,7 +134,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpPost("/api/verify/sendsmscode")]
-        public async Task<InvokeResult> SendSMSCodeAsync([FromBody] VerfiyPhoneNumberDTO sendSMSCode)
+        public async Task<InvokeResult> SendSMSCodeAsync([FromBody] VerfiyPhoneNumber sendSMSCode)
         {
             if (User == null || !User.Identity.IsAuthenticated)
             {
@@ -179,7 +179,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="verifyRequest"></param>
         /// <returns></returns>
         [HttpPost("/api/verify/sms")]
-        public async Task<InvokeResult> ValidateSMSAsync([FromBody] VerfiyPhoneNumberDTO verifyRequest)
+        public async Task<InvokeResult> ValidateSMSAsync([FromBody] VerfiyPhoneNumber verifyRequest)
         {
             if (User == null || !User.Identity.IsAuthenticated)
             {
@@ -231,7 +231,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="confirmemaildto"></param>
         /// <returns></returns>
         [HttpPost("/api/verify/email")]
-        public async Task<InvokeResult> ValidateEmailAsync([FromBody] ConfirmEmailDTO confirmemaildto)
+        public async Task<InvokeResult> ValidateEmailAsync([FromBody] ConfirmEmail confirmemaildto)
         {
             if (User == null || !User.Identity.IsAuthenticated)
             {

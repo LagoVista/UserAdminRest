@@ -77,7 +77,7 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("/api/user/register")]
-        public async Task<InvokeResult<AuthResponse>> CreateNewAsync([FromBody] RegisterUserDTO newUser)
+        public async Task<InvokeResult<AuthResponse>> CreateNewAsync([FromBody] RegisterUser newUser)
         {
             if (String.IsNullOrEmpty(newUser.AppId))
             {

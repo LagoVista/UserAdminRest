@@ -96,5 +96,10 @@ namespace LagoVista.UserAdmin.Rest
 
             return DetailResponse<CreateOrganizationViewModel>.Create(createOrgVM);
         }
+
+        public async Task<InvokeResult> InviteToOrgAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

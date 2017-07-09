@@ -86,29 +86,29 @@ namespace LagoVista.UserAdmin.Rest
 
 
         /// <summary>
-        /// User Service - Reset Password
+        /// User Service - Send Reset Password Link
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/auth/resetpassword")]
-        public async Task<InvokeResult> SendResetPasswordLinkAsync([FromBody] ResetPasswordDTO resetPasswordDTO)
+        [HttpGet("/api/auth/resetpassword/sendlink")]
+        public async Task<InvokeResult> SendResetPasswordLinkAsync([FromBody] SendResetPasswordLink sendRestPasswordLink)
         {
-            if (String.IsNullOrEmpty(resetPasswordDTO.Email))
+            if (String.IsNullOrEmpty(sendRestPasswordLink.Email))
             {
                 _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "AuthServices_SendResetPasswordLinkAsync", UserAdminErrorCodes.RegMissingEmail.Message);
                 return InvokeResult.FromErrors(UserAdminErrorCodes.RegMissingEmail.ToErrorMessage());
             }
 
             var emailRegEx = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
-            if (!emailRegEx.Match(resetPasswordDTO.Email).Success)
+            if (!emailRegEx.Match(sendRestPasswordLink.Email).Success)
             {
                 _adminLogger.AddCustomEvent(Core.PlatformSupport.LogLevel.Error, "AuthServices_SendResetPasswordLinkAsync", UserAdminErrorCodes.RegInvalidEmailAddress.Message);
                 return InvokeResult.FromErrors(UserAdminErrorCodes.RegInvalidEmailAddress.ToErrorMessage());
             }
 
-            var appUser = await _userManager.FindByEmailAsync(resetPasswordDTO.Email);
+            var appUser = await _userManager.FindByEmailAsync(sendRestPasswordLink.Email);
             if (appUser == null)
             {
-                _adminLogger.AddError("AuthServices_SendResetPasswordLinkAsync", "CouldNotFindUser", new System.Collections.Generic.KeyValuePair<string, string>("email", resetPasswordDTO.Email));
+                _adminLogger.AddError("AuthServices_SendResetPasswordLinkAsync", "CouldNotFindUser", new System.Collections.Generic.KeyValuePair<string, string>("email", sendRestPasswordLink.Email));
                 return InvokeResult.FromErrors(new ErrorMessage(UserAdminRestResources.Err_ResetPwd_CouldNotFindUser));
             }
 
@@ -121,13 +121,23 @@ namespace LagoVista.UserAdmin.Rest
                 var subject = UserAdminRestResources.Email_ResetPassword_Subject.Replace("[APP_NAME]", _appConfig.AppName);
                 var body = UserAdminRestResources.Email_ResetPassword_Body.Replace("[CALLBACK_URL]", callbackUrl).Replace("[MOBILE_CALLBACK_URL]", mobileCallbackUrl);
 
-                return await _emailSender.SendAsync(resetPasswordDTO.Email, subject, body);
+                return await _emailSender.SendAsync(sendRestPasswordLink.Email, subject, body);
             }
             catch (Exception ex)
             {
                 _adminLogger.AddException("AuthServices_SendResetPasswordLinkAsync", ex);
                 return InvokeResult.FromErrors(new ErrorMessage(UserAdminRestResources.Email_RestPassword_ErrorSending), new ErrorMessage() { Message = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// User Service - Send Reset Password Link
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/auth/resetpassword")]
+        public Task<InvokeResult> ResetPasswordAsync([FromBody] ResetPassword resetPassword)
+        {
+            throw new NotImplementedException();
 
         }
 
@@ -136,7 +146,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/auth/changepassword")]
-        public async Task<InvokeResult> ChangePasswordAsync([FromBody] ChangePasswordDTO changePasswordDTO)
+        public async Task<InvokeResult> ChangePasswordAsync([FromBody] ChangePassword changePasswordDTO)
         {
             if (String.IsNullOrEmpty(changePasswordDTO.UserId))
             {
