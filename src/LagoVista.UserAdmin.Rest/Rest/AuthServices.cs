@@ -105,7 +105,7 @@ namespace LagoVista.UserAdmin.Rest
         /// User Service - Send Reset Password Link
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/auth/resetpassword/sendlink")]
+        [HttpPost("/api/auth/resetpassword/sendlink")]
         [AllowAnonymous]
         public Task<InvokeResult> SendResetPasswordLinkAsync([FromBody] SendResetPasswordLink sendResetPasswordLink)
         {
@@ -116,7 +116,7 @@ namespace LagoVista.UserAdmin.Rest
         /// User Service - Reset Password
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/auth/resetpassword")]
+        [HttpPost("/api/auth/resetpassword")]
         [AllowAnonymous]
         public Task<InvokeResult> ResetPasswordAsync([FromBody] ResetPassword resetPassword)
         {
@@ -127,7 +127,7 @@ namespace LagoVista.UserAdmin.Rest
         /// User Service - Change Password
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/auth/changepassword")]
+        [HttpPost("/api/auth/changepassword")]
         [Authorize]
         public Task<InvokeResult> ChangePasswordAsync([FromBody] ChangePassword changePassword)
         {
