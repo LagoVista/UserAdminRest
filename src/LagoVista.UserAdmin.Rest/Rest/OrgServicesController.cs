@@ -114,7 +114,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="inviteid"></param>
         /// <returns></returns>
-        [HttpPost("/api/org/inviteuser/accept/inviteid}")]
+        [HttpPost("/api/org/inviteuser/accept/{inviteid}")]
         public async Task<InvokeResult> AcceptInvitationAsync(string inviteid)
         {
             return await _orgManager.AcceptInvitationAsync(inviteid, OrgEntityHeader, UserEntityHeader);
