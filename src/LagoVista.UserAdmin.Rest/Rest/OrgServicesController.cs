@@ -99,7 +99,7 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
-        /// Orgs Services - Invite User to Join Org
+        /// Orgs Service - Invite User to Join Org
         /// </summary>
         /// <param name="inviteUser"></param>
         /// <returns></returns>
@@ -110,7 +110,7 @@ namespace LagoVista.UserAdmin.Rest
         }       
 
         /// <summary>
-        /// Orgs Services - Accpet Invitation
+        /// Orgs Service - Accept Invitation
         /// </summary>
         /// <param name="inviteid"></param>
         /// <returns></returns>
@@ -122,14 +122,14 @@ namespace LagoVista.UserAdmin.Rest
 
 
         /// <summary>
-        /// Orgs Services - Switch To New Org
+        /// Orgs Service - Switch To New Org
         /// </summary>
         /// <param name="authRequest"></param>
         /// <returns></returns>
         [HttpPost("/api/org/change")]
         public Task<InvokeResult<AuthResponse>> SwitchOrgs(AuthRequest authRequest)
         {
-            return _authTokenManager.RefreshTokenGrantAsync(authRequest, OrgEntityHeader, UserEntityHeader);
+            return _authTokenManager.RefreshTokenGrantAsync(authRequest);
         }
     }
 }

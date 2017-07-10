@@ -64,7 +64,7 @@ namespace LagoVista.UserAdmin.Rest
             }
             else if (req.GrantType == AuthTokenManager.GRANT_TYPE_REFRESHTOKEN)
             {
-                return _tokenManager.RefreshTokenGrantAsync(req, OrgEntityHeader, UserEntityHeader);
+                return _tokenManager.RefreshTokenGrantAsync(req);
             }
             else if(String.IsNullOrEmpty(req.GrantType))
             {
