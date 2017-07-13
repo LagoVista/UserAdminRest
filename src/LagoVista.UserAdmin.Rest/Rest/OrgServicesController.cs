@@ -127,7 +127,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="authRequest"></param>
         /// <returns></returns>
         [HttpPost("/api/org/change")]
-        public Task<InvokeResult<AuthResponse>> SwitchOrgs(AuthRequest authRequest)
+        public Task<InvokeResult<AuthResponse>> SwitchOrgs([FromBody] AuthRequest authRequest)
         {
             return _authTokenManager.RefreshTokenGrantAsync(authRequest);
         }
