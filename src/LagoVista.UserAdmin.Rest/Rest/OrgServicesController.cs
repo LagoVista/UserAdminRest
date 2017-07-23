@@ -88,6 +88,31 @@ namespace LagoVista.UserAdmin.Rest
             return _orgManager.CreateNewOrganizationAsync(orgVM, UserEntityHeader);
         }
 
+
+        /// <summary>
+        /// Orgs Service - Return Organization
+        /// </summary>
+        /// <param name="id">Organization Id</param>
+        /// <returns></returns>
+        [HttpGet("/api/org/{id}")]
+        public async Task<DetailResponse<Organization>> GetOrgAsync(string id)
+        {
+            var org = await _orgManager.GetOrganizationAsync(id, OrgEntityHeader, UserEntityHeader);
+            return DetailResponse<Organization>.Create(org);
+        }
+
+        /// <summary>
+        /// Orgs Service - Return Currently Organization
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/org/current")]
+        public async Task<DetailResponse<Organization>> GetCurrentOrgAsync()
+        {
+            var org = await _orgManager.GetOrganizationAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            return DetailResponse<Organization>.Create(org);
+        }
+
+
         /// <summary>
         /// Orgs Service - Org Factory
         /// </summary>
