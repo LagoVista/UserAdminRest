@@ -47,7 +47,8 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPut("/api/subscription")]
         public Task<InvokeResult> UpdateSubscriptionAsync([FromBody] Subscription subscription)
         {
-            SetUpdatedProperties(subscription);
+            subscription.LastUpdatedById = UserEntityHeader.Id;
+            subscription.LastUpdatedDate = DateTime.UtcNow;
             return _subscriptionManager.UpdateSubscriptionAsync(subscription, OrgEntityHeader, UserEntityHeader);
         }
 
@@ -59,8 +60,15 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/subscription/{id}")]
         public async Task<DetailResponse<Subscription>> GetSubscriptionAsync(string id)
         {
-            var subscription = await _subscriptionManager.GetSubscriptionAsync(id, OrgEntityHeader, UserEntityHeader);
-            return DetailResponse<Subscription>.Create(subscription);
+            if (Guid.TryParse(id, out Guid subscrptionId))
+            {
+                var subscription = await _subscriptionManager.GetSubscriptionAsync(subscrptionId, OrgEntityHeader, UserEntityHeader);
+                return DetailResponse<Subscription>.Create(subscription);
+            }
+            else
+            {
+                throw new Exception("Must pass in subscription id must be a Guid.");
+            }
         }
 
 
@@ -84,7 +92,14 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/subscription/{id}/inuse")]
         public Task<DependentObjectCheckResult> CheckInUse(String id)
         {
-            return _subscriptionManager.CheckInUseAsync(id, OrgEntityHeader, UserEntityHeader);
+            if (Guid.TryParse(id, out Guid subscriptionId))
+            {
+                return _subscriptionManager.CheckInUseAsync(subscriptionId, OrgEntityHeader, UserEntityHeader);
+            }
+            else
+            {
+                throw new Exception("Must pass in subscription id must be a Guid.");
+            }
         }
 
         /// <summary>
@@ -104,7 +119,14 @@ namespace LagoVista.UserAdmin.Rest
         [HttpDelete("/api/subscription/{id}")]
         public Task<InvokeResult> DeleteSubscriptionAsync(string id)
         {
-            return _subscriptionManager.DeleteSubscriptionAsync(id, OrgEntityHeader, UserEntityHeader);
+            if (Guid.TryParse(id, out Guid subscriptionId))
+            {
+                return _subscriptionManager.DeleteSubscriptionAsync(subscriptionId, OrgEntityHeader, UserEntityHeader);
+            }
+            else
+            {
+                throw new Exception("Must pass in subscription id must be a Guid.");
+            }
         }
 
         /// <summary>
@@ -115,9 +137,11 @@ namespace LagoVista.UserAdmin.Rest
         public DetailResponse<Subscription> CreateSubscriptionAsync()
         {
             var response = DetailResponse<Subscription>.Create();
-            response.Model.Id = Guid.NewGuid().ToId();
-            SetAuditProperties(response.Model);
-            SetOwnedProperties(response.Model);
+            response.Model.Id = Guid.NewGuid();
+            response.Model.LastUpdatedById = UserEntityHeader.Id;
+            response.Model.CreationDate = DateTime.UtcNow;
+            response.Model.LastUpdatedById = UserEntityHeader.Id;
+            response.Model.LastUpdatedDate = response.Model.CreationDate;
             return response;
         }
     }
