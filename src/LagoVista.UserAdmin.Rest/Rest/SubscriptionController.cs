@@ -138,7 +138,9 @@ namespace LagoVista.UserAdmin.Rest
         {
             var response = DetailResponse<Subscription>.Create();
             response.Model.Id = Guid.NewGuid();
-            response.Model.LastUpdatedById = UserEntityHeader.Id;
+            response.Model.OrgId = OrgEntityHeader.Id;
+            response.Model.Status = "active";
+            response.Model.CreatedById = UserEntityHeader.Id;
             response.Model.CreationDate = DateTime.UtcNow;
             response.Model.LastUpdatedById = UserEntityHeader.Id;
             response.Model.LastUpdatedDate = response.Model.CreationDate;
