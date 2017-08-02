@@ -46,7 +46,7 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [HttpGet("/api/user")]
         public async Task<DetailResponse<UserInfo>> GetCurrentUser()
-        {
+        {        
             var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
             //No need to send the password has down there, need to be careful when doing an update...
             appUser.PasswordHash = null;
