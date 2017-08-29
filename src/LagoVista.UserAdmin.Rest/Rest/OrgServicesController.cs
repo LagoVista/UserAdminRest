@@ -18,6 +18,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LagoVista.Core.Authentication.Models;
 using LagoVista.UserAdmin.Interfaces.Repos.Security;
+using LagoVista.Core.Models;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -59,10 +60,10 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="orgid"></param>
         /// <returns></returns>
         [HttpGet("/api/org/{orgid}/users")]
-        public async Task<ListResponse<OrgUser>> GetUserForOrgAsync(string orgid)
+        public async Task<ListResponse<UserInfoSummary>> GetUserForOrgAsync(string orgid)
         {
             var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
-            return ListResponse<OrgUser>.Create(orgUsers);
+            return ListResponse<UserInfoSummary>.Create(orgUsers);
         }
 
         /// <summary>
