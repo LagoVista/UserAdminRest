@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using LagoVista.Core.Authentication.Models;
 using LagoVista.UserAdmin.Interfaces.Repos.Security;
 using LagoVista.Core.Models;
+using LagoVista.IoT.Web.Common.Attributes;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -45,6 +46,17 @@ namespace LagoVista.UserAdmin.Rest
         /// <summary>
         /// Orgs Service - Get Orgs for User
         /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/user/orgs")]
+        public async Task<ListResponse<OrgUser>> GetOrgsForUserAsync()
+        {
+            var orgsForUser = await _orgManager.GetOrganizationsForUserAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            return ListResponse<OrgUser>.Create(orgsForUser);
+        }
+
+        /// <summary>
+        /// Orgs Service - Get Orgs for User
+        /// </summary>
         /// <param name="userid"></param>
         /// <returns></returns>
         [HttpGet("/api/user/{userid}/orgs")]
@@ -53,6 +65,7 @@ namespace LagoVista.UserAdmin.Rest
             var orgsForUser = await _orgManager.GetOrganizationsForUserAsync(userid, OrgEntityHeader, UserEntityHeader);
             return ListResponse<OrgUser>.Create(orgsForUser);
         }
+
 
         /// <summary>
         /// Orgs Service - Get Users for Org
@@ -75,7 +88,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/org/{orgid}/{userid}/orgs")]
         public async Task<InvokeResult> AddAccountToOrgAsync(string orgid, string userid)
         {
-            return await _orgManager.AddUserToOrgAsync(orgid, userid,OrgEntityHeader, UserEntityHeader);
+            return await _orgManager.AddUserToOrgAsync(orgid, userid, OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>
@@ -130,10 +143,42 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="inviteUser"></param>
         /// <returns></returns>
         [HttpPost("/api/org/inviteuser/send")]
-        public  Task<InvokeResult<Invitation>> InviteToOrgAsync([FromBody] InviteUser inviteUser)
+        public Task<InvokeResult<Invitation>> InviteToOrgAsync([FromBody] InviteUser inviteUser)
         {
             return _orgManager.InviteUserAsync(inviteUser, OrgEntityHeader, UserEntityHeader);
-        }       
+        }
+
+        /// <summary>
+        /// Orgs Service - Get Invitations
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/org/invitations")]
+        public Task<ListResponse<Invitation>> GetInvitationsAsync()
+        {
+            return _orgManager.GetInvitationsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// Orgs Service - Set Org Admin for User
+        /// </summary>
+        /// <returns></returns>
+        [OrgAdmin]
+        [HttpGet("/api/org/admin/{userId}/set")]
+        public Task<InvokeResult> SetOrgAdmin(String userId)
+        {
+            return _orgManager.SetOrgAdminAsync(userId, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// Orgs Service - Clear Org Admin for User
+        /// </summary>
+        /// <returns></returns>
+        [OrgAdmin]
+        [HttpGet("/api/org/admin/{userId}/clear")]
+        public Task<InvokeResult> ClearOrgAdmin(String userId)
+        {
+            return _orgManager.ClearOrgAdminAsync(userId, OrgEntityHeader, UserEntityHeader);
+        }
 
         /// <summary>
         /// Orgs Service - Accept Invitation
@@ -146,7 +191,6 @@ namespace LagoVista.UserAdmin.Rest
             return await _orgManager.AcceptInvitationAsync(inviteid, OrgEntityHeader, UserEntityHeader);
         }
 
-
         /// <summary>
         /// Orgs Service - Switch To New Org
         /// </summary>
@@ -156,6 +200,24 @@ namespace LagoVista.UserAdmin.Rest
         public Task<InvokeResult<AuthResponse>> SwitchOrgs([FromBody] AuthRequest authRequest)
         {
             return _authTokenManager.RefreshTokenGrantAsync(authRequest);
+        }
+
+        /// <summary>
+        /// Orgs Service - Switch To New Org
+        /// </summary>
+        /// <param name="orgid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/org/{orgid}/change")]
+        public async Task<InvokeResult<AppUser>> SwitchOrgs(string orgid)
+        {
+            var result = await _orgManager.ChangeOrgsAsync(orgid, OrgEntityHeader, UserEntityHeader);
+            if(result.Successful)
+            {
+                result.Result.PasswordHash = null;
+                await _signInManager.SignInAsync(result.Result);
+            }
+
+            return result;
         }
     }
 }
