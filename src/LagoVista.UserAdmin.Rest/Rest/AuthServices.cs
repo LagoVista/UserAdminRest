@@ -83,7 +83,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <returns></returns>
         [HttpPost("/api/v1/auth")]
         [AllowAnonymous]
-        public Task<InvokeResult<AuthResponse>> PostFromBody([FromBody] AuthRequest req)
+        public Task<InvokeResult<AuthResponse>> AuthFromBody([FromBody] AuthRequest req)
         {
             return HandleAuthRequest(req);               
         }
@@ -95,7 +95,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <returns></returns>
         [HttpPost("/api/v1/auth/form")]
         [AllowAnonymous]
-        public Task<InvokeResult<AuthResponse>> PostFromForm([FromForm] AuthRequest req)
+        public Task<InvokeResult<AuthResponse>> AuthFromForm([FromForm] AuthRequest req)
         {
             return HandleAuthRequest(req);
         }

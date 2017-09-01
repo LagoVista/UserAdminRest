@@ -24,7 +24,7 @@ using LagoVista.IoT.Web.Common.Attributes;
 namespace LagoVista.UserAdmin.Rest
 {
     /// <summary>
-    /// Orgs Srevices
+    /// Orgs Services
     /// </summary>
     [Authorize]
     public class OrgServicesController : LagoVistaBaseController
@@ -142,6 +142,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="inviteUser"></param>
         /// <returns></returns>
+        [OrgAdmin]
         [HttpPost("/api/org/inviteuser/send")]
         public Task<InvokeResult<Invitation>> InviteToOrgAsync([FromBody] InviteUser inviteUser)
         {
@@ -152,10 +153,35 @@ namespace LagoVista.UserAdmin.Rest
         /// Orgs Service - Get Invitations
         /// </summary>
         /// <returns></returns>
+        [OrgAdmin]
         [HttpGet("/api/org/invitations")]
         public Task<ListResponse<Invitation>> GetInvitationsAsync()
         {
-            return _orgManager.GetInvitationsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+            return _orgManager.GetActiveInvitationsForOrgAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// Orgs Service - Revoke Invitation
+        /// </summary>
+        /// <param name="inviteId">Invitation Id</param>
+        /// <returns></returns>
+        [OrgAdmin]
+        [HttpDelete("/api/org/invitation/{inviteId}")]
+        public Task<InvokeResult> RevokeInvitationAsync(string inviteId)
+        {
+            return _orgManager.RevokeInvitationAsync(inviteId, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// Orgs Service - Resend Invitation
+        /// </summary>
+        /// <param name="inviteId">Invitation Id</param>
+        /// <returns></returns>
+        [OrgAdmin]
+        [HttpGet("/api/org/invitation/{inviteId}/resend")]
+        public Task<InvokeResult> ResendInvitationAsync(string inviteId)
+        {
+            return _orgManager.ResendInvitationAsync(inviteId, OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>

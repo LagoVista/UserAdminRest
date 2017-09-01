@@ -12,6 +12,8 @@ using LagoVista.IoT.Logging.Loggers;
 using LagoVista.Core.Validation;
 using LagoVista.Core.Authentication.Models;
 using LagoVista.UserAdmin.Models.DTOs;
+using LagoVista.IoT.Web.Common.Attributes;
+using LagoVista.UserAdmin.Interfaces.Managers;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -22,10 +24,12 @@ namespace LagoVista.UserManagement.Rest
     public class UserServicesController : LagoVistaBaseController
     {
         private readonly IAppUserManager _appUserManager;
+        private readonly IUserManager _usrManager; /* TODO: OK TOO MANY USER MANGERS, may need refactoring */
 
-        public UserServicesController(IAppUserManager appUserManager,  UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
+        public UserServicesController(IAppUserManager appUserManager, IUserManager usrManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
+            _usrManager = usrManager;
         }
 
         /// <summary>
@@ -45,13 +49,23 @@ namespace LagoVista.UserManagement.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/user")]
-        public async Task<DetailResponse<UserInfo>> GetCurrentUser()
-        {        
+        public async Task<DetailResponse<UserInfo>> ReturnCurrentUserAsync()
+        {
             var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
             //No need to send the password has down there, need to be careful when doing an update...
             return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
         }
 
+        /// <summary>
+        /// User Service - Update User
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        [HttpPut("/api/user")]
+        public Task<InvokeResult> UpdateCurrentUserAsync([FromBody] AppUser user)
+        {
+            return _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+        }
 
         /// <summary>
         /// User Service - Register a new user (sign-up)
@@ -63,6 +77,30 @@ namespace LagoVista.UserManagement.Rest
         public Task<InvokeResult<AuthResponse>> CreateNewAsync([FromBody] RegisterUser newUser)
         {
             return _appUserManager.CreateUserAsync(newUser);
+        }
+
+        /// <summary>
+        /// User Service - Set as System Admin (requires system admin)
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [SystemAdmin]
+        [HttpGet("/api/user/sysadmin/{id}/set")]
+        public Task<InvokeResult> SetAsSystemAdmin(string id)
+        {
+            return _usrManager.SetSystemAdminAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// User Service - Clear as System Admin (requires system admin)
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [SystemAdmin]
+        [HttpGet("/api/user/sysadmin/{id}/clear")]
+        public Task<InvokeResult> ClearSystemAdmin(string id)
+        {
+            return _usrManager.ClearSystemAdminAsync(id, OrgEntityHeader, UserEntityHeader);
         }
     }
 }
