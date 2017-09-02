@@ -18,7 +18,7 @@ using LagoVista.IoT.Logging.Loggers;
 
 namespace LagoVista.UserAdmin.Rest
 {
-    [SystemAdmin]
+    [OrgAdmin]
     [Authorize]
     public class SubscriptionController : LagoVistaBaseController
     {
