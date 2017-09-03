@@ -14,6 +14,7 @@ using LagoVista.Core.Authentication.Models;
 using LagoVista.UserAdmin.Models.DTOs;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.UserAdmin.Interfaces.Managers;
+using LagoVista.Core;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -25,11 +26,13 @@ namespace LagoVista.UserManagement.Rest
     {
         private readonly IAppUserManager _appUserManager;
         private readonly IUserManager _usrManager; /* TODO: OK TOO MANY USER MANGERS, may need refactoring */
+        private readonly SignInManager<AppUser> _signInManager;
 
-        public UserServicesController(IAppUserManager appUserManager, IUserManager usrManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
+        public UserServicesController(IAppUserManager appUserManager, IUserManager usrManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
             _usrManager = usrManager;
+            _signInManager = signInManager;
         }
 
         /// <summary>
