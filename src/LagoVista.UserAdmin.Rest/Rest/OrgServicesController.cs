@@ -68,6 +68,26 @@ namespace LagoVista.UserAdmin.Rest
 
 
         /// <summary>
+        /// Orgs Service - Check if Namespace in use
+        /// </summary>
+        /// <param name="orgnamespace"></param>
+        /// <returns></returns>
+        [HttpGet("/api/org/namespace/{orgnamespace}/canuse")]
+        public async Task<InvokeResult> CheckNameSpaceInUseAsync(string orgnamespace)
+        {
+            var inUse = await _orgManager.QueryOrgNamespaceInUseAsync(orgnamespace);
+            if (inUse)
+            {
+                var errMessage = LagoVista.UserAdmin.Resources.UserAdminResources.Organization_NamespaceInUse.Replace(LagoVista.UserAdmin.Resources.Tokens.NAMESPACE, orgnamespace);
+                return InvokeResult.FromErrors(new ErrorMessage(errMessage));
+            }
+            else
+            {
+                return InvokeResult.Success;
+            }
+        }
+
+        /// <summary>
         /// Orgs Service - Get Users for Org
         /// </summary>
         /// <param name="orgid"></param>

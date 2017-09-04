@@ -17,8 +17,6 @@ namespace LagoVista.UserAdmin.Rest
 
         IUserVerficationManager _userVerificationManager;
 
-        
-
         public UserVerifyController(IUserVerficationManager userVerificationManager, IAdminLogger logger, UserManager<AppUser> userManager) : base(userManager, logger)
         {
             _userVerificationManager = userVerificationManager;
