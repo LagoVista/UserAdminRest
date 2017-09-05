@@ -117,9 +117,11 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="orgVM"></param>
         /// <returns></returns>
         [HttpPost("/api/org")]
-        public Task<InvokeResult> CreateOrgAsync([FromBody] CreateOrganizationViewModel orgVM)
+        public async Task<InvokeResult> CreateOrgAsync([FromBody] CreateOrganizationViewModel orgVM)
         {
-            return _orgManager.CreateNewOrganizationAsync(orgVM, UserEntityHeader);
+            var org = await _orgManager.CreateNewOrganizationAsync(orgVM, UserEntityHeader);
+            await _signInManager.SignInAsync(await this.GetCurrentUserAsync());
+            return org;
         }
 
 

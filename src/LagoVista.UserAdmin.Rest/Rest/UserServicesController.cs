@@ -65,7 +65,7 @@ namespace LagoVista.UserManagement.Rest
         /// <param name="user"></param>
         /// <returns></returns>
         [HttpPut("/api/user")]
-        public Task<InvokeResult> UpdateCurrentUserAsync([FromBody] AppUser user)
+        public Task<InvokeResult> UpdateCurrentUserAsync([FromBody] UserInfo user)
         {
             return _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
         }
