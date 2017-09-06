@@ -27,12 +27,14 @@ namespace LagoVista.UserManagement.Rest
         private readonly IAppUserManager _appUserManager;
         private readonly IUserManager _usrManager; /* TODO: OK TOO MANY USER MANGERS, may need refactoring */
         private readonly SignInManager<AppUser> _signInManager;
+        private readonly IOrganizationManager _orgManager;
 
-        public UserServicesController(IAppUserManager appUserManager, IUserManager usrManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
+        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserManager usrManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
             _usrManager = usrManager;
             _signInManager = signInManager;
+            _orgManager = orgManager;
         }
 
         /// <summary>
@@ -77,9 +79,15 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("/api/user/register")]
-        public Task<InvokeResult<AuthResponse>> CreateNewAsync([FromBody] RegisterUser newUser)
+        public async Task<InvokeResult<AuthResponse>> CreateNewAsync([FromBody] RegisterUser newUser)
         {
-            return _appUserManager.CreateUserAsync(newUser);
+            var result = await _appUserManager.CreateUserAsync(newUser);
+            if (!String.IsNullOrEmpty(newUser.InviteId) && result.Successful)
+            {
+                await _orgManager.AcceptInvitationAsync(newUser.InviteId, result.Result.User.Id);
+            }
+
+            return result;
         }
 
         /// <summary>

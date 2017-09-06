@@ -183,6 +183,18 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// Orgs Service - Get Invitation
+        /// </summary>
+        /// <param name="invitationid"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet("/api/org/invitation/{invitationid}")]
+        public Task<Invitation> GetInvitationAsync(string invitationid)
+        {
+            return _orgManager.GetInvitationAsync(invitationid);
+        }
+
+        /// <summary>
         /// Orgs Service - Revoke Invitation
         /// </summary>
         /// <param name="inviteId">Invitation Id</param>
@@ -229,14 +241,29 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// Orgs Service - Check if Invitation is Still Available
+        /// </summary>
+        /// <param name="inviteid"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet("/api/org/inviteuser/{inviteid}/isavailable")]
+        public async Task<bool> GetIsInviteActiveAsync(string inviteid)
+        {
+            return await _orgManager.GetIsInvigationActiveAsync(inviteid);
+        }
+
+        /// <summary>
         /// Orgs Service - Accept Invitation
         /// </summary>
         /// <param name="inviteid"></param>
         /// <returns></returns>
-        [HttpPost("/api/org/inviteuser/accept/{inviteid}")]
+        [HttpGet("/api/org/inviteuser/accept/{inviteid}")]
         public async Task<InvokeResult> AcceptInvitationAsync(string inviteid)
         {
-            return await _orgManager.AcceptInvitationAsync(inviteid, OrgEntityHeader, UserEntityHeader);
+            var result = await _orgManager.AcceptInvitationAsync(inviteid, OrgEntityHeader, UserEntityHeader);
+            /* Make sure we update the claims */
+            await _signInManager.SignInAsync(await GetCurrentUserAsync());
+            return result;
         }
 
         /// <summary>
