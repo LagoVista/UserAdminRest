@@ -85,6 +85,8 @@ namespace LagoVista.UserManagement.Rest
             if (!String.IsNullOrEmpty(newUser.InviteId) && result.Successful)
             {
                 await _orgManager.AcceptInvitationAsync(newUser.InviteId, result.Result.User.Id);
+                var user = await _appUserManager.GetUserByIdAsync(result.Result.User.Id, OrgEntityHeader, result.Result.User);
+                await _signInManager.SignInAsync(user, false);
             }
 
             return result;
