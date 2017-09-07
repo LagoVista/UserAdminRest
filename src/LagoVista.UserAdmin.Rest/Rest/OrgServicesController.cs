@@ -262,16 +262,7 @@ namespace LagoVista.UserAdmin.Rest
             var result = await _orgManager.AcceptInvitationAsync(inviteid, OrgEntityHeader, UserEntityHeader);
             /* Make sure we update the claims */
             var currentUser = await GetCurrentUserAsync();
-            if (EntityHeader.IsNullOrEmpty(currentUser.CurrentOrganization))
-            {
-                Console.WriteLine("CURRENT ORG IS NULL!");
-            }
-            else
-            {
-                Console.WriteLine("THIS IS CURRENT ORG => " + currentUser.CurrentOrganization.Text);
-            }
-            
-            await _signInManager.SignInAsync(currentUser);
+                await _signInManager.SignInAsync(currentUser);
             return result;
         }
 
