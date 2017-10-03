@@ -262,7 +262,7 @@ namespace LagoVista.UserAdmin.Rest
             var result = await _orgManager.AcceptInvitationAsync(inviteid, OrgEntityHeader, UserEntityHeader);
             /* Make sure we update the claims */
             var currentUser = await GetCurrentUserAsync();
-                await _signInManager.SignInAsync(currentUser);
+            await _signInManager.SignInAsync(currentUser);
             return result;
         }
 
@@ -272,9 +272,16 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="authRequest"></param>
         /// <returns></returns>
         [HttpPost("/api/org/change")]
-        public Task<InvokeResult<AuthResponse>> SwitchOrgs([FromBody] AuthRequest authRequest)
+        public async Task<InvokeResult<AuthResponse>> SwitchOrgs([FromBody] AuthRequest authRequest)
         {
-            return _authTokenManager.RefreshTokenGrantAsync(authRequest);
+            var result = await _authTokenManager.RefreshTokenGrantAsync(authRequest);
+            if (result.Successful)
+            {
+                var currentUser = await GetCurrentUserAsync();
+                await _signInManager.SignInAsync(currentUser);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -286,7 +293,7 @@ namespace LagoVista.UserAdmin.Rest
         public async Task<InvokeResult<AppUser>> SwitchOrgs(string orgid)
         {
             var result = await _orgManager.ChangeOrgsAsync(orgid, OrgEntityHeader, UserEntityHeader);
-            if(result.Successful)
+            if (result.Successful)
             {
                 result.Result.PasswordHash = null;
                 await _signInManager.SignInAsync(result.Result);
