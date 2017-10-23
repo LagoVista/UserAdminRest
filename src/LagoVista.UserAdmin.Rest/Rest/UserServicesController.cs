@@ -54,7 +54,7 @@ namespace LagoVista.UserManagement.Rest
         /// </summary>
         /// <param name="email"></param>
         /// <returns></returns>
-        [HttpGet("/api/user")]
+        [HttpGet("/api/userbyemail")]
         public async Task<DetailResponse<UserInfo>> GetUserByEmailAsync(String email)
         {
             var appUser = await _appUserManager.GetUserByIdAsync(email, OrgEntityHeader, UserEntityHeader);
