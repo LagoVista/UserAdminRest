@@ -50,6 +50,31 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
+        /// User Service - Get User by Email
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        [HttpGet("/api/user")]
+        public async Task<DetailResponse<UserInfo>> GetUserByEmailAsync(String email)
+        {
+            var appUser = await _appUserManager.GetUserByIdAsync(email, OrgEntityHeader, UserEntityHeader);
+            return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
+        }
+
+
+        /// <summary>
+        /// User Service - Enable/Disable preview status for user
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="status"></param>
+        /// <returns></returns>
+        [HttpGet("/api/user/{id}/preview/{status}")]
+        public async Task<InvokeResult> SetPreviewStatusAsync(String id, bool status)
+        {
+            return await _usrManager.SetPreviewUserStatusAsync(id, status, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
         /// User Service - Get Currently Logged In User.
         /// </summary>
         /// <returns></returns>
