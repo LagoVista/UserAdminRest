@@ -15,12 +15,12 @@
     <NoWarn>1701;1702;1705;1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LagoVista.AspNetCore.Identity" Version="1.2.201-alpha1006" />
-    <PackageReference Include="LagoVista.Core" Version="1.2.201-alpha1006" />
-    <PackageReference Include="LagoVista.Core.Authentication" Version="1.2.201-alpha1006" />
-    <PackageReference Include="LagoVista.IoT.Logging" Version="1.2.201-alpha1006" />
-    <PackageReference Include="LagoVista.IoT.Web.Common" Version="1.2.201-alpha1006" />
-    <PackageReference Include="LagoVista.UserAdmin" Version="1.2.201-alpha1006" />
+    <PackageReference Include="LagoVista.AspNetCore.Identity" Version="1.2.202-alpha0849" />
+    <PackageReference Include="LagoVista.Core" Version="1.2.202-alpha0849" />
+    <PackageReference Include="LagoVista.Core.Authentication" Version="1.2.202-alpha0849" />
+    <PackageReference Include="LagoVista.IoT.Logging" Version="1.2.202-alpha0849" />
+    <PackageReference Include="LagoVista.IoT.Web.Common" Version="1.2.202-alpha0849" />
+    <PackageReference Include="LagoVista.UserAdmin" Version="1.2.202-alpha0849" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.2.0-preview2-41113220915" />
