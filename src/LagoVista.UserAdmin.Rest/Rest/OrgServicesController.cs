@@ -78,7 +78,7 @@ namespace LagoVista.UserAdmin.Rest
             var inUse = await _orgManager.QueryOrgNamespaceInUseAsync(orgnamespace);
             if (inUse)
             {
-                var errMessage = LagoVista.UserAdmin.Resources.UserAdminResources.Organization_NamespaceInUse.Replace(LagoVista.UserAdmin.Resources.Tokens.NAMESPACE, orgnamespace);
+                var errMessage = LagoVista.UserAdmin.Models.Resources.UserAdminResources.Organization_NamespaceInUse.Replace(LagoVista.UserAdmin.Resources.Tokens.NAMESPACE, orgnamespace);
                 return InvokeResult.FromErrors(new ErrorMessage(errMessage));
             }
             else

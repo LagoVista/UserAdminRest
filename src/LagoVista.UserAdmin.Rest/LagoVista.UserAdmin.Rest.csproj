@@ -21,8 +21,10 @@
     <PackageReference Include="LagoVista.IoT.Logging" Version="1.2.202-alpha0849" />
     <PackageReference Include="LagoVista.IoT.Web.Common" Version="1.2.202-alpha0849" />
     <PackageReference Include="LagoVista.UserAdmin" Version="1.2.202-alpha0849" />
+    <PackageReference Include="LagoVista.UserAdmin.Models" Version="1.2.211-alpha0847" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.1-beta1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.2.0-preview2-41113220915" />
   </ItemGroup>
   <ItemGroup>
