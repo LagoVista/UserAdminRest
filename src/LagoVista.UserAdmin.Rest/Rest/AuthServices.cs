@@ -31,6 +31,7 @@ using System.Text.RegularExpressions;
 using LagoVista.IoT.Logging.Exceptions;
 using System.Net;
 using System.Collections.Generic;
+using LagoVista.UserAdmin.ViewModels.Users;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -44,6 +45,7 @@ namespace LagoVista.UserAdmin.Rest
     {
         private readonly IAuthTokenManager _tokenManager;
         private readonly IPasswordManager _passwordMangaer;
+        private readonly SignInManager<AppUser> _signInManager;
 
 
         //IMPORTANT Until this can all be refactored into the UserAdmin class this NEEDS to point to action on the Web Site.
@@ -53,6 +55,7 @@ namespace LagoVista.UserAdmin.Rest
         {
             _tokenManager = tokenManager;
             _passwordMangaer = passwordManager;
+            _signInManager = signInManager;
             
         }
 
@@ -100,6 +103,24 @@ namespace LagoVista.UserAdmin.Rest
             return HandleAuthRequest(req);
         }
 
+        /// <summary>
+        /// Auth by Form Post with Simple Email Address and Password, will set cookie rather than JWT
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost("/api/v1/login")]
+        public async Task<InvokeResult> CookieAuthFromForm([FromForm] LoginViewModel model)
+        {
+            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+            if (result.Succeeded)
+            {
+                return InvokeResult.Success;
+            }
+            else
+            {
+                return InvokeResult.FromError("Could not authenticate");
+            }
+        }
 
         /// <summary>
         /// User Service - Send Reset Password Link
