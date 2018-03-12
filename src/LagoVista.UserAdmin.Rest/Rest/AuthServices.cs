@@ -123,6 +123,17 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// Auth by Form Post with Simple Email Address and Password, will set cookie rather than JWT
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/v1/logoff")]
+        public async Task<InvokeResult> Logoff()
+        {
+            await _signInManager.SignOutAsync();
+            return InvokeResult.Success;
+        }
+
+        /// <summary>
         /// User Service - Send Reset Password Link
         /// </summary>
         /// <returns></returns>
