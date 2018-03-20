@@ -43,6 +43,13 @@ namespace LagoVista.UserAdmin.Rest
     [AllowAnonymous]
     public class AuthServices : LagoVistaBaseController
     {
+        public class LoginModel
+        {
+            public string Email { get; set; }
+            public string Password { get; set; }
+            public bool RememberMe { get; set; }
+        }
+
         private readonly IAuthTokenManager _tokenManager;
         private readonly IPasswordManager _passwordMangaer;
         private readonly SignInManager<AppUser> _signInManager;
@@ -55,8 +62,7 @@ namespace LagoVista.UserAdmin.Rest
         {
             _tokenManager = tokenManager;
             _passwordMangaer = passwordManager;
-            _signInManager = signInManager;
-            
+            _signInManager = signInManager;            
         }
 
         private Task<InvokeResult<AuthResponse>> HandleAuthRequest(AuthRequest req)
@@ -109,8 +115,13 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("/api/v1/login")]
-        public async Task<InvokeResult> CookieAuthFromForm([FromForm] LoginViewModel model)
+        public async Task<InvokeResult> CookieAuthFromForm([FromForm] LoginModel model)
         {
+            Console.WriteLine("we are login now");
+            Console.WriteLine(model.Email);
+            Console.WriteLine(model.Password);
+            Console.WriteLine("-------");
+
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
             if (result.Succeeded)
             {
