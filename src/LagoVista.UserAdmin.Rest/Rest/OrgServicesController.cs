@@ -240,6 +240,41 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// Orgs Service - Set appp builder privelages for user
+        /// </summary>
+        /// <returns></returns>
+        [OrgAdmin]
+        [HttpGet("/api/org/appbuilder/{userId}/set")]
+        public Task<InvokeResult> SetAppBuilder(String userId)
+        {
+            return _orgManager.SetAppBuilderAsync(userId, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// Orgs Service - Clear app builder privelages for user
+        /// </summary>
+        /// <returns></returns>
+        [OrgAdmin]
+        [HttpGet("/api/org/appbuilder/{userId}/clear")]
+        public Task<InvokeResult> ClearAppBuilder(String userId)
+        {
+            return _orgManager.ClearAppBuilderAsync(userId, OrgEntityHeader, UserEntityHeader);
+        }
+
+
+        /// <summary>
+        /// Orgs Service - Check if user is app builder
+        /// </summary>
+        /// <returns></returns>
+        [OrgAdmin]
+        [HttpGet("/api/org/admin/{userId}")]
+        public async Task<InvokeResult<bool>> IsAppBuilder(String userId)
+        {
+            return InvokeResult<bool>.Create(await _orgManager.IsUserAppBuildernAsync(OrgEntityHeader.Id,  userId));
+        }
+
+
+        /// <summary>
         /// Orgs Service - Check if Invitation is Still Available
         /// </summary>
         /// <param name="inviteid"></param>
