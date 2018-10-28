@@ -98,6 +98,21 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// Auth by JSON Body
+        /// </summary>
+        /// <param name="req"></param>
+        /// <param name="repoId"></param>
+        /// <returns></returns>
+        [HttpPost("/api/v1/auth/repo/{repoid}")]
+        [AllowAnonymous]
+        public Task<InvokeResult<AuthResponse>> AuthFromBody(String repoId, [FromBody] AuthRequest req)
+        {
+            req.Email = $"{repoId}-{req.Email}";
+
+            return HandleAuthRequest(req);
+        }
+
+        /// <summary>
         /// Auth by Form POST
         /// </summary>
         /// <param name="req"></param>

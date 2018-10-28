@@ -140,5 +140,18 @@ namespace LagoVista.UserManagement.Rest
         {
             return _usrManager.ClearSystemAdminAsync(id, OrgEntityHeader, UserEntityHeader);
         }
+
+
+        /// <summary>
+        /// User Service - Get Devices Users by Repo Id
+        /// </summary>
+        /// <param name="repoid"></param>
+        /// <returns></returns>
+        [OrgAdmin]
+        [HttpGet("/api/users/repo/{repoid}")]
+        public Task<ListResponse<UserInfoSummary>> GetDeviceUsers(string repoid)
+        {
+            return _appUserManager.GetDeviceUsersAsync(repoid, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
     }
 }
