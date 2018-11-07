@@ -118,6 +118,34 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
+        /// User Service - Register a new user (sign-up)
+        /// </summary>
+        /// <param name="newUser"></param>
+        /// <returns></returns>
+        [OrgAdmin]
+        [HttpPost("/api/user/create")]
+        public async Task<InvokeResult> CreateAuthorizedNewAsync([FromBody] RegisterUser newUser)
+        {
+            var result = await _appUserManager.CreateUserAsync(newUser, false, false);
+            if (!result.Successful) return result.ToInvokeResult();
+            var setAuthResult = await _appUserManager.SetApprovedAsync(result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
+            if (!setAuthResult.Successful) return result.ToInvokeResult();
+            return await _orgManager.AddUserToOrgAsync(OrgEntityHeader.Id, result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// User Service - Disable user account
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [OrgAdmin]
+        [HttpGet("/api/user/{userid}/disable")]
+        public Task<InvokeResult> DisableUserAccount(string userid)
+        {
+            return _appUserManager.DisableAccountAsync(userid, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
         /// User Service - Set as System Admin (requires system admin)
         /// </summary>
         /// <param name="id"></param>
