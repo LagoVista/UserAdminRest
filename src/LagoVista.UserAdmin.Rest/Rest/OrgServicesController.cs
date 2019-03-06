@@ -119,7 +119,14 @@ namespace LagoVista.UserAdmin.Rest
         public async Task<InvokeResult> CreateOrgAsync([FromBody] CreateOrganizationViewModel orgVM)
         {
             var org = await _orgManager.CreateNewOrganizationAsync(orgVM, UserEntityHeader);
-            await _signInManager.SignInAsync(await this.GetCurrentUserAsync());
+
+            var currentUser = await this.GetCurrentUserAsync();
+            if(currentUser.OwnerOrganization == null)
+            {
+                await _signInManager.RefreshUserLoginAsync(currentUser);
+            }
+
+            await _signInManager.SignInAsync(currentUser);
             return org;
         }
 
