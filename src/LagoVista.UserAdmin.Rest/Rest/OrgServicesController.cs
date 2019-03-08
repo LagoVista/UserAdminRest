@@ -20,6 +20,7 @@ using LagoVista.Core.Authentication.Models;
 using LagoVista.UserAdmin.Interfaces.Repos.Security;
 using LagoVista.Core.Models;
 using LagoVista.IoT.Web.Common.Attributes;
+using LagoVista.Core.Exceptions;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -121,7 +122,13 @@ namespace LagoVista.UserAdmin.Rest
             var org = await _orgManager.CreateNewOrganizationAsync(orgVM, UserEntityHeader);
 
             var currentUser = await this.GetCurrentUserAsync();
-            if(currentUser.OwnerOrganization == null)
+
+            if (currentUser == null)
+            {
+                throw new RecordNotFoundException("AppUser", UserEntityHeader.Id + $"{UserEntityHeader.Id}");
+            }
+
+            if (currentUser.OwnerOrganization == null)
             {
                 await _signInManager.RefreshUserLoginAsync(currentUser);
             }
@@ -129,7 +136,6 @@ namespace LagoVista.UserAdmin.Rest
             await _signInManager.SignInAsync(currentUser);
             return org;
         }
-
 
         /// <summary>
         /// Orgs Service - Return Organization
