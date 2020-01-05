@@ -86,6 +86,13 @@ namespace LagoVista.UserManagement.Rest
             return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
         }
 
+        [SystemAdmin]
+        [HttpGet("/api/users/all")]
+        public async Task<ListResponse<UserInfoSummary>> GetAllUses()
+        {
+            return await _appUserManager.GetAllUsersAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
+
         /// <summary>
         /// User Service - Update User
         /// </summary>
