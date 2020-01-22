@@ -133,7 +133,7 @@ namespace LagoVista.UserAdmin.Rest
                 await _signInManager.RefreshUserLoginAsync(currentUser);
             }
 
-            await _signInManager.SignInAsync(currentUser);
+//            await _signInManager.SignInAsync(currentUser);
             return org;
         }
 
