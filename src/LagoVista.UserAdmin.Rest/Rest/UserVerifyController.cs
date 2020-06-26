@@ -8,13 +8,13 @@ using Microsoft.AspNetCore.Mvc;
 using LagoVista.UserAdmin.Models.DTOs;
 using System.Threading.Tasks;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Web.Common.Attributes;
 
 namespace LagoVista.UserAdmin.Rest
 {
     [Authorize]
     public class UserVerifyController : LagoVistaBaseController
     {
-
         IUserVerficationManager _userVerificationManager;
 
         public UserVerifyController(IUserVerficationManager userVerificationManager, IAdminLogger logger, UserManager<AppUser> userManager) : base(userManager, logger)
@@ -73,6 +73,22 @@ namespace LagoVista.UserAdmin.Rest
         {
             return _userVerificationManager.ValidateEmailAsync(confirmEmail, OrgEntityHeader, UserEntityHeader);
         }
+    }
 
+    [SystemAdmin]
+    public class UserVerifySettingsController : LagoVistaBaseController
+    {
+        IUserVerficationManager _userVerificationManager;
+
+        public UserVerifySettingsController(IUserVerficationManager userVerificationManager, IAdminLogger logger, UserManager<AppUser> userManager) : base(userManager, logger)
+        {
+            _userVerificationManager = userVerificationManager;
+        }
+
+        [HttpGet("/api/sysadmin/sms/{userid}/setverified")]
+        public Task<InvokeResult> SetUserSMSVerifiedAsync(string userId)
+        {
+            return _userVerificationManager.SetUserSMSValidated(userId, OrgEntityHeader, UserEntityHeader);
+        }
     }
 }
