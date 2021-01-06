@@ -119,5 +119,18 @@ namespace LagoVista.UserAdmin.Rest
             SetOwnedProperties(response.Model);
             return response;
         }
+
+
+        /// <summary>
+        /// Scheduled Downtime - Create New
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/scheduleddowntime/period/factory")]
+        public DetailResponse<ScheduledDowntimePeriod> CreateScheduledDowntimePeriod()
+        {
+            var response = DetailResponse<ScheduledDowntimePeriod>.Create();
+            response.Model.Id = Guid.NewGuid().ToId();
+            return response;
+        }
     }
 }
