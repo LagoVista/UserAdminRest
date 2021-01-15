@@ -129,6 +129,23 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// Subscription - Get resources for subscription
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/subscription/{id}/resources")]
+        public Task<ListResponse<SubscriptionResource>> GetSubscriptionResourcesAsync(string id)
+        {
+            if (Guid.TryParse(id, out Guid subscriptionId))
+            {
+                return _subscriptionManager.GetResourcesForSubscriptionAsync(subscriptionId, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+            }
+            else
+            {
+                throw new Exception("Must pass in subscription id must be a Guid.");
+            }
+        }
+
+        /// <summary>
         ///  Subscription - Create New
         /// </summary>
         /// <returns></returns>
