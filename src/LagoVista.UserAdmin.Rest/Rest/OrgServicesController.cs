@@ -87,7 +87,7 @@ namespace LagoVista.UserAdmin.Rest
                 return InvokeResult.Success;
             }
         }
-
+            
         /// <summary>
         /// Orgs Service - Get Users for Org
         /// </summary>
@@ -98,6 +98,19 @@ namespace LagoVista.UserAdmin.Rest
             var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
             return ListResponse<UserInfoSummary>.Create(orgUsers);
         }
+
+
+        /// <summary>
+        /// Orgs Service - Get Users for Org
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/users/active")]
+        public async Task<ListResponse<UserInfoSummary>> GetActiveUserForOrgAsync()
+        {
+            var orgUsers = await _orgManager.GetActiveUsersForOrganizationsAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            return ListResponse<UserInfoSummary>.Create(orgUsers);
+        }
+
 
         /// <summary>
         /// Orgs Service - Add User to Org
