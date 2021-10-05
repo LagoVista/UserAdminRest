@@ -30,14 +30,12 @@ namespace LagoVista.UserAdmin.Rest
     [Authorize]
     public class OrgServicesController : LagoVistaBaseController
     {
-        IAppUserManager _appUserManager;
         IOrganizationManager _orgManager;
         IAuthTokenManager _authTokenManager;
         ISignInManager _signInManager;
 
         public OrgServicesController(IAppUserManager appUserManager, ISignInManager signInManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
-            _appUserManager = appUserManager;
             _orgManager = orgManager;
             _authTokenManager = authTokenManager;
             _signInManager = signInManager;
@@ -361,6 +359,68 @@ namespace LagoVista.UserAdmin.Rest
             }
 
             return result;
+        }
+    }
+
+    [Authorize]
+    [SystemAdmin]
+    public class SysAdminOrgServicesController : LagoVistaBaseController
+    {
+        IOrganizationManager _orgManager;
+        IAuthTokenManager _authTokenManager;
+        ISignInManager _signInManager;
+        IAppUserManager _appUserManager;
+
+        public SysAdminOrgServicesController(IAppUserManager appUserManager, ISignInManager signInManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        {
+            _orgManager = orgManager;
+            _authTokenManager = authTokenManager;
+            _signInManager = signInManager;
+            _appUserManager = appUserManager;
+        }
+
+        [HttpGet("/sys/api/orgs/all")]
+        public Task<ListResponse<Organization>> GetAllOrgsAsync()
+        {
+            return _orgManager.GetAllOrgsAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
+
+        /// <summary>
+        /// Orgs Service - Get Users for Org
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/sys/api/org/{orgid}/users")]
+        public async Task<ListResponse<UserInfoSummary>> GetUserForOrgAsync(string orgid)
+        {
+            var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
+            return ListResponse<UserInfoSummary>.Create(orgUsers);
+        }
+
+
+        [HttpGet("/sys/api/users/withoutorgs")]
+        public Task<ListResponse<UserInfoSummary>> GetUsersWithoutOrgAsync()
+        {
+            return _appUserManager.GetUsersWithoutOrgsAsync(UserEntityHeader, GetListRequestFromHeader());
+        }
+
+
+        [HttpGet("/sys/api/org/{id}/ownedobjects")]
+        public Task<ListResponse<OwnedObject>> GetOwnedObjectsAsync(string id)
+        {
+            return _orgManager.GetOwnedObjectsForOrgAsync(id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+
+        [HttpDelete("/sys/api/user/{id}")]
+        public Task<InvokeResult> DeleteUserAsync(string id)
+        {
+            return _appUserManager.DeleteUserAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpDelete("/sys/api/org/{id}")]
+        public Task<InvokeResult> DeleteOrgAsync(string id)
+        {
+            return _orgManager.DeleteOrgAsync(id, OrgEntityHeader, UserEntityHeader);
         }
     }
 }

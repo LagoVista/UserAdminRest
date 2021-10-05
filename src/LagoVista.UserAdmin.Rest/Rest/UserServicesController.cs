@@ -87,7 +87,7 @@ namespace LagoVista.UserManagement.Rest
         }
 
         [SystemAdmin]
-        [HttpGet("/api/users/all")]
+        [HttpGet("/sys/api/users/all")]
         public async Task<ListResponse<UserInfoSummary>> GetAllUses(bool? emailconfirmed, bool? smsconfirmed)
         {
             return await _appUserManager.GetAllUsersAsync(emailconfirmed, smsconfirmed, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
