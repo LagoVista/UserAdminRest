@@ -93,6 +93,29 @@ namespace LagoVista.UserManagement.Rest
             return await _appUserManager.GetAllUsersAsync(emailconfirmed, smsconfirmed, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
 
+        [HttpGet("/api/users/welcome/show/{state}")]
+        public async Task ShowWelcomeOnLogin(bool state)
+        {
+            var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            appUser.ShowWelcome = state;
+            await _appUserManager.UpdateUserAsync(appUser.ToUserInfo(), OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpDelete("/api/user/{id}")]
+        public async Task<InvokeResult> DeleteUser(string id)
+        {
+            
+            var result = await _appUserManager.DeleteUserAsync(id, OrgEntityHeader, UserEntityHeader);
+            if(id == UserEntityHeader.Id)
+            {
+                await _signInManager.SignOutAsync();
+                Response.Redirect("/account/login");
+                await Response.CompleteAsync();
+            }
+
+            return result; 
+        }
+
         /// <summary>
         /// User Service - Update User
         /// </summary>
@@ -125,7 +148,7 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
-        /// User Service - Register a new user (sign-up)
+        /// User Service - Register a new user by existing user (not sign up)
         /// </summary>
         /// <param name="newUser"></param>
         /// <returns></returns>

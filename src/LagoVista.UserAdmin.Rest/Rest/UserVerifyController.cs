@@ -73,6 +73,16 @@ namespace LagoVista.UserAdmin.Rest
         {
             return _userVerificationManager.ValidateEmailAsync(confirmEmail, OrgEntityHeader, UserEntityHeader);
         }
+
+        /// <summary>
+        /// Verify User - skip step to verify phone number.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/sms/setverified")]
+        public Task<InvokeResult> SetUserSMSVerifiedAsync()
+        {
+            return _userVerificationManager.SetUserSMSValidated(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+        }
     }
 
     [SystemAdmin]
