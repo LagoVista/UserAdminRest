@@ -102,18 +102,16 @@ namespace LagoVista.UserManagement.Rest
         }
 
         [HttpDelete("/api/user/{id}")]
-        public async Task<InvokeResult> DeleteUser(string id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
-            
             var result = await _appUserManager.DeleteUserAsync(id, OrgEntityHeader, UserEntityHeader);
-            if(id == UserEntityHeader.Id)
+            if (id == UserEntityHeader.Id && result.Successful)
             {
                 await _signInManager.SignOutAsync();
-                Response.Redirect("/account/login");
-                await Response.CompleteAsync();
             }
 
-            return result; 
+            return Ok(result);
+
         }
 
         /// <summary>
