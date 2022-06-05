@@ -15,6 +15,8 @@ using LagoVista.UserAdmin.Models.DTOs;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.Core;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Http;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -114,6 +116,28 @@ namespace LagoVista.UserManagement.Rest
 
         }
 
+        public static string GetClientIPAddress(HttpContext context)
+        {
+            string ip = string.Empty;
+            if (!string.IsNullOrEmpty(context.Request.Headers["X-Forwarded-For"]))
+            {
+                ip = context.Request.Headers["X-Forwarded-For"];
+            }
+            else
+            {
+                ip = context.Request.HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString();
+            }
+            return ip;
+        }
+
+        [HttpGet("/api/user/accepttc")]
+        public Task<InvokeResult<AppUser>> AcceptTermsAndConditionsAsync()
+        {
+            var ipAddress = GetClientIPAddress(Request.HttpContext);
+
+            return _appUserManager.AcceptTermsAndConditionsAsync(ipAddress, OrgEntityHeader, UserEntityHeader);
+        }
+
         /// <summary>
         /// User Service - Update User
         /// </summary>
@@ -121,6 +145,29 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [HttpPut("/api/user")]
         public Task<InvokeResult> UpdateCurrentUserAsync([FromBody] UserInfo user)
+        {
+            return _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// User Service - Add Media resources
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <param name="mediaResource"></param>
+        /// <returns></returns>
+        [HttpPost("/api/user/{userid}/mediaresource")]
+        public Task<InvokeResult> UpdateCurrentUserAsync(string userid, [FromBody] EntityHeader mediaResource)
+        {
+            return _appUserManager.AddMediaResourceAsync(userid, mediaResource, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// User Service - Update User (just basic info)
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        [HttpPut("/api/user/coreinfo")]
+        public Task<InvokeResult> UpdateCurrentUserAsync([FromBody] CoreUserInfo user)
         {
             return _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
         }
