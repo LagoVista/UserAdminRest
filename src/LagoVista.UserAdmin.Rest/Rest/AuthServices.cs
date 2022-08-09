@@ -134,9 +134,9 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("/api/v1/login")]
-        public async Task<InvokeResult> CookieAuthFromForm([FromForm] LoginModel model)
+        public async Task<InvokeResult> CookieAuthFromForm([FromBody] LoginModel model)
         {
-            Console.WriteLine("we are logging now");
+            Console.WriteLine("Login with JSON Object");
             Console.WriteLine(model.Email);
             Console.WriteLine(model.Password);
             Console.WriteLine("-------");
