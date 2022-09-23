@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>LagoVista.UserAdmin.Rest</id>
-    <version>2.1.1433-beta0839</version>
+    <version>3.0.1955.0017</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -14,7 +14,7 @@
     <tags>HomeAutomation IoT</tags>
   </metadata>
   <files>
-    <file src="bin\release\net5.0\LagoVista.UserAdmin.Rest.xml" target="contentFiles\wwwroot\xmldocs" />
-    <file src="bin\release\net5.0\*.dll" target="lib\net5.0" />
+    <file src="bin\release\net6.0\LagoVista.UserAdmin.Rest.xml" target="contentFiles\wwwroot\xmldocs" />
+    <file src="bin\release\net6.0\*.dll" target="lib\net6.0" />
   </files>
 </package>
