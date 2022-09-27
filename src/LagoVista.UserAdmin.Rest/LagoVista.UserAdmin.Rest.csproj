@@ -7,16 +7,16 @@
     <RootNamespace>LagoVista.UserAdmin</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LagoVista.AspNetCore.Identity" Version="3.0.1958.0509" />
-    <PackageReference Include="LagoVista.Core" Version="3.0.1958.0509" />
-    <PackageReference Include="LagoVista.Core.Authentication" Version="3.0.1958.0509" />
-    <PackageReference Include="LagoVista.IoT.Deployment.Admin" Version="3.0.1958.0509" />
-    <PackageReference Include="LagoVista.IoT.Logging" Version="3.0.1958.0509" />
-    <PackageReference Include="LagoVista.IoT.Web.Common" Version="3.0.1958.0509" />
-    <PackageReference Include="LagoVista.UserAdmin" Version="3.0.1958.0509" />
-    <PackageReference Include="LagoVista.UserAdmin.Models" Version="3.0.1958.0509" />
+    <PackageReference Include="LagoVista.AspNetCore.Identity" Version="3.0.1959.1339" />
+    <PackageReference Include="LagoVista.Core" Version="3.0.1959.1339" />
+    <PackageReference Include="LagoVista.Core.Authentication" Version="3.0.1959.1339" />
+    <PackageReference Include="LagoVista.IoT.Deployment.Admin" Version="3.0.1959.1339" />
+    <PackageReference Include="LagoVista.IoT.Logging" Version="3.0.1959.1339" />
+    <PackageReference Include="LagoVista.IoT.Web.Common" Version="3.0.1959.1339" />
+    <PackageReference Include="LagoVista.UserAdmin" Version="3.0.1959.1339" />
+    <PackageReference Include="LagoVista.UserAdmin.Models" Version="3.0.1959.1339" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.4.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.23.1" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="UserAdminRestResources.Designer.cs">
