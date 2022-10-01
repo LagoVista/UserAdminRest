@@ -1,20 +1,37 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <package>
   <metadata>
     <id>LagoVista.UserAdmin.Rest</id>
-    <version>3.0.1959.1339</version>
+    <version>3.0.1963.1055</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <projectUrl>http://www.lagovista-iot.com/opensource</projectUrl>
+    <projectUrl>https://www.nuviot.com</projectUrl>
     <iconUrl>http://bytemaster.blob.core.windows.net/icons/LagoVistaIcon.png</iconUrl>
     <description>REST Services for User, Organization, Locations and Roles Administration and Management</description>
-    <releaseNotes>Initial Unstable Release</releaseNotes>
-    <copyright>Copyright 2017</copyright>
+    <copyright>Copyright Software Logistics - 2022</copyright>
     <tags>HomeAutomation IoT</tags>
+    <icon>LagoVistaIcon.png</icon>
+    <releaseNotes>Build Date: 10/1/2022 2:55:01 PM UTC</releaseNotes>
+    <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
+    <dependencies>
+      <group targetFramework="net6.0">
+        <dependency id="LagoVista.AspNetCore.Identity" version="3.0.1963.1055" />
+        <dependency id="LagoVista.Core" version="3.0.1963.1055" />
+        <dependency id="LagoVista.Core.Authentication" version="3.0.1963.1055" />
+        <dependency id="LagoVista.IoT.Deployment.Admin" version="3.0.1963.1055" />
+        <dependency id="LagoVista.IoT.Logging" version="3.0.1963.1055" />
+        <dependency id="LagoVista.IoT.Web.Common" version="3.0.1963.1055" />
+        <dependency id="LagoVista.UserAdmin" version="3.0.1963.1055" />
+        <dependency id="LagoVista.UserAdmin.Models" version="3.0.1963.1055" />
+        <dependency id="Newtonsoft.Json" version="13.0.1" />
+        <dependency id="System.IdentityModel.Tokens.Jwt" version="6.23.1" />
+      </group>
+    </dependencies>
   </metadata>
   <files>
-    <file src="bin\release\net6.0\LagoVista.UserAdmin.Rest.xml" target="contentFiles\wwwroot\xmldocs" />
-    <file src="bin\release\net6.0\*.dll" target="lib\net6.0" />
+    <file src="LagoVistaIcon.png" target="LagoVistaIcon.png" />
+    <file src="bin\release\net6.0\LagoVista.UserAdmin.Rest.dll" target="lib\net6.0\LagoVista.UserAdmin.Rest.dll" />
+    <file src="bin\release\net6.0\LagoVista.UserAdmin.Rest.pdb" target="lib\net6.0\LagoVista.UserAdmin.Rest.pdb" />
   </files>
 </package>
