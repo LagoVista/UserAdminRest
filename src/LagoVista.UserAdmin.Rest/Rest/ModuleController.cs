@@ -1,4 +1,5 @@
 ﻿using LagoVista.Core;
+using LagoVista.Core.Exceptions;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LagoVista.UserAdmin.Rest
@@ -48,6 +50,7 @@ namespace LagoVista.UserAdmin.Rest
             return _moduleManager.UpdateModuleAsync(module, OrgEntityHeader, UserEntityHeader);
         }
 
+
         /// <summary>
         /// module Lists - Get for Current Org
         /// </summary>
@@ -58,20 +61,62 @@ namespace LagoVista.UserAdmin.Rest
             return _moduleManager.GetAllModulesAsync(OrgEntityHeader, UserEntityHeader);
         }
 
-        
         /// <summary>
-        /// module - Get
+        /// module - Get aras by id
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/module/{id}")]
-        public async Task<DetailResponse<Module>> GetModuleAsync(String id)
+        public async Task<DetailResponse<Module>> GetModuleByIdAsync(String id)
         {
             var module = await _moduleManager.GetModuleAsync(id, OrgEntityHeader, UserEntityHeader);
-
             return DetailResponse<Module>.Create(module);
-        }
         
+        }
+
+        /// <summary>
+        /// module - Get aras by key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        [HttpGet("/api/module/{key}/areas")]
+        public async Task<IEnumerable<Area>> GetAreasAsync(String key)
+        {
+            var module = await _moduleManager.GetModuleByKeyAsync(key, OrgEntityHeader, UserEntityHeader);
+
+            if(module == null)
+            {
+                throw new RecordNotFoundException(nameof(Module), key);
+            }
+
+            return module.Areas;
+        }
+
+        /// <summary>
+        /// module - Get pages by key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="areakey"></param>
+        /// <returns></returns>
+        [HttpGet("/api/module/{key}/area/{areakey}/pages")]
+        public async Task<IEnumerable<Page>> GetPagesAsync(String key, string areakey)
+        {
+            var module = await _moduleManager.GetModuleByKeyAsync(key, OrgEntityHeader, UserEntityHeader);
+
+            if (module == null)
+            {
+                throw new RecordNotFoundException(nameof(Module), key);
+            }
+
+            var area = module.Areas.Single(ar=>ar.Key == areakey);
+            if (area == null)
+            {
+                throw new RecordNotFoundException(nameof(Module), $"{key}-{areakey}");
+            }
+
+            return area.Pages;
+        }
+
         /// <summary>
         /// Module - Delete
         /// </summary>
