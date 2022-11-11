@@ -89,7 +89,7 @@ namespace LagoVista.UserAdmin.Rest
                 CreatedBy = UserEntityHeader,
                 Organization = OrgEntityHeader,
                 CreationDate = DateTime.UtcNow.ToJSONString(),
-                Role = EntityHeader.Create(roleId, role.Name),
+                Role = EntityHeader.Create(roleId, role.Key, role.Name),
             };
         }
     }
