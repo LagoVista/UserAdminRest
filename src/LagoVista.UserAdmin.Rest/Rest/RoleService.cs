@@ -19,9 +19,9 @@ namespace LagoVista.UserAdmin.Rest
     [Authorize]
     public class RoleService : LagoVistaBaseController
     {
-        private readonly IUserRoleManager _roleManager;
+        private readonly IRoleManager _roleManager;
 
-        public RoleService(IUserRoleManager userRoleManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public RoleService(IRoleManager userRoleManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _roleManager = userRoleManager ?? throw new ArgumentNullException(nameof(userRoleManager));
         }
@@ -58,13 +58,13 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/sys/role/access")]
         public Task<InvokeResult> AddRoleAcessAsync([FromBody] RoleAccess access)
         {
-            return _roleManager.AddRoleAccess(access, OrgEntityHeader, UserEntityHeader);
+            return _roleManager.AddRoleAccessAsync(access, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpDelete("/api/sys/role/access/{id}")]
         public Task<InvokeResult> UpdateRoleAcessAsync(string id)
         {
-            return _roleManager.RevokeRoleAccess(id, OrgEntityHeader, UserEntityHeader);
+            return _roleManager.RevokeRoleAccessAsync(id, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpPost("/api/sys/role")]
