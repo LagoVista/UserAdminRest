@@ -32,6 +32,12 @@ namespace LagoVista.UserAdmin.Rest
             return _roleManager.GetRolesAsync(OrgEntityHeader, UserEntityHeader);
         }
 
+        [HttpGet("/api/sys/roles/assignable")]
+        public Task<List<RoleSummary>> GetAssignableRolesAsync()
+        {
+            return _roleManager.GetAssignableRolesAsync(OrgEntityHeader, UserEntityHeader);
+        }
+
         [HttpGet("/api/sys/role/{id}")]
         public async Task<DetailResponse<Role>> GetRolesAsync(string id)
         {

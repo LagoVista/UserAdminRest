@@ -136,11 +136,6 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/v1/login")]
         public async Task<InvokeResult> CookieAuthFromForm([FromBody] LoginModel model)
         {
-            Console.WriteLine("Login with JSON Object");
-            Console.WriteLine(model.Email);
-            Console.WriteLine(model.Password);
-            Console.WriteLine("-------");
-
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
             if (result.Succeeded)
             {
@@ -160,11 +155,6 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/v1/loginkiosk")]
         public async Task<InvokeResult<string>> KioskCookieAuthFromForm([FromForm] LoginModel model)
         {
-            Console.WriteLine("we are logging now (kiosk)");
-            Console.WriteLine(model.Email);
-            Console.WriteLine(model.Password);
-            Console.WriteLine("-------");
-
             if (model != null && !string.IsNullOrEmpty(model.Password))
             {
                 var kioskResult = await _clientAppManager.AuthorizeAppAsync(model.Email, model.Password); /* ClientId, ApiKey */
