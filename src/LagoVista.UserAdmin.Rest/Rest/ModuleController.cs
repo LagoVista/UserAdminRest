@@ -5,6 +5,7 @@ using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
+using LagoVista.UserAdmin.Interfaces;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Security;
 using LagoVista.UserAdmin.Models.Users;
@@ -22,10 +23,12 @@ namespace LagoVista.UserAdmin.Rest
     public class ModuleController : LagoVistaBaseController
     {
         private readonly IModuleManager _moduleManager;
+        private readonly IIUserAccessManager _userAccessManager;
 
-        public ModuleController(IModuleManager moduleManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public ModuleController(IModuleManager moduleManager, IIUserAccessManager userAccessManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _moduleManager = moduleManager ?? throw new ArgumentNullException();
+            _userAccessManager = userAccessManager ?? throw new ArgumentNullException(nameof(userAccessManager));
         }
 
         /// <summary>
@@ -62,6 +65,16 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// module Lists - Get for Current Org
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/modules/my")]
+        public Task<List<ModuleSummary>> GetAllModulesForuserAsync()
+        {
+            return  _userAccessManager.GetUserModulesAsync(UserEntityHeader.Id, OrgEntityHeader.Id);
+        }
+
+        /// <summary>
         /// module - Get aras by id
         /// </summary>
         /// <param name="id"></param>
@@ -73,6 +86,20 @@ namespace LagoVista.UserAdmin.Rest
             return DetailResponse<Module>.Create(module);
         
         }
+
+        /// <summary>
+        /// module - Get aras by id
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        [HttpGet("/api/module/{key}/my")]
+        public async Task<Module> GetModuleByKeyAsync(String key)
+        {
+            var module = await _userAccessManager.GetUserModuleAsync(key, UserEntityHeader.Id, OrgEntityHeader.Id);
+            return module;
+
+        }
+
 
         /// <summary>
         /// module - Get aras by key
