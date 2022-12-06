@@ -199,13 +199,16 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [OrgAdmin]
         [HttpPost("/api/user/create")]
-        public async Task<InvokeResult> CreateAuthorizedNewAsync([FromBody] RegisterUser newUser)
+        public async Task<InvokeResult<UserInfoSummary>> CreateAuthorizedNewAsync([FromBody] RegisterUser newUser)
         {
             var result = await _appUserManager.CreateUserAsync(newUser, false, false);
-            if (!result.Successful) return result.ToInvokeResult();
+            if (!result.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(result.ToInvokeResult());
             var setAuthResult = await _appUserManager.SetApprovedAsync(result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
-            if (!setAuthResult.Successful) return result.ToInvokeResult();
-            return await _orgManager.AddUserToOrgAsync(OrgEntityHeader.Id, result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
+            if (!setAuthResult.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(setAuthResult.ToInvokeResult()); 
+            var addOrgResult = await _orgManager.AddUserToOrgAsync(OrgEntityHeader.Id, result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
+            if (!setAuthResult.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(addOrgResult.ToInvokeResult());
+            var appUser = await _appUserManager.GetUserByIdAsync(result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<UserInfoSummary>.Create(appUser.ToUserInfoSummary());
         }
 
         /// <summary>
