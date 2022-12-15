@@ -192,6 +192,20 @@ namespace LagoVista.UserManagement.Rest
             return result;
         }
 
+        [FinanceAdmin]
+        [HttpGet("/api/user/{id}/paymentaccounts")]
+        public Task<InvokeResult<PaymentAccounts>> GetPaymentAccounts(string id)
+        {
+            return _appUserManager.GetPaymentAccountsAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [FinanceAdmin]
+        [HttpPost("/api/user/{id}/paymentaccounts")]
+        public Task<InvokeResult> UpdatePaymentAccounts(string id, [FromBody] PaymentAccounts paymentAccount)
+        {
+            return _appUserManager.UpdatePaymentAccountsAsync(id, paymentAccount, OrgEntityHeader, UserEntityHeader);
+        }
+
         /// <summary>
         /// User Service - Register a new user by existing user (not sign up)
         /// </summary>
@@ -204,7 +218,7 @@ namespace LagoVista.UserManagement.Rest
             var result = await _appUserManager.CreateUserAsync(newUser, false, false);
             if (!result.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(result.ToInvokeResult());
             var setAuthResult = await _appUserManager.SetApprovedAsync(result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
-            if (!setAuthResult.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(setAuthResult.ToInvokeResult()); 
+            if (!setAuthResult.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(setAuthResult.ToInvokeResult());
             var addOrgResult = await _orgManager.AddUserToOrgAsync(OrgEntityHeader.Id, result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
             if (!setAuthResult.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(addOrgResult.ToInvokeResult());
             var appUser = await _appUserManager.GetUserByIdAsync(result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
