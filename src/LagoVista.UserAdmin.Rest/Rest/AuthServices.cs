@@ -60,6 +60,10 @@ namespace LagoVista.UserAdmin.Rest
             {
                 return _tokenManager.RefreshTokenGrantAsync(req);
             }
+            else if(req.GrantType == AuthTokenManager.GRANT_TYPE_SINGLEUSETOKEN)
+            {
+                return _tokenManager.SingleUseTokenGrantAsync(req);
+            }
             else if(String.IsNullOrEmpty(req.GrantType))
             {
                 throw new Exception($"Missing Grant Type.");
