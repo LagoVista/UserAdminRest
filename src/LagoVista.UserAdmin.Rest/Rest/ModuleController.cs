@@ -75,6 +75,16 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// module Lists - Get for a user id
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/modules/user/{userId}")]
+        public Task<List<ModuleSummary>> GetModulesForUserAsync(string userId)
+        {
+            return _userAccessManager.GetUserModulesAsync(userId, OrgEntityHeader.Id);
+        }
+
+        /// <summary>
         /// module - Get aras by id
         /// </summary>
         /// <param name="id"></param>
@@ -99,6 +109,20 @@ namespace LagoVista.UserAdmin.Rest
             return module;
 
         }
+
+        /// <summary>
+        /// module - Get aras by id
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        [HttpGet("/api/module/{key}/user/{userid}")]
+        public async Task<Module> GetModuleByKeyForUserAsync(String key, string userid)
+        {
+            var module = await _userAccessManager.GetUserModuleAsync(key, userid, OrgEntityHeader.Id);
+            return module;
+
+        }
+
 
 
         /// <summary>
