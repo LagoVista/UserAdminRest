@@ -85,6 +85,43 @@ namespace LagoVista.UserAdmin.Rest
             return _roleManager.UpdateRoleAsync(role, OrgEntityHeader, UserEntityHeader);
         }
 
+        [HttpGet("/api/sys/role/access/module/{moduleid}")]
+        public Task<List<RoleAccess>> GetRoleAccessForModuleAsync(string moduleid)
+        {
+            return _roleManager.GetRoleAccessForModuleAsync(moduleid, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/sys/role/access/module/{moduleid}/area/{areaid}")]
+        public Task<List<RoleAccess>> GetRoleAccessForAreaAsync(string moduleid, string areaid)
+        {
+            return _roleManager.GetRoleAccessForAreaAsync(moduleid, areaid, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/sys/role/access/module/{moduleid}/area/{areaid}/page/{pageid}")]
+        public Task<List<RoleAccess>> GetRoleAccessForPageAsync(string moduleid, string areaid, string pageid)
+        {
+            return _roleManager.GetRoleAccessForPageAsync(moduleid, areaid, pageid, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/sys/role/access/module/{moduleid}/feature/{featureid}")]
+        public Task<List<RoleAccess>> GetRoleAccessForModuleFeatureAsync(string moduleid, string featureid)
+        {
+            return _roleManager.GetRoleAccessForModuleFeatureAsync(moduleid, featureid, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/sys/role/access/module/{moduleid}/area/{areaid}/feature/{featureid}")]
+        public Task<List<RoleAccess>> GetRoleAccessForAreaAsync(string moduleid, string areaid, string featureid)
+        {
+            return _roleManager.GetRoleAccessForAreaFeatureAsync(moduleid, areaid, featureid, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/sys/role/access/module/{moduleid}/area/{areaid}/page/{pageid}/feature/{featureid}")]
+        public Task<List<RoleAccess>> GetRoleAccessForPageAsync(string moduleid, string areaid, string pageid, string featureid)
+        {
+            return _roleManager.GetRoleAccessForPageFeatureAsync(moduleid, areaid, pageid, featureid, OrgEntityHeader, UserEntityHeader);
+        }
+
+
         [HttpGet("/api/sys/role/{roleid}/access/factory")]
         public async Task<RoleAccess> CreateRoleAccess(string roleId)
         {
