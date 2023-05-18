@@ -90,9 +90,17 @@ namespace LagoVista.UserManagement.Rest
 
         [SystemAdmin]
         [HttpGet("/sys/api/users/all")]
-        public async Task<ListResponse<UserInfoSummary>> GetAllUses(bool? emailconfirmed, bool? smsconfirmed)
+        public async Task<ListResponse<UserInfoSummary>> GetAllUsers(bool? emailconfirmed, bool? smsconfirmed)
         {
             return await _appUserManager.GetAllUsersAsync(emailconfirmed, smsconfirmed, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
+
+
+        [SystemAdmin]
+        [HttpGet("/sys/api/users/active")]
+        public async Task<ListResponse<UserInfoSummary>> GetActiveUses()
+        {
+            return await _appUserManager.GetActiveUsersAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
 
         [HttpGet("/api/users/welcome/show/{state}")]
