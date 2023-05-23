@@ -181,6 +181,17 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
+        /// User Services - Remove External Login by Extenral Login Id
+        /// </summary>
+        /// <param name="id">id of external login</param>
+        /// <returns></returns>
+        [HttpDelete("/api/user/externallogin/{id}")]
+        public Task<InvokeResult<AppUser>> RemoveExternalLogin(string id)
+        {
+            return _appUserManager.RemoveExternalLoginAsync(UserEntityHeader.Id, id, UserEntityHeader);
+        }
+
+        /// <summary>
         /// User Service - Register a new user (sign-up)
         /// </summary>
         /// <param name="newUser"></param>
