@@ -94,5 +94,18 @@ namespace LagoVista.UserAdmin.Rest
         {
             return await _manager.DeleteCalendarEventAsync(id, OrgEntityHeader, UserEntityHeader);
         }
+
+        /// <summary>
+        /// Calendar Event - Create
+        /// </summary>
+        [HttpGet("/api/calendar/event/factory")]
+        public DetailResponse<CalendarEvent> Factory(string id)
+        {
+            var calendarEvent = new CalendarEvent();
+            SetAuditProperties(calendarEvent);
+            SetOwnedProperties(calendarEvent);
+            return DetailResponse<CalendarEvent>.Create(calendarEvent);
+        }
+
     }
 }
