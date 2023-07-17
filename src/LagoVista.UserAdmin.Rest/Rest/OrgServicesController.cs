@@ -148,6 +148,18 @@ namespace LagoVista.UserAdmin.Rest
             return org;
         }
 
+
+        /// <summary>
+        /// Orgs Service - Add an Organization
+        /// </summary>
+        /// <param name="orgVM"></param>
+        /// <returns></returns>
+        [HttpPut("/api/org")]
+        public async Task<InvokeResult> UpdateOrgAsync([FromBody] Organization org)
+        {
+            return await _orgManager.UpdateOrganizationAsync(org,  OrgEntityHeader, UserEntityHeader);
+        }
+
         /// <summary>
         /// Orgs Service - Return Organization
         /// </summary>
