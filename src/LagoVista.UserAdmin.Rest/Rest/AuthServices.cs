@@ -15,6 +15,7 @@ using LagoVista.AspNetCore.Identity.Managers;
 using LagoVista.Core.Interfaces;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.IoT.Deployment.Admin;
+using Prometheus;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -38,9 +39,12 @@ namespace LagoVista.UserAdmin.Rest
         private readonly ISignInManager _signInManager;
 		private readonly IClientAppManager _clientAppManager;
 
+        protected static readonly Counter UserLogin = Metrics.CreateCounter("nuviot_login", "successful user login.", "source");
+        protected static readonly Counter UserLoginFailed = Metrics.CreateCounter("nuviot_login_failed", "unsuccessful user login.", "source", "reason");
 
-		//IMPORTANT Until this can all be refactored into the UserAdmin class this NEEDS to point to action on the Web Site.
-		public const string ACTION_RESET_PASSWORD = "/Account/ResetPassword";
+
+        //IMPORTANT Until this can all be refactored into the UserAdmin class this NEEDS to point to action on the Web Site.
+        public const string ACTION_RESET_PASSWORD = "/Account/ResetPassword";
 
         public AuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, UserManager<AppUser> userManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
         {
@@ -81,9 +85,15 @@ namespace LagoVista.UserAdmin.Rest
         /// <returns></returns>
         [HttpPost("/api/v1/auth")]
         [AllowAnonymous]
-        public Task<InvokeResult<AuthResponse>> AuthFromBody([FromBody] AuthRequest req)
+        public async Task<InvokeResult<AuthResponse>> AuthFromBody([FromBody] AuthRequest req)
         {
-            return HandleAuthRequest(req);               
+            var result = await HandleAuthRequest(req);
+            if(result.Successful)
+                UserLogin.WithLabels("auth-request").Inc();
+            else
+                UserLoginFailed.WithLabels("auth-request","failed").Inc();
+
+            return result;
         }
 
         /// <summary>
@@ -94,11 +104,17 @@ namespace LagoVista.UserAdmin.Rest
         /// <returns></returns>
         [HttpPost("/api/v1/auth/repo/{repoid}")]
         [AllowAnonymous]
-        public Task<InvokeResult<AuthResponse>> AuthFromBody(String repoId, [FromBody] AuthRequest req)
+        public async Task<InvokeResult<AuthResponse>> AuthFromBody(String repoId, [FromBody] AuthRequest req)
         {
             req.Email = $"{repoId}-{req.Email}";
 
-            return HandleAuthRequest(req);
+            var result = await HandleAuthRequest(req);
+            if (result.Successful)
+                UserLogin.WithLabels("auth-request-repo").Inc();
+            else
+                UserLoginFailed.WithLabels("auth-request-repo", "failed").Inc();
+
+            return result;
         }
 
         /// <summary>
@@ -108,9 +124,15 @@ namespace LagoVista.UserAdmin.Rest
         /// <returns></returns>
         [HttpPost("/api/v1/auth/form")]
         [AllowAnonymous]
-        public Task<InvokeResult<AuthResponse>> AuthFromForm([FromForm] AuthRequest req)
+        public async Task<InvokeResult<AuthResponse>> AuthFromForm([FromForm] AuthRequest req)
         {
-            return HandleAuthRequest(req);
+            var result = await HandleAuthRequest(req);
+            if (result.Successful)
+                UserLogin.WithLabels("auth-request-form").Inc();
+            else
+                UserLoginFailed.WithLabels("auth-request-form", "failed").Inc();
+
+            return result;
         }
 
         /// <summary>
@@ -121,7 +143,13 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/v1/login")]
         public async Task<InvokeResult> CookieAuthFromForm([FromBody] LoginModel model)
         {
-            return await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+            if (result.Successful)
+                UserLogin.WithLabels("cookie-auth-request-repo").Inc();
+            else
+                UserLoginFailed.WithLabels("cookie-auth-request-repo", "failed").Inc();
+
+            return result;
         }
 
         /// <summary>
@@ -137,6 +165,8 @@ namespace LagoVista.UserAdmin.Rest
                 var kioskResult = await _clientAppManager.AuthorizeAppAsync(model.Email, model.Password); /* ClientId, ApiKey */
                 if (kioskResult.Successful)
                 {
+                    UserLogin.WithLabels("kiosk").Inc();
+
                     var clientApp = kioskResult.Result;
       //              var claims = new[]
       //              {
@@ -182,10 +212,13 @@ namespace LagoVista.UserAdmin.Rest
                     }
                     catch
                     {
+                        UserLoginFailed.WithLabels("kiosk", "failed").Inc();
                         return InvokeResult<string>.FromError("Could not authenticate (kiosk:1)");
                     }
                 }
             }
+
+            UserLoginFailed.WithLabels("kiosk", "failed").Inc();
 
             return InvokeResult<string>.FromError("Could not authenticate (kiosk:2)");
         }
