@@ -17,6 +17,8 @@ using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.Core;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http;
+using LagoVista.UserAdmin.ViewModels.Users;
+using LagoVista.UserAdmin.ViewModels.Organization;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -242,14 +244,25 @@ namespace LagoVista.UserManagement.Rest
             if (!setAuthResult.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(addOrgResult.ToInvokeResult());
             var appUser = await _appUserManager.GetUserByIdAsync(result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
             return InvokeResult<UserInfoSummary>.Create(appUser.ToUserInfoSummary());
-        }
+		}
 
-        /// <summary>
-        /// User Service - Disable user account
-        /// </summary>
-        /// <param name="userid"></param>
-        /// <returns></returns>
-        [OrgAdmin]
+		/// <summary>
+		/// User Service - Register User by existing User Factory
+		/// </summary>
+		/// <returns></returns>
+		[OrgAdmin]
+		[HttpGet("/api/user/factory")]
+		public  DetailResponse<RegisterViewModel> CreateRegisterFactory()
+		{
+			return DetailResponse<RegisterViewModel>.Create();
+		}
+
+		/// <summary>
+		/// User Service - Disable user account
+		/// </summary>
+		/// <param name="userid"></param>
+		/// <returns></returns>
+		[OrgAdmin]
         [HttpGet("/api/user/{userid}/disable")]
         public Task<InvokeResult> DisableUserAccount(string userid)
         {
