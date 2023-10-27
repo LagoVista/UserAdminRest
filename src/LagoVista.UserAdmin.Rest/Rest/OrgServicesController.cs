@@ -21,6 +21,7 @@ using LagoVista.UserAdmin.Interfaces.Repos.Security;
 using LagoVista.Core.Models;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.Core.Exceptions;
+using LagoVista.Core;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -148,11 +149,44 @@ namespace LagoVista.UserAdmin.Rest
 			return org;
 		}
 
+		/// <summary>
+		/// Orgs Service - See if the current org has been initialized.
+		/// </summary>
+		/// <param name="org"></param>
+		/// <returns></returns>
+		[HttpGet("/api/org/initialized")]
+		public async Task<InvokeResult<Boolean>> IsCUrrentOrgIninitalized()
+		{
+			var org = await _orgManager.GetOrganizationAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+			return InvokeResult<Boolean>.Create(org.InitializationCompleted);
+		}
+
+		/// <summary>
+		/// Orgs Service - See if the current org has been initialized.
+		/// </summary>
+		/// <param name="org"></param>
+		/// <returns></returns>
+		[HttpGet("/api/org/initialized/true")]
+		public async Task<InvokeResult> SetCUrrentOrgIninitalized()
+		{
+			var org = await _orgManager.GetOrganizationAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+			if (!org.InitializationCompleted)
+			{
+				org.InitializationCompleted = true;
+				org.InitializationCompletedDate = DateTime.UtcNow.ToJSONString();
+				org.InitializationCompletedBy = UserEntityHeader;
+				return await _orgManager.UpdateOrganizationAsync(org, OrgEntityHeader, UserEntityHeader);
+			}
+
+			return InvokeResult.Success;
+		}
+
+
 
 		/// <summary>
 		/// Orgs Service - Add an Organization
 		/// </summary>
-		/// <param name="orgVM"></param>
+		/// <param name="org"></param>
 		/// <returns></returns>
 		[HttpPut("/api/org")]
 		public async Task<InvokeResult> UpdateOrgAsync([FromBody] Organization org)
