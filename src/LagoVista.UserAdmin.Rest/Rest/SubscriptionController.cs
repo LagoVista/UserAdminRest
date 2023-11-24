@@ -83,23 +83,6 @@ namespace LagoVista.UserAdmin.Rest
             return ListResponse<SubscriptionSummary>.Create(hostSummaries);
         }
 
-        /// <summary>
-        /// Subscription - Can Delete
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        [HttpGet("/api/subscription/{id}/inuse")]
-        public Task<DependentObjectCheckResult> CheckInUse(String id)
-        {
-            if (Guid.TryParse(id, out Guid subscriptionId))
-            {
-                return _subscriptionManager.CheckInUseAsync(subscriptionId, OrgEntityHeader, UserEntityHeader);
-            }
-            else
-            {
-                throw new Exception("Must pass in subscription id must be a Guid.");
-            }
-        }
 
         /// <summary>
         /// Subscription - Key In Use
@@ -111,22 +94,6 @@ namespace LagoVista.UserAdmin.Rest
             return _subscriptionManager.QueryKeyInUseAsync(key, OrgEntityHeader);
         }
 
-        /// <summary>
-        /// Subscription - Delete
-        /// </summary>
-        /// <returns></returns>
-        [HttpDelete("/api/subscription/{id}")]
-        public Task<InvokeResult> DeleteSubscriptionAsync(string id)
-        {
-            if (Guid.TryParse(id, out Guid subscriptionId))
-            {
-                return _subscriptionManager.DeleteSubscriptionAsync(subscriptionId, OrgEntityHeader, UserEntityHeader);
-            }
-            else
-            {
-                throw new Exception("Must pass in subscription id must be a Guid.");
-            }
-        }
 
         /// <summary>
         /// Subscription - Get resources for subscription
