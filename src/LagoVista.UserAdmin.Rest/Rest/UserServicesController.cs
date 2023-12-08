@@ -160,6 +160,78 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
+        /// User Service - Set Advacned Mode
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/user/mode/advanced")]
+        public async Task<InvokeResult> SetUserModeAdvanced()
+        {
+            var user = await GetCurrentUserAsync();
+            if (!user.AdvancedUser)
+            {
+                user.AdvancedUser = true;
+                SetUpdatedProperties(user);
+                return await _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+            }
+            else
+                return InvokeResult.Success;
+        }
+
+        /// <summary>
+        /// User Service - Set Normal Mode
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/user/mode/normal")]
+        public async Task<InvokeResult> SetUserModeNormal()
+        {
+            var user = await GetCurrentUserAsync();
+            if (user.AdvancedUser)
+            {
+                user.AdvancedUser = false;
+                SetUpdatedProperties(user);
+                return await _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+            }
+            return InvokeResult.Success;
+        }
+
+        /// <summary>
+        /// User Service - Add Preference
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/user/preference/{key}/{value}")]
+        public async Task<InvokeResult> AddPreference(string key, string value)
+        {
+            var user = await GetCurrentUserAsync();
+            if (user.Preferences.ContainsKey(key))
+                user.Preferences.Remove(key);
+
+            SetUpdatedProperties(user);
+            user.Preferences.Add(key, value);
+            return await _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// User Service - Set Normal Mode
+        /// </summary>
+        /// <returns></returns>
+        [HttpDelete("/api/user/preference/{key}")]
+        public async Task<InvokeResult> RemovePreference(string key)
+        {
+            var user = await GetCurrentUserAsync();
+            if (user.Preferences.ContainsKey(key))
+            {
+                user.Preferences.Remove(key);
+
+                SetUpdatedProperties(user);
+
+                return await _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+            }
+
+            return InvokeResult.Success;
+        }
+
+
+        /// <summary>
         /// User Service - Add Media resources
         /// </summary>
         /// <param name="userid"></param>

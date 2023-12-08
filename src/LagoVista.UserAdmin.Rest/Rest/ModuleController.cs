@@ -93,8 +93,11 @@ namespace LagoVista.UserAdmin.Rest
         public async Task<DetailResponse<Module>> GetModuleByIdAsync(String id)
         {
             var module = await _moduleManager.GetModuleAsync(id, OrgEntityHeader, UserEntityHeader);
-            return DetailResponse<Module>.Create(module);
-        
+            var form = DetailResponse<Module>.Create(module);
+            if (!IsPrimaryOrg)
+                form.FormFields.Remove(nameof(Module.IsPublic));
+
+            return form;
         }
 
         /// <summary>
@@ -166,6 +169,59 @@ namespace LagoVista.UserAdmin.Rest
             }
 
             return area.Pages;
+        }
+
+        [HttpGet("/api/module/moveup/{mod1id}/{mod2id}")]
+        public async Task<InvokeResult> MoveModuleUp(string mod1id, string mod2id)
+        {
+            var mod1 = await _moduleManager.GetModuleAsync(mod1id, OrgEntityHeader, UserEntityHeader);
+            var mod2 = await _moduleManager.GetModuleAsync(mod2id, OrgEntityHeader, UserEntityHeader);
+
+            if (mod1.SortOrder != mod2.SortOrder)
+            {
+                var sort1 = mod1.SortOrder;
+                mod1.SortOrder = mod2.SortOrder;
+                mod2.SortOrder = sort1;
+                SetUpdatedProperties(mod1);
+                SetUpdatedProperties(mod2);
+                await _moduleManager.UpdateModuleAsync(mod1, OrgEntityHeader, UserEntityHeader);
+                await _moduleManager.UpdateModuleAsync(mod2, OrgEntityHeader, UserEntityHeader);
+            }
+            else
+            {
+                mod2.SortOrder--;
+                SetUpdatedProperties(mod2);
+                await _moduleManager.UpdateModuleAsync(mod2, OrgEntityHeader, UserEntityHeader);
+            }
+
+            return InvokeResult.Success;
+        }
+
+
+        [HttpGet("/api/module/movedown/{mod1id}/{mod2id}")]
+        public async Task<InvokeResult> MoveModuleDown(string mod1id, string mod2id)
+        {
+            var mod1 = await _moduleManager.GetModuleAsync(mod1id, OrgEntityHeader, UserEntityHeader);
+            var mod2 = await _moduleManager.GetModuleAsync(mod2id, OrgEntityHeader, UserEntityHeader);
+
+            if (mod1.SortOrder != mod2.SortOrder)
+            {
+                var sort1 = mod1.SortOrder;
+                mod1.SortOrder = mod2.SortOrder;
+                mod2.SortOrder = sort1;
+                SetUpdatedProperties(mod1);
+                SetUpdatedProperties(mod2);
+                await _moduleManager.UpdateModuleAsync(mod1, OrgEntityHeader, UserEntityHeader);
+                await _moduleManager.UpdateModuleAsync(mod2, OrgEntityHeader, UserEntityHeader);
+            }
+            else
+            {
+                mod2.SortOrder++;
+                SetUpdatedProperties(mod2);
+                await _moduleManager.UpdateModuleAsync(mod2, OrgEntityHeader, UserEntityHeader);
+            }
+
+            return InvokeResult.Success;
         }
 
         /// <summary>
