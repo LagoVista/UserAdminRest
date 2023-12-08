@@ -193,6 +193,28 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// Ui Category - Create New
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/module/uicategory/factory")]
+        public DetailResponse<UiCategory> CreateUiCategory()
+        {
+            return DetailResponse<UiCategory>.Create();
+        }
+
+        /// <summary>
+        /// Ui Category - Get Top Level User Interface Categories
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/module/uicategories/top")]
+        public ListResponse<UiCategory> GetTopLevelCategories()
+        {
+            return ListResponse<UiCategory>.Create(_moduleManager.GetTopLevelCategories());
+        }
+
+
+
+        /// <summary>
         /// Area - Create New
         /// </summary>
         /// <returns></returns>
