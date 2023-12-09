@@ -32,13 +32,15 @@ namespace LagoVista.UserManagement.Rest
         private readonly IUserManager _usrManager; /* TODO: OK TOO MANY USER MANGERS, may need refactoring */
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IOrganizationManager _orgManager;
+        private readonly IUserFavoritesManager _userFavoritesManager;
 
-        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserManager usrManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
+        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, IUserManager usrManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
             _usrManager = usrManager;
             _signInManager = signInManager;
             _orgManager = orgManager;
+            _userFavoritesManager = userFavoritesManager;
         }
 
         /// <summary>
@@ -252,6 +254,41 @@ namespace LagoVista.UserManagement.Rest
         public Task<InvokeResult> UpdateCurrentUserAsync([FromBody] CoreUserInfo user)
         {
             return _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+        }
+
+
+        /// <summary>
+        /// User Service - Get List of Favorites for current user.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/user/favorites")]
+        public async Task<InvokeResult<UserFavorites>> GetCurrentUserFavorites()
+        {
+            var result = await _userFavoritesManager.GetUserFavoritesAsync(UserEntityHeader, OrgEntityHeader);
+            return InvokeResult<UserFavorites>.Create(result);
+        }
+
+        /// <summary>
+        /// User Service - Add a new favorite.
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("/api/user/favorite")]
+        public async Task<InvokeResult<UserFavorites>> GetCurrentUserFavorites([FromBody] UserFavorite favorite)
+        {
+            var result = await _userFavoritesManager.AddUserFavoriteAsync(UserEntityHeader, OrgEntityHeader, favorite);
+            return InvokeResult<UserFavorites>.Create(result);
+        }
+
+        /// <summary>
+        /// User Service - Remove favorite
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpDelete("/api/user/favorite/{id}")]
+        public async Task<InvokeResult<UserFavorites>> RemoveUserFavorite(string id)
+        {
+            var result = await _userFavoritesManager.RemoveUserFavoriteAsync(UserEntityHeader, OrgEntityHeader, id);
+            return InvokeResult<UserFavorites>.Create(result);
         }
 
         /// <summary>
