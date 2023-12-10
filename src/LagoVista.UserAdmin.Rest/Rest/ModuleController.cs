@@ -243,6 +243,9 @@ namespace LagoVista.UserAdmin.Rest
         {
             var response = DetailResponse<Module>.Create();
             response.Model.Id = Guid.NewGuid().ToId();
+            response.View[nameof(Module.UiCategory)].Options = new List<EnumDescription>(GetTopLevelCategories().Model.Select(opt=> 
+                new EnumDescription() 
+                {  Id = opt.Id, Key = opt.Key, Label = opt.Name, Name = opt.Name, Text = opt.Name}));
             SetAuditProperties(response.Model);
             SetOwnedProperties(response.Model);
             return response;
