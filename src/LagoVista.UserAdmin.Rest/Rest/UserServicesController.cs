@@ -240,9 +240,10 @@ namespace LagoVista.UserManagement.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/mru")]
-        public async Task<MostRecentlyUsed> GetMru()
+        public async Task<InvokeResult<MostRecentlyUsed>> GetMru()
         {
-            return await _mruManager.GetMostRecentlyUsedAsync(OrgEntityHeader, UserEntityHeader);
+            var result = await _mruManager.GetMostRecentlyUsedAsync(OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<MostRecentlyUsed>.Create(result);
         }
 
         /// <summary>
@@ -251,19 +252,21 @@ namespace LagoVista.UserManagement.Rest
         /// <param name="mruItem"></param>
         /// <returns></returns>
         [HttpPost("/api/mru/item")]
-        public async Task<MostRecentlyUsed> AddMru([FromBody] MostRecentlyUsedItem mruItem)
+        public async Task<InvokeResult<MostRecentlyUsed>> AddMru([FromBody] MostRecentlyUsedItem mruItem)
         {
-            return await _mruManager.AddMostRecentlyUsedAsync(mruItem, OrgEntityHeader, UserEntityHeader);
+            var result = await _mruManager.AddMostRecentlyUsedAsync(mruItem, OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<MostRecentlyUsed>.Create(result);
         }
 
         /// <summary>
         /// Clear most recently used items for a user in an organization.
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/mru")]
-        public async Task<InvokeResult> DeleteMru()
+        [HttpDelete("/api/mru")]
+        public async Task<InvokeResult<MostRecentlyUsed>> DeleteMru()
         {
-            return await _mruManager.ClearMostRecentlyUsedAsync(OrgEntityHeader, UserEntityHeader);
+            await  _mruManager.ClearMostRecentlyUsedAsync(OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<MostRecentlyUsed>.Create( new MostRecentlyUsed());
         }
 
         /// <summary>

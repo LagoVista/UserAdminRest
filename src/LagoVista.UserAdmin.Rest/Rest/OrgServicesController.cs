@@ -167,7 +167,7 @@ namespace LagoVista.UserAdmin.Rest
 		/// <param name="org"></param>
 		/// <returns></returns>
 		[HttpGet("/api/org/initialized/true")]
-		public async Task<InvokeResult> SetCUrrentOrgIninitalized()
+		public async Task<InvokeResult> SetCurrentOrgIninitalized()
 		{
 			var org = await _orgManager.GetOrganizationAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
 			if (!org.InitializationCompleted)
