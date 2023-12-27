@@ -33,14 +33,17 @@ namespace LagoVista.UserManagement.Rest
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IOrganizationManager _orgManager;
         private readonly IUserFavoritesManager _userFavoritesManager;
+        private readonly IMostRecentlyUsedManager _mruManager;
 
-        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, IUserManager usrManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
+        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, IUserManager usrManager, 
+            IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
             _usrManager = usrManager;
             _signInManager = signInManager;
             _orgManager = orgManager;
             _userFavoritesManager = userFavoritesManager;
+            _mruManager = mruManager;
         }
 
         /// <summary>
@@ -232,6 +235,36 @@ namespace LagoVista.UserManagement.Rest
             return InvokeResult.Success;
         }
 
+        /// <summary>
+        /// Get Most Recent Used Items for User in an Organization.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/mru")]
+        public async Task<MostRecentlyUsed> GetMru()
+        {
+            return await _mruManager.GetMostRecentlyUsedAsync(OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// Add a most recently used item.
+        /// </summary>
+        /// <param name="mruItem"></param>
+        /// <returns></returns>
+        [HttpPost("/api/mru/item")]
+        public async Task<MostRecentlyUsed> AddMru([FromBody] MostRecentlyUsedItem mruItem)
+        {
+            return await _mruManager.AddMostRecentlyUsedAsync(mruItem, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// Clear most recently used items for a user in an organization.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/mru")]
+        public async Task<InvokeResult> DeleteMru()
+        {
+            return await _mruManager.ClearMostRecentlyUsedAsync(OrgEntityHeader, UserEntityHeader);
+        }
 
         /// <summary>
         /// User Service - Add Media resources
