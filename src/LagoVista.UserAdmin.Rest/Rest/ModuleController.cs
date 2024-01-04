@@ -59,9 +59,9 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/modules")]
-        public Task<List<ModuleSummary>> GetAllModulesAsync()
+        public Task<ListResponse<ModuleSummary>> GetAllModulesAsync()
         {
-            return _moduleManager.GetAllModulesAsync(OrgEntityHeader, UserEntityHeader);
+            return _moduleManager.GetAllModulesAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>
@@ -94,6 +94,10 @@ namespace LagoVista.UserAdmin.Rest
         {
             var module = await _moduleManager.GetModuleAsync(id, OrgEntityHeader, UserEntityHeader);
             var form = DetailResponse<Module>.Create(module);
+
+            form.View[nameof(Module.UiCategory).CamelCase()].Options = new List<EnumDescription>( _moduleManager.GetTopLevelCategories().Select(cat=> 
+            new EnumDescription() {  Id = cat.Id, Key = cat.Key, Label = cat.Name, Name = cat.Name, Help = cat.Summary, Text = cat.Name}));
+            
             if (!IsPrimaryOrg)
                 form.FormFields.Remove(nameof(Module.IsPublic));
 
