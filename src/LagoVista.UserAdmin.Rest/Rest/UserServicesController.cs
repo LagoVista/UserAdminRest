@@ -159,7 +159,7 @@ namespace LagoVista.UserManagement.Rest
         /// <param name="user"></param>
         /// <returns></returns>
         [HttpPut("/api/user")]
-        public Task<InvokeResult> UpdateCurrentUserAsync([FromBody] UserInfo user)
+        public Task<InvokeResult> UpdateCurrentUserAsync([FromBody] CoreUserInfo user)
         {
             return _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
         }
@@ -287,11 +287,10 @@ namespace LagoVista.UserManagement.Rest
         /// <param name="user"></param>
         /// <returns></returns>
         [HttpPut("/api/user/coreinfo")]
-        public Task<InvokeResult> UpdateCurrentUserAsync([FromBody] CoreUserInfo user)
+        public Task<InvokeResult> UpdateUserAsync([FromBody] CoreUserInfo user)
         {
             return _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
-        }
-
+        }   
 
         /// <summary>
         /// User Service - Get List of Favorites for current user.
@@ -357,6 +356,13 @@ namespace LagoVista.UserManagement.Rest
 
             return result;
         }
+
+        [HttpGet("/api/user/{id}/ssn")]
+        public Task<InvokeResult<string>> GetSSNForUserAsync(string id)
+        {
+            return _appUserManager.GetUserSSNAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
 
         [FinanceAdmin]
         [HttpGet("/api/user/{id}/paymentaccounts")]

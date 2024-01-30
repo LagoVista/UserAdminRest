@@ -46,7 +46,7 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         [HttpGet("/api/sys/role/factory")]
-        public async Task<DetailResponse<Role>> GetNewRole()
+        public DetailResponse<Role> GetNewRole()
         {
             var response = DetailResponse<Role>.Create();
             response.Model.Id = Guid.NewGuid().ToId();

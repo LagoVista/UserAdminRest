@@ -121,16 +121,13 @@ namespace LagoVista.UserAdmin.Rest
         /// module - Get aras by id
         /// </summary>
         /// <param name="key"></param>
+        /// <param name="userid"></param>
         /// <returns></returns>
         [HttpGet("/api/module/{key}/user/{userid}")]
         public async Task<Module> GetModuleByKeyForUserAsync(String key, string userid)
         {
-            var module = await _userAccessManager.GetUserModuleAsync(key, userid, OrgEntityHeader.Id);
-            return module;
-
+            return await _userAccessManager.GetUserModuleAsync(key, userid, OrgEntityHeader.Id);
         }
-
-
 
         /// <summary>
         /// module - Get aras by key
