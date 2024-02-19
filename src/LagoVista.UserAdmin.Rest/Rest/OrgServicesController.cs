@@ -22,6 +22,7 @@ using LagoVista.Core.Models;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.Core.Exceptions;
 using LagoVista.Core;
+using LagoVista.UserAdmin.Models.Auth;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -152,7 +153,6 @@ namespace LagoVista.UserAdmin.Rest
 		/// <summary>
 		/// Orgs Service - See if the current org has been initialized.
 		/// </summary>
-		/// <param name="org"></param>
 		/// <returns></returns>
 		[HttpGet("/api/org/initialized")]
 		public async Task<InvokeResult<Boolean>> IsCUrrentOrgIninitalized()
@@ -164,7 +164,6 @@ namespace LagoVista.UserAdmin.Rest
 		/// <summary>
 		/// Orgs Service - See if the current org has been initialized.
 		/// </summary>
-		/// <param name="org"></param>
 		/// <returns></returns>
 		[HttpGet("/api/org/initialized/true")]
 		public async Task<InvokeResult> SetCurrentOrgIninitalized()

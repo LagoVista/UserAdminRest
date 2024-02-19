@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http;
 using LagoVista.UserAdmin.ViewModels.Users;
 using LagoVista.UserAdmin.ViewModels.Organization;
+using LagoVista.UserAdmin.Models.Auth;
 
 namespace LagoVista.UserManagement.Rest
 {

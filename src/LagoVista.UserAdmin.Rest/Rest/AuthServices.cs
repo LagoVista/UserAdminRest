@@ -16,6 +16,7 @@ using LagoVista.Core.Interfaces;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.IoT.Deployment.Admin;
 using Prometheus;
+using LagoVista.UserAdmin.Models.Auth;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -38,6 +39,7 @@ namespace LagoVista.UserAdmin.Rest
         private readonly IPasswordManager _passwordMangaer;
         private readonly ISignInManager _signInManager;
 		private readonly IClientAppManager _clientAppManager;
+        private readonly IOrganizationManager _orgmanager;
 
         protected static readonly Counter UserLogin = Metrics.CreateCounter("nuviot_login", "successful user login.", "source");
         protected static readonly Counter UserLoginFailed = Metrics.CreateCounter("nuviot_login_failed", "unsuccessful user login.", "source", "reason");
@@ -46,12 +48,13 @@ namespace LagoVista.UserAdmin.Rest
         //IMPORTANT Until this can all be refactored into the UserAdmin class this NEEDS to point to action on the Web Site.
         public const string ACTION_RESET_PASSWORD = "/Account/ResetPassword";
 
-        public AuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, UserManager<AppUser> userManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
+        public AuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
         {
             _tokenManager = tokenManager;
             _passwordMangaer = passwordManager;
             _signInManager = signInManager;
 			_clientAppManager = clientAppManager;
+            _orgmanager = orgManager;
 		}
 
         private Task<InvokeResult<AuthResponse>> HandleAuthRequest(AuthRequest req)
@@ -141,13 +144,16 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("/api/v1/login")]
-        public async Task<InvokeResult> CookieAuthFromForm([FromBody] LoginModel model)
+        public async Task<InvokeResult<UserLoginResponse>> CookieAuthFromForm([FromBody] LoginModel model)
         {
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+            Console.WriteLine("resource=>" + result.Successful.ToString());
+
             if (result.Successful)
                 UserLogin.WithLabels("cookie-auth-request-repo").Inc();
             else
                 UserLoginFailed.WithLabels("cookie-auth-request-repo", "failed").Inc();
+
 
             return result;
         }
@@ -168,24 +174,27 @@ namespace LagoVista.UserAdmin.Rest
                     UserLogin.WithLabels("kiosk").Inc();
 
                     var clientApp = kioskResult.Result;
-      //              var claims = new[]
-      //              {
-      //                  new Claim(ClaimsFactory.InstanceId, clientApp.DeploymentInstance.Id),
-      //                  new Claim(ClaimsFactory.InstanceName, clientApp.DeploymentInstance.Text),
-      //                  new Claim(ClaimsFactory.CurrentOrgId, clientApp.OwnerOrganization.Id),
-      //                  new Claim(ClaimsFactory.CurrentOrgName, clientApp.OwnerOrganization.Text),
-						//new Claim(ClaimsFactory.CurrentUserId, clientApp.ClientAppUser.Id),
-      //                  new Claim(ClaimTypes.NameIdentifier, clientApp.ClientAppUser.Text),
-      //                  new Claim(ClaimTypes.Surname, "system"),
-						//new Claim(ClaimTypes.GivenName, clientApp.ClientAppUser.Text),
-      //                  new Claim(ClaimsFactory.KioskId, clientApp.Kiosk.Id),
-      //                  new Claim(ClaimsFactory.EmailVerified, true.ToString()),
-      //                  new Claim(ClaimsFactory.PhoneVerfiied, true.ToString()),
-      //                  new Claim(ClaimsFactory.IsSystemAdmin, false.ToString()),
-      //                  new Claim(ClaimsFactory.IsAppBuilder, false.ToString()),
-      //                  new Claim(ClaimsFactory.IsOrgAdmin, false.ToString()),
-      //                  new Claim(ClaimsFactory.IsPreviewUser, false.ToString()),
-      //              };
+                    //              var claims = new[]
+                    //              {
+                    //                  new Claim(ClaimsFactory.InstanceId, clientApp.DeploymentInstance.Id),
+                    //                  new Claim(ClaimsFactory.InstanceName, clientApp.DeploymentInstance.Text),
+                    //                  new Claim(ClaimsFactory.CurrentOrgId, clientApp.OwnerOrganization.Id),
+                    //                  new Claim(ClaimsFactory.CurrentOrgName, clientApp.OwnerOrganization.Text),
+                    //new Claim(ClaimsFactory.CurrentUserId, clientApp.ClientAppUser.Id),
+                    //                  new Claim(ClaimTypes.NameIdentifier, clientApp.ClientAppUser.Text),
+                    //                  new Claim(ClaimTypes.Surname, "system"),
+                    //new Claim(ClaimTypes.GivenName, clientApp.ClientAppUser.Text),
+                    //                  new Claim(ClaimsFactory.KioskId, clientApp.Kiosk.Id),
+                    //                  new Claim(ClaimsFactory.EmailVerified, true.ToString()),
+                    //                  new Claim(ClaimsFactory.PhoneVerfiied, true.ToString()),
+                    //                  new Claim(ClaimsFactory.IsSystemAdmin, false.ToString()),
+                    //                  new Claim(ClaimsFactory.IsAppBuilder, false.ToString()),
+                    //                  new Claim(ClaimsFactory.IsOrgAdmin, false.ToString()),
+                    //                  new Claim(ClaimsFactory.IsPreviewUser, false.ToString()),
+                    //              };
+
+                    var currentOrg = await _orgmanager.GetOrganizationAsync(clientApp.OwnerOrganization.Id, clientApp.OwnerOrganization, clientApp.CreatedBy);
+                    
 
       //              var identity = new ClaimsIdentity(claims);
                     var clientAppUser = new AppUser(clientApp.ClientAppUser.Id, "system")
@@ -201,7 +210,7 @@ namespace LagoVista.UserAdmin.Rest
                         OwnerUser = clientApp.OwnerUser,
                         UserName = clientApp.ClientAppUser.Id,
 						OwnerOrganization = clientApp.OwnerOrganization,
-						CurrentOrganization = clientApp.OwnerOrganization,
+						CurrentOrganization = currentOrg.CreateSummary(),
 					};
 
                     try
