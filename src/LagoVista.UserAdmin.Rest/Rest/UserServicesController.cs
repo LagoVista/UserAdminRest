@@ -20,6 +20,8 @@ using Microsoft.AspNetCore.Http;
 using LagoVista.UserAdmin.ViewModels.Users;
 using LagoVista.UserAdmin.ViewModels.Organization;
 using LagoVista.UserAdmin.Models.Auth;
+using LagoVista.UserAdmin.Repos.Repos.Account;
+using LagoVista.UserAdmin.Interfaces;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -35,8 +37,9 @@ namespace LagoVista.UserManagement.Rest
         private readonly IOrganizationManager _orgManager;
         private readonly IUserFavoritesManager _userFavoritesManager;
         private readonly IMostRecentlyUsedManager _mruManager;
+        private readonly IAppUserInboxManager _appUserInboxManager;
 
-        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, IUserManager usrManager, 
+        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, IUserManager usrManager, IAppUserInboxManager appUserInboxManager,
             IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
@@ -45,6 +48,7 @@ namespace LagoVista.UserManagement.Rest
             _orgManager = orgManager;
             _userFavoritesManager = userFavoritesManager;
             _mruManager = mruManager;
+            _appUserInboxManager = appUserInboxManager;
         }
 
         /// <summary>
@@ -336,6 +340,25 @@ namespace LagoVista.UserManagement.Rest
         public Task<InvokeResult<AppUser>> RemoveExternalLogin(string id)
         {
             return _appUserManager.RemoveExternalLoginAsync(UserEntityHeader.Id, id, UserEntityHeader);
+        }
+
+        [HttpGet("/api/user/inbox")]
+        public Task<ListResponse<InboxItem>> GetUserInbox()
+        {
+            return _appUserInboxManager.GetAllInboxItemsAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
+
+
+        [HttpGet("/api/user/inbox/unread")]
+        public Task<InvokeResult<int>> GetUserInboxCount()
+        {
+            return _appUserInboxManager.GetAllInboxItemCountAsync(OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/user/inbox/{partitionkey}/{rowkey}/viewed")]
+        public Task<InvokeResult> MarkedAsViewed(string partitionkey, string rowkey)
+        {
+            return _appUserInboxManager.MarkAsReadAsync(partitionkey, rowkey, OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>
