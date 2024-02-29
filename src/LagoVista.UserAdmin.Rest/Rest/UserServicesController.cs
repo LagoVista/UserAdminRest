@@ -361,6 +361,13 @@ namespace LagoVista.UserManagement.Rest
             return _appUserInboxManager.MarkAsReadAsync(partitionkey, rowkey, OrgEntityHeader, UserEntityHeader);
         }
 
+
+        [HttpDelete("/api/user/inbox/{partitionkey}/{rowkey}")]
+        public Task<InvokeResult> DeleteInboxItem(string partitionkey, string rowkey)
+        {
+            return _appUserInboxManager.DeleteItemAsync(partitionkey, rowkey, OrgEntityHeader, UserEntityHeader);
+        }
+
         /// <summary>
         /// User Service - Register a new user (sign-up)
         /// </summary>
