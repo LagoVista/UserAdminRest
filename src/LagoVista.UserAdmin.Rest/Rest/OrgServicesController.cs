@@ -147,7 +147,7 @@ namespace LagoVista.UserAdmin.Rest
 			}
 
 			//            await _signInManager.SignInAsync(currentUser);
-			return org;
+			return org.ToInvokeResult();
 		}
 
 		/// <summary>
@@ -450,7 +450,7 @@ namespace LagoVista.UserAdmin.Rest
 		}
 
 		[HttpGet("/sys/api/orgs/all")]
-		public Task<ListResponse<Organization>> GetAllOrgsAsync()
+		public Task<ListResponse<OrganizationSummary>> GetAllOrgsAsync()
 		{
 			return _orgManager.GetAllOrgsAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
 		}

@@ -124,7 +124,7 @@ namespace LagoVista.UserManagement.Rest
         }
 
         [HttpDelete("/api/user/{id}")]
-        public async Task<IActionResult> DeleteUser(string id)
+        public async Task<InvokeResult> DeleteUser(string id)
         {
             var result = await _appUserManager.DeleteUserAsync(id, OrgEntityHeader, UserEntityHeader);
             if (id == UserEntityHeader.Id && result.Successful)
@@ -132,8 +132,20 @@ namespace LagoVista.UserManagement.Rest
                 await _signInManager.SignOutAsync();
             }
 
-            return Ok(result);
+            return result;
+        }
 
+        [SystemAdmin]
+        [HttpDelete("/api/user/{id}/delete")]
+        public async Task<InvokeResult> ForceDeleteUser(string id)
+        {
+            var result = await _appUserManager.DeleteUserAsync(id,  OrgEntityHeader, UserEntityHeader);
+            if (id == UserEntityHeader.Id && result.Successful)
+            {
+                await _signInManager.SignOutAsync();
+            }
+
+            return result;
         }
 
         public static string GetClientIPAddress(HttpContext context)
@@ -425,7 +437,7 @@ namespace LagoVista.UserManagement.Rest
             var addOrgResult = await _orgManager.AddUserToOrgAsync(OrgEntityHeader.Id, result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
             if (!setAuthResult.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(addOrgResult.ToInvokeResult());
             var appUser = await _appUserManager.GetUserByIdAsync(result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
-            return InvokeResult<UserInfoSummary>.Create(appUser.ToUserInfoSummary());
+            return InvokeResult<UserInfoSummary>.Create(appUser.CreateSummary(false, false));
 		}
 
 		/// <summary>

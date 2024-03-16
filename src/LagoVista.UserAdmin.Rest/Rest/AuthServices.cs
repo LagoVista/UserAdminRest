@@ -17,6 +17,9 @@ using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.IoT.Deployment.Admin;
 using Prometheus;
 using LagoVista.UserAdmin.Models.Auth;
+using LagoVista.IoT.Web.Common.Attributes;
+using LagoVista.Core.Models.UIMetaData;
+using LagoVista.UserAdmin.Models.Security;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -40,6 +43,7 @@ namespace LagoVista.UserAdmin.Rest
         private readonly ISignInManager _signInManager;
 		private readonly IClientAppManager _clientAppManager;
         private readonly IOrganizationManager _orgmanager;
+        private readonly IAuthenticationLogManager _authenticationLogManager;
 
         protected static readonly Counter UserLogin = Metrics.CreateCounter("nuviot_login", "successful user login.", "source");
         protected static readonly Counter UserLoginFailed = Metrics.CreateCounter("nuviot_login_failed", "unsuccessful user login.", "source", "reason");
@@ -48,13 +52,15 @@ namespace LagoVista.UserAdmin.Rest
         //IMPORTANT Until this can all be refactored into the UserAdmin class this NEEDS to point to action on the Web Site.
         public const string ACTION_RESET_PASSWORD = "/Account/ResetPassword";
 
-        public AuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
+        public AuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager,
+            IAuthenticationLogManager authenticationLogManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
         {
             _tokenManager = tokenManager;
             _passwordMangaer = passwordManager;
             _signInManager = signInManager;
 			_clientAppManager = clientAppManager;
             _orgmanager = orgManager;
+            _authenticationLogManager = authenticationLogManager;
 		}
 
         private Task<InvokeResult<AuthResponse>> HandleAuthRequest(AuthRequest req)
@@ -239,7 +245,10 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/v1/logoff")]
         public async Task<InvokeResult> Logoff()
         {
+            
             await _signInManager.SignOutAsync();
+
+            _authenticationLogManager.AddAsync(AuthLogTypes.UserLogout, UserEntityHeader.Id, UserEntityHeader.Text, OrgEntityHeader.Id, OrgEntityHeader.Text);
             return InvokeResult.Success;
         }
 
@@ -274,6 +283,40 @@ namespace LagoVista.UserAdmin.Rest
         public Task<InvokeResult> ChangePasswordAsync([FromBody] ChangePassword changePassword)
         {
             return _passwordMangaer.ChangePasswordAsync(changePassword, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [SystemAdmin]
+        [HttpGet("/sys/auth/log")]
+        [Authorize]
+        public Task<ListResponse<AuthenticationLog>> GetAllAuthAsync()
+        {
+            return _authenticationLogManager.GetAllAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+        [SystemAdmin]
+        [HttpGet("/sys/auth/log/{type}")]
+        [Authorize]
+        public Task<ListResponse<AuthenticationLog>> GetAuthAsync(string type)
+        {
+            var authLogType = Enum.Parse<AuthLogTypes>(type, true);
+
+            return _authenticationLogManager.GetAsync(authLogType, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/auth/log/{type}")]
+        [Authorize]
+        public Task<ListResponse<AuthenticationLog>> GetAuthAsyncForOrg(string type)
+        {
+            var authLogType = Enum.Parse<AuthLogTypes>(type, true);
+
+            return _authenticationLogManager.GetAsync(OrgEntityHeader.Id, authLogType, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/auth/log")]
+        [Authorize]
+        public Task<ListResponse<AuthenticationLog>> GetAllAuthAsyncForOrg()
+        {
+            return _authenticationLogManager.GetAllAsync(OrgEntityHeader.Id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
     }
 }
