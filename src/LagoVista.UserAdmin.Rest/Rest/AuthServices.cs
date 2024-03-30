@@ -20,6 +20,14 @@ using LagoVista.UserAdmin.Models.Auth;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.UserAdmin.Models.Security;
+using System.Linq;
+using LagoVista.Core.Models;
+using LagoVista.ProjectManagement.Core;
+using LagoVista.ProjectManagement;
+using LagoVista.UserAdmin.Interfaces;
+using LagoVista.UserAdmin.Interfaces.Repos.Users;
+using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
+using System.Diagnostics;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -33,6 +41,7 @@ namespace LagoVista.UserAdmin.Rest
     {
         public class LoginModel
         {
+            public string Module { get; set; }
             public string Email { get; set; }
             public string Password { get; set; }
             public bool RememberMe { get; set; }
@@ -44,16 +53,22 @@ namespace LagoVista.UserAdmin.Rest
 		private readonly IClientAppManager _clientAppManager;
         private readonly IOrganizationManager _orgmanager;
         private readonly IAuthenticationLogManager _authenticationLogManager;
+        private readonly IMileStoneRepo _mileStoneRepo;
+        private readonly IProjectRepo _projectRepo;
+        private readonly IAppUserRepo _appUserRepo;
+        private readonly IOrgUserRepo _orgUserRepo;
+        private readonly IIUserAccessManager _userAccessManager;
+        private readonly IDeploymentInstanceManager _instanceManager;
+        private readonly IToDoRepo _todoRepo;
 
         protected static readonly Counter UserLogin = Metrics.CreateCounter("nuviot_login", "successful user login.", "source");
         protected static readonly Counter UserLoginFailed = Metrics.CreateCounter("nuviot_login_failed", "unsuccessful user login.", "source", "reason");
 
-
         //IMPORTANT Until this can all be refactored into the UserAdmin class this NEEDS to point to action on the Web Site.
         public const string ACTION_RESET_PASSWORD = "/Account/ResetPassword";
 
-        public AuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, IOrganizationManager orgManager, UserManager<AppUser> userManager,
-            IAuthenticationLogManager authenticationLogManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
+        public AuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, IMileStoneRepo mileStoneRepo, IProjectRepo projectRepo, IOrganizationManager orgManager, UserManager<AppUser> userManager, IToDoRepo todoRepo,
+            IAuthenticationLogManager authenticationLogManager, IAppUserRepo appUserRepo, IOrgUserRepo orgUserRepo, IDeploymentInstanceManager instanceManager, IIUserAccessManager userAccessManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
         {
             _tokenManager = tokenManager;
             _passwordMangaer = passwordManager;
@@ -61,7 +76,14 @@ namespace LagoVista.UserAdmin.Rest
 			_clientAppManager = clientAppManager;
             _orgmanager = orgManager;
             _authenticationLogManager = authenticationLogManager;
-		}
+            _mileStoneRepo = mileStoneRepo;
+            _projectRepo = projectRepo;
+            _userAccessManager = userAccessManager;
+            _appUserRepo = appUserRepo;
+            _orgUserRepo = orgUserRepo ?? throw new ArgumentNullException(nameof(orgUserRepo));
+            _instanceManager = instanceManager ?? throw new ArgumentNullException(nameof(instanceManager)); ;
+            _todoRepo = todoRepo ?? throw new ArgumentNullException(nameof(todoRepo));
+        }
 
         private Task<InvokeResult<AuthResponse>> HandleAuthRequest(AuthRequest req)
         {
@@ -169,6 +191,61 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
+        [HttpPost("/api/v2/login")]
+        public async Task<InvokeResult<PortalPageData>> CookieAuthFromFormV2([FromBody] LoginModel model)
+        {            
+            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+            Console.WriteLine("resource=>" + result.Successful.ToString());
+
+            if (result.Successful)
+                UserLogin.WithLabels("cookie-auth-request-repo").Inc();
+            else
+                UserLoginFailed.WithLabels("cookie-auth-request-repo", "failed").Inc();
+
+            if (!result.Successful)
+            {
+                return InvokeResult<PortalPageData>.FromInvokeResult(result.ToInvokeResult());
+            }            
+
+            var data = new PortalPageData(result.Result);
+            var orgUsers = await _orgUserRepo.GetUsersForOrgAsync(result.Result.User.CurrentOrganization.Id);
+            data.AddMetric("Load Org Users");
+            var activeUsers = (await _appUserRepo.GetUserSummaryForListAsync(orgUsers)).Where(usr => !usr.IsAccountDisabled && !usr.IsRuntimeUser && !usr.IsUserDevice).OrderBy(usr => usr.Name);
+            data.ActiveUsers = activeUsers.Select(au => EntityHeader.Create(au.Id, au.Name)).ToList();
+            data.AddMetric("Load Active Users");
+
+            var currentOrgId = result.Result.User.CurrentOrganization.Id;
+            var orgEh = result.Result.User.CurrentOrganization.ToEntityHeader();
+            var userEh = result.Result.User.ToEntityHeader();
+            
+            var mileStones = await _mileStoneRepo.GetActiveMileStonesAsync(currentOrgId, ListRequest.CreateForAll());
+            data.Milestones = mileStones.Model.ToList();
+            data.AddMetric("Load Milestones");
+            data.ToDos = (await _todoRepo.GetOpenToDosAssignedToAsync(userEh.Id, orgEh.Id, ListRequest.CreateForAll())).Model.ToList();
+            data.AddMetric("Load ToDos");
+            var projects = await _projectRepo.GetActiveProjectAsync(currentOrgId, ListRequest.CreateForAll());
+            data.ActiveProjects = projects.Model.Select(prj => EntityHeader.Create(prj.Id, prj.Key, prj.Name)).ToList();
+            data.AddMetric("Load Active Projects");
+
+
+            var wsREsult = await _instanceManager.GetRemoteMonitoringURIAsync("ToDo", userEh.Id, "normal", orgEh, userEh);
+            data.ToDoWebSocketUrl = wsREsult.Result;
+            data.AddMetric($"Loaded ToDo Web Socket URL");
+
+            wsREsult = await _instanceManager.GetRemoteMonitoringURIAsync("Inbox", userEh.Id, "normal", orgEh, userEh);
+            data.AddMetric($"Loaded In box Socket URL");
+            data.InboxWebSocketUrl = wsREsult.Result;
+
+            data.ServerLoadTime = (data.Metrics.Sum(met => met.Ms) / 1000.0);
+
+            return InvokeResult<PortalPageData>.Create(data);
+         }
+
+        /// <summary>
+        /// Auth by Form Post with Simple Email Address and Password, will set cookie rather than JWT
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [HttpPost("/api/v1/loginkiosk")]
         public async Task<InvokeResult<string>> KioskCookieAuthFromForm([FromForm] LoginModel model)
         {
@@ -247,8 +324,7 @@ namespace LagoVista.UserAdmin.Rest
         {
             
             await _signInManager.SignOutAsync();
-
-            _authenticationLogManager.AddAsync(AuthLogTypes.UserLogout, UserEntityHeader.Id, UserEntityHeader.Text, OrgEntityHeader.Id, OrgEntityHeader.Text);
+            await _authenticationLogManager.AddAsync(AuthLogTypes.UserLogout, UserEntityHeader.Id, UserEntityHeader.Text, OrgEntityHeader.Id, OrgEntityHeader.Text);
             return InvokeResult.Success;
         }
 

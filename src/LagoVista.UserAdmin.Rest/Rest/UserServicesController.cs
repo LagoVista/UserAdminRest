@@ -10,15 +10,12 @@ using LagoVista.Core.Models.UIMetaData;
 using LagoVista.UserAdmin.Models.Users;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.Core.Validation;
-using LagoVista.Core.Authentication.Models;
 using LagoVista.UserAdmin.Models.DTOs;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.UserAdmin.Interfaces.Managers;
-using LagoVista.Core;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http;
 using LagoVista.UserAdmin.ViewModels.Users;
-using LagoVista.UserAdmin.ViewModels.Organization;
 using LagoVista.UserAdmin.Models.Auth;
 using LagoVista.UserAdmin.Repos.Repos.Account;
 using LagoVista.UserAdmin.Interfaces;
@@ -49,6 +46,7 @@ namespace LagoVista.UserManagement.Rest
             _userFavoritesManager = userFavoritesManager;
             _mruManager = mruManager;
             _appUserInboxManager = appUserInboxManager;
+
         }
 
         /// <summary>
