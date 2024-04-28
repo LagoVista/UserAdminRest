@@ -28,6 +28,7 @@ using LagoVista.UserAdmin.Interfaces;
 using LagoVista.UserAdmin.Interfaces.Repos.Users;
 using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
 using System.Diagnostics;
+using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -43,8 +44,20 @@ namespace LagoVista.UserAdmin.Rest
         {
             public string Module { get; set; }
             public string Email { get; set; }
+            public string InviteId { get; set; }
             public string Password { get; set; }
             public bool RememberMe { get; set; }
+        
+            public AuthLoginRequest GetAuthRequest()
+            {
+                return new AuthLoginRequest()
+                {
+                    InviteId = InviteId,
+                    UserName = Email,
+                    Password = Password,
+                    RememberMe = RememberMe,
+                };
+            }
         }
 
         private readonly IAuthTokenManager _tokenManager;
@@ -174,7 +187,9 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/v1/login")]
         public async Task<InvokeResult<UserLoginResponse>> CookieAuthFromForm([FromBody] LoginModel model)
         {
-            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+
+
+            var result = await _signInManager.PasswordSignInAsync(model.GetAuthRequest());
             Console.WriteLine("resource=>" + result.Successful.ToString());
 
             if (result.Successful)
@@ -194,7 +209,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/v2/login")]
         public async Task<InvokeResult<PortalPageData>> CookieAuthFromFormV2([FromBody] LoginModel model)
         {            
-            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+            var result = await _signInManager.PasswordSignInAsync(model.GetAuthRequest());
             Console.WriteLine("resource=>" + result.Successful.ToString());
 
             if (result.Successful)
@@ -337,6 +352,17 @@ namespace LagoVista.UserAdmin.Rest
         public Task<InvokeResult> SendResetPasswordLinkAsync([FromBody] SendResetPasswordLink sendResetPasswordLink)
         {
             return _passwordMangaer.SendResetPasswordLinkAsync(sendResetPasswordLink);
+        }
+
+        [HttpGet("/api/auth/invite/accept/{inviteid}")]
+        public async Task<InvokeResult<AcceptInviteResponse>> AcceptInvite(string inviteid)
+        {
+            var result = await _orgmanager.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
+
+            /* Make sure we update the claims */
+            var currentUser = await GetCurrentUserAsync();
+            await _signInManager.SignInAsync(currentUser);
+            return result;
         }
 
         /// <summary>

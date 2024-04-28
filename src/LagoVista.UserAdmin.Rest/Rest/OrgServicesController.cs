@@ -380,20 +380,6 @@ namespace LagoVista.UserAdmin.Rest
 			return await _orgManager.GetIsInvigationActiveAsync(inviteid);
 		}
 
-		/// <summary>
-		/// Orgs Service - Accept Invitation
-		/// </summary>
-		/// <param name="inviteid"></param>
-		/// <returns></returns>
-		[HttpGet("/api/org/inviteuser/accept/{inviteid}")]
-		public async Task<InvokeResult> AcceptInvitationAsync(string inviteid)
-		{
-			var result = await _orgManager.AcceptInvitationAsync(inviteid, OrgEntityHeader, UserEntityHeader);
-			/* Make sure we update the claims */
-			var currentUser = await GetCurrentUserAsync();
-			await _signInManager.SignInAsync(currentUser);
-			return result;
-		}
 
 		/// <summary>
 		/// Orgs Service - Switch To New Org
