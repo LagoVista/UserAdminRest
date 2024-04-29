@@ -9,6 +9,7 @@ using LagoVista.UserAdmin.Models.DTOs;
 using System.Threading.Tasks;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Attributes;
+using Twilio.Types;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -36,7 +37,7 @@ namespace LagoVista.UserAdmin.Rest
         /// Verify User - Send Confirmation Email
         /// </summary>
         /// <returns></returns>
-        [HttpGet("/api/verify/sendconfirmationemail")]
+        [HttpGet("/api/verify/email/confirmationcode/send")]
         public Task<InvokeResult> SendConfirmationEmailAsync()
         {
             return _userVerificationManager.SendConfirmationEmailAsync(OrgEntityHeader, UserEntityHeader);
@@ -53,13 +54,23 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// Verify User - Send Confirmation SMS Code
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("/api/verify/sendsmscode/{phonenumber}")]
+        public Task<InvokeResult> SendSMSCodeAsync(string phonenumber)
+        {
+            return _userVerificationManager.SendSMSCodeAsync(new VerfiyPhoneNumber(){PhoneNumber= phonenumber}, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
         /// Verify User - Confirm SMS
         /// </summary>
         /// <param name="verifyRequest"></param>
         /// <returns></returns>
         [HttpPost("/api/verify/sms")]
         public Task<InvokeResult> ValidateSMSAsync([FromBody] VerfiyPhoneNumber verifyRequest)
-        {
+        {           
             return _userVerificationManager.ValidateSMSAsync(verifyRequest, OrgEntityHeader, UserEntityHeader);
         }
 
@@ -72,6 +83,28 @@ namespace LagoVista.UserAdmin.Rest
         public Task<InvokeResult> ValidateEmailAsync([FromBody] ConfirmEmail confirmEmail)
         {
             return _userVerificationManager.ValidateEmailAsync(confirmEmail, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// Verify User - Confirm Email
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        [HttpPost("/api/verify/email/{code}")]
+        public Task<InvokeResult> ValidateEmailAsync(string code)
+        {
+            return _userVerificationManager.ValidateEmailAsync(new ConfirmEmail() {  ReceivedCode = code}, OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// Verify User - Confirm Phone
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        [HttpPost("/api/verify/sms/{code}")]
+        public  Task<InvokeResult> ValidatePhoneAsync(string code)
+        {
+            return _userVerificationManager.ValidateSMSAsync( new VerfiyPhoneNumber() {  SMSCode = code, SkipStep = false }, OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>

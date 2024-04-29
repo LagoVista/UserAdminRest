@@ -29,6 +29,7 @@ using LagoVista.UserAdmin.Interfaces.Repos.Users;
 using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
 using System.Diagnostics;
 using Microsoft.Azure.Cosmos.Serialization.HybridRow;
+using Microsoft.VisualStudio.Services.Aad;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -60,6 +61,7 @@ namespace LagoVista.UserAdmin.Rest
             }
         }
 
+        private readonly UserManager<AppUser> _userManager;
         private readonly IAuthTokenManager _tokenManager;
         private readonly IPasswordManager _passwordMangaer;
         private readonly ISignInManager _signInManager;
@@ -83,6 +85,7 @@ namespace LagoVista.UserAdmin.Rest
         public AuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, IMileStoneRepo mileStoneRepo, IProjectRepo projectRepo, IOrganizationManager orgManager, UserManager<AppUser> userManager, IToDoRepo todoRepo,
             IAuthenticationLogManager authenticationLogManager, IAppUserRepo appUserRepo, IOrgUserRepo orgUserRepo, IDeploymentInstanceManager instanceManager, IIUserAccessManager userAccessManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
         {
+            _userManager = userManager;
             _tokenManager = tokenManager;
             _passwordMangaer = passwordManager;
             _signInManager = signInManager;
