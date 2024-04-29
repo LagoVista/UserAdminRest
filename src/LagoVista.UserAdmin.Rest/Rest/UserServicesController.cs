@@ -19,6 +19,7 @@ using LagoVista.UserAdmin.ViewModels.Users;
 using LagoVista.UserAdmin.Models.Auth;
 using LagoVista.UserAdmin.Repos.Repos.Account;
 using LagoVista.UserAdmin.Interfaces;
+using LagoVista.Core.Interfaces;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -35,9 +36,10 @@ namespace LagoVista.UserManagement.Rest
         private readonly IUserFavoritesManager _userFavoritesManager;
         private readonly IMostRecentlyUsedManager _mruManager;
         private readonly IAppUserInboxManager _appUserInboxManager;
+        private readonly IAppConfig _appConfig;
 
         public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, IUserManager usrManager, IAppUserInboxManager appUserInboxManager,
-            IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
+            IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
             _usrManager = usrManager;
@@ -46,6 +48,7 @@ namespace LagoVista.UserManagement.Rest
             _userFavoritesManager = userFavoritesManager;
             _mruManager = mruManager;
             _appUserInboxManager = appUserInboxManager;
+            _appConfig = appConfig;
 
         }
 
@@ -121,9 +124,38 @@ namespace LagoVista.UserManagement.Rest
             await _appUserManager.UpdateUserAsync(appUser.ToUserInfo(), OrgEntityHeader, UserEntityHeader);
         }
 
+        [AllowAnonymous]
+        [HttpDelete("/api/user")]
+        public async Task<InvokeResult> DeleteUserByEmail(string username)
+         {
+
+            if (_appConfig.Environment == Environments.Production ||
+                _appConfig.Environment == Environments.Staging)
+                throw new NotSupportedException();
+
+            var user = await _appUserManager.GetUserByUserNameAsync(username, OrgEntityHeader, UserEntityHeader);
+            if (user == null)
+                return InvokeResult.FromError("Could not load user.");
+
+            var id = user.Id;
+
+            var result = await _appUserManager.DeleteUserAsync(id, OrgEntityHeader, UserEntityHeader);
+            if (id == UserEntityHeader.Id && result.Successful)
+            {
+                await _signInManager.SignOutAsync();
+            }
+
+            return result;
+        }
+
         [HttpDelete("/api/user/{id}")]
         public async Task<InvokeResult> DeleteUser(string id)
         {
+            if(id != UserEntityHeader.Id)
+            {
+                return InvokeResult.FromError("Can not remove a different user.");
+            }
+
             var result = await _appUserManager.DeleteUserAsync(id, OrgEntityHeader, UserEntityHeader);
             if (id == UserEntityHeader.Id && result.Successful)
             {

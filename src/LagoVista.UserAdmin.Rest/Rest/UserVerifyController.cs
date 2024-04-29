@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Attributes;
 using Twilio.Types;
+using LagoVista.Core.Interfaces;
+using System;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -17,10 +19,14 @@ namespace LagoVista.UserAdmin.Rest
     public class UserVerifyController : LagoVistaBaseController
     {
         IUserVerficationManager _userVerificationManager;
+        UserManager<AppUser> _userManager;
+        IAdminLogger _adminLogger;
 
-        public UserVerifyController(IUserVerficationManager userVerificationManager, IAdminLogger logger, UserManager<AppUser> userManager) : base(userManager, logger)
+        public UserVerifyController(IUserVerficationManager userVerificationManager, IAdminLogger logger, UserManager<AppUser> userManager, IAppConfig appConfig) : base(userManager, logger)
         {
             _userVerificationManager = userVerificationManager;
+            _adminLogger = logger;
+            _userManager = userManager;
         }
 
         /// <summary>
@@ -38,7 +44,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/verify/email/confirmationcode/send")]
-        public Task<InvokeResult> SendConfirmationEmailAsync()
+        public Task<InvokeResult<string>> SendConfirmationEmailAsync()
         {
             return _userVerificationManager.SendConfirmationEmailAsync(OrgEntityHeader, UserEntityHeader);
         }
@@ -48,7 +54,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpPost("/api/verify/sendsmscode")]
-        public Task<InvokeResult> SendSMSCodeAsync([FromBody] VerfiyPhoneNumber sendSMSCode)
+        public Task<InvokeResult<string>> SendSMSCodeAsync([FromBody] VerfiyPhoneNumber sendSMSCode)
         {
             return _userVerificationManager.SendSMSCodeAsync(sendSMSCode, OrgEntityHeader, UserEntityHeader);
         }
@@ -58,7 +64,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpPost("/api/verify/sendsmscode/{phonenumber}")]
-        public Task<InvokeResult> SendSMSCodeAsync(string phonenumber)
+        public Task<InvokeResult<string>> SendSMSCodeAsync(string phonenumber)
         {
             return _userVerificationManager.SendSMSCodeAsync(new VerfiyPhoneNumber(){PhoneNumber= phonenumber}, OrgEntityHeader, UserEntityHeader);
         }
@@ -71,7 +77,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/verify/sms")]
         public Task<InvokeResult> ValidateSMSAsync([FromBody] VerfiyPhoneNumber verifyRequest)
         {           
-            return _userVerificationManager.ValidateSMSAsync(verifyRequest, OrgEntityHeader, UserEntityHeader);
+            return _userVerificationManager.ValidateSMSAsync(verifyRequest,  UserEntityHeader);
         }
 
         /// <summary>
@@ -79,10 +85,11 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="confirmEmail"></param>
         /// <returns></returns>
+        [AllowAnonymous]
         [HttpPost("/api/verify/email")]
         public Task<InvokeResult> ValidateEmailAsync([FromBody] ConfirmEmail confirmEmail)
         {
-            return _userVerificationManager.ValidateEmailAsync(confirmEmail, OrgEntityHeader, UserEntityHeader);
+            return _userVerificationManager.ValidateEmailAsync(confirmEmail, UserEntityHeader);
         }
 
         /// <summary>
@@ -90,10 +97,29 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
-        [HttpPost("/api/verify/email/{code}")]
-        public Task<InvokeResult> ValidateEmailAsync(string code)
+        [AllowAnonymous]
+        [HttpGet("/api/verify/email")]
+        public async Task<InvokeResult> ValidateEmailAsync(string userid, string code)
         {
-            return _userVerificationManager.ValidateEmailAsync(new ConfirmEmail() {  ReceivedCode = code}, OrgEntityHeader, UserEntityHeader);
+            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync] User: {userid} Code: {code}");
+
+            if (string.IsNullOrEmpty(userid))
+                return InvokeResult.FromError("[userid] required as a query string parameter.");
+
+            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_1] User: {userid} Code: {code}");
+
+            if (string.IsNullOrEmpty(code))
+                return InvokeResult.FromError("[code] required as a query string parameter.");
+
+            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_2] User: {userid} Code: {code}");
+
+            var user = await _userManager.FindByIdAsync(userid);
+            if (user == null)
+                return InvokeResult.FromError($"Could not find a user with an id of {userid}.");           
+
+            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_3] User: {user.Name} Code: {code}");
+
+            return await _userVerificationManager.ValidateEmailAsync(new ConfirmEmail() {  ReceivedCode = code}, user.ToEntityHeader());
         }
 
         /// <summary>
@@ -104,7 +130,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/verify/sms/{code}")]
         public  Task<InvokeResult> ValidatePhoneAsync(string code)
         {
-            return _userVerificationManager.ValidateSMSAsync( new VerfiyPhoneNumber() {  SMSCode = code, SkipStep = false }, OrgEntityHeader, UserEntityHeader);
+            return _userVerificationManager.ValidateSMSAsync( new VerfiyPhoneNumber() {  SMSCode = code, SkipStep = false },  UserEntityHeader);
         }
 
         /// <summary>
