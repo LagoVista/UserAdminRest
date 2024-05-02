@@ -133,13 +133,13 @@ namespace LagoVista.UserManagement.Rest
                 _appConfig.Environment == Environments.Staging)
                 throw new NotSupportedException();
 
-            var user = await _appUserManager.GetUserByUserNameAsync(username, OrgEntityHeader, UserEntityHeader);
+            var user = await _appUserManager.GetUserByUserNameAsync(username, null, null);
             if (user == null)
                 return InvokeResult.FromError("Could not load user.");
 
             var id = user.Id;
 
-            var result = await _appUserManager.DeleteUserAsync(id, OrgEntityHeader, UserEntityHeader);
+            var result = await _appUserManager.DeleteUserAsync(id, null, EntityHeader.Create(id, "dontcare"));
             if (id == UserEntityHeader.Id && result.Successful)
             {
                 await _signInManager.SignOutAsync();

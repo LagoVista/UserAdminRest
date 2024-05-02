@@ -190,8 +190,6 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/v1/login")]
         public async Task<InvokeResult<UserLoginResponse>> CookieAuthFromForm([FromBody] LoginModel model)
         {
-
-
             var result = await _signInManager.PasswordSignInAsync(model.GetAuthRequest());
             Console.WriteLine("resource=>" + result.Successful.ToString());
 
@@ -351,7 +349,6 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpPost("/api/auth/resetpassword/sendlink")]
-        [AllowAnonymous]
         public Task<InvokeResult> SendResetPasswordLinkAsync([FromBody] SendResetPasswordLink sendResetPasswordLink)
         {
             return _passwordMangaer.SendResetPasswordLinkAsync(sendResetPasswordLink);
