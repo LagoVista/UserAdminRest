@@ -36,7 +36,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/verify/isemailconfirmed")]
         public Task<InvokeResult> CheckConfirmedAsync()
         {
-            return _userVerificationManager.CheckConfirmedAsync(OrgEntityHeader, UserEntityHeader);
+            return _userVerificationManager.CheckConfirmedAsync(UserEntityHeader);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/verify/email/confirmationcode/send")]
         public Task<InvokeResult<string>> SendConfirmationEmailAsync()
         {
-            return _userVerificationManager.SendConfirmationEmailAsync(OrgEntityHeader, UserEntityHeader);
+            return _userVerificationManager.SendConfirmationEmailAsync(UserEntityHeader);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/verify/sendsmscode")]
         public Task<InvokeResult<string>> SendSMSCodeAsync([FromBody] VerfiyPhoneNumber sendSMSCode)
         {
-            return _userVerificationManager.SendSMSCodeAsync(sendSMSCode, OrgEntityHeader, UserEntityHeader);
+            return _userVerificationManager.SendSMSCodeAsync(sendSMSCode, UserEntityHeader);
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/verify/sendsmscode/{phonenumber}")]
         public Task<InvokeResult<string>> SendSMSCodeAsync(string phonenumber)
         {
-            return _userVerificationManager.SendSMSCodeAsync(new VerfiyPhoneNumber(){PhoneNumber= phonenumber}, OrgEntityHeader, UserEntityHeader);
+            return _userVerificationManager.SendSMSCodeAsync(new VerfiyPhoneNumber(){PhoneNumber= phonenumber}, UserEntityHeader);
         }
 
         /// <summary>
@@ -95,6 +95,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <summary>
         /// Verify User - Confirm Email
         /// </summary>
+        /// <param name="userid"></param>
         /// <param name="code"></param>
         /// <returns></returns>
         [AllowAnonymous]
@@ -140,7 +141,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/sms/setverified")]
         public Task<InvokeResult> SetUserSMSVerifiedAsync()
         {
-            return _userVerificationManager.SetUserSMSValidated(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            return _userVerificationManager.SetUserSMSValidated(UserEntityHeader.Id,  UserEntityHeader);
         }
     }
 
@@ -157,7 +158,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/sysadmin/sms/{userid}/setverified")]
         public Task<InvokeResult> SetUserSMSVerifiedAsync(string userId)
         {
-            return _userVerificationManager.SetUserSMSValidated(userId, OrgEntityHeader, UserEntityHeader);
+            return _userVerificationManager.SetUserSMSValidated(userId, UserEntityHeader);
         }
     }
 }

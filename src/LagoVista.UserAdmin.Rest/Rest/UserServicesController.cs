@@ -452,7 +452,7 @@ namespace LagoVista.UserManagement.Rest
         [HttpPost("/api/user/create")]
         public async Task<InvokeResult<UserInfoSummary>> CreateAuthorizedNewAsync([FromBody] RegisterUser newUser)
         {
-            var result = await _appUserManager.CreateUserAsync(newUser, false, false);
+            var result = await _appUserManager.CreateUserAsync(newUser, false);
             if (!result.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(result.ToInvokeResult());
             var setAuthResult = await _appUserManager.SetApprovedAsync(result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
             if (!setAuthResult.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(setAuthResult.ToInvokeResult());
