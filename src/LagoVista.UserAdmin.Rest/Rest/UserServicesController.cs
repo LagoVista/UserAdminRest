@@ -462,11 +462,11 @@ namespace LagoVista.UserManagement.Rest
             return InvokeResult<UserInfoSummary>.Create(appUser.CreateSummary(false, false));
 		}
 
-		/// <summary>
-		/// User Service - Register User by existing User Factory
-		/// </summary>
-		/// <returns></returns>
-		[OrgAdmin]
+        /// <summary>
+        /// User Service - Register User by existing User Factory
+        /// </summary>
+        /// <returns></returns>
+        [AllowAnonymous]
 		[HttpGet("/api/user/factory")]
 		public  DetailResponse<RegisterViewModel> CreateRegisterFactory()
 		{

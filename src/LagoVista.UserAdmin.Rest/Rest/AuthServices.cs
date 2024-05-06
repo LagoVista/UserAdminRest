@@ -354,15 +354,21 @@ namespace LagoVista.UserAdmin.Rest
             return _passwordMangaer.SendResetPasswordLinkAsync(sendResetPasswordLink);
         }
 
+        [AllowAnonymous]
         [HttpGet("/api/auth/invite/accept/{inviteid}")]
-        public async Task<InvokeResult<AcceptInviteResponse>> AcceptInvite(string inviteid)
+        public async Task<IActionResult> AcceptInvite(string inviteid)
         {
-            var result = await _orgmanager.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
+            Response.Cookies.Append("nuviotinvite", inviteid);
+            if (User.Identity.IsAuthenticated)
+            {
+                var result = await _orgmanager.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
+                if(result.Successful)                    
+                    return Redirect($"/auth/invite/accepted/{inviteid}");
 
-            /* Make sure we update the claims */
-            var currentUser = await GetCurrentUserAsync();
-            await _signInManager.SignInAsync(currentUser);
-            return result;
+                return Redirect($"/auth/invite/failed/{inviteid}?err={result.ErrorMessage}");
+            }
+
+            return Redirect($"/auth/invite/accept/{inviteid}");            
         }
 
         /// <summary>
