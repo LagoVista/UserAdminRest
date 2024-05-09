@@ -79,9 +79,6 @@ namespace LagoVista.UserAdmin.Rest
         protected static readonly Counter UserLogin = Metrics.CreateCounter("nuviot_login", "successful user login.", "source");
         protected static readonly Counter UserLoginFailed = Metrics.CreateCounter("nuviot_login_failed", "unsuccessful user login.", "source", "reason");
 
-        //IMPORTANT Until this can all be refactored into the UserAdmin class this NEEDS to point to action on the Web Site.
-        public const string ACTION_RESET_PASSWORD = "/Account/ResetPassword";
-
         public AuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, IMileStoneRepo mileStoneRepo, IProjectRepo projectRepo, IOrganizationManager orgManager, UserManager<AppUser> userManager, IToDoRepo todoRepo,
             IAuthenticationLogManager authenticationLogManager, IAppUserRepo appUserRepo, IOrgUserRepo orgUserRepo, IDeploymentInstanceManager instanceManager, IIUserAccessManager userAccessManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
         {
