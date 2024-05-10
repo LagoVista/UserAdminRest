@@ -116,5 +116,12 @@ namespace LagoVista.UserAdmin.Rest
             SetOwnedProperties(response.Model);
             return response;
         }
+
+        [HttpGet("/api/distro/externalcontact/factory")]
+        public DetailResponse<ExternalContact> CreateExternalContact()
+        {
+            var response = DetailResponse<ExternalContact>.Create();
+            return response;
+        }
     }
 }
