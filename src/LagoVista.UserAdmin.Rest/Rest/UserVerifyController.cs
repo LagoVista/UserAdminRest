@@ -100,27 +100,33 @@ namespace LagoVista.UserAdmin.Rest
         /// <returns></returns>
         [AllowAnonymous]
         [HttpGet("/api/verify/email")]
-        public async Task<InvokeResult> ValidateEmailAsync(string userid, string code)
+        public async Task<IActionResult> ValidateEmailAsync(string userid, string code)
         {
+            code = System.Net.WebUtility.UrlDecode(code);
+
             _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync] User: {userid} Code: {code}");
 
             if (string.IsNullOrEmpty(userid))
-                return InvokeResult.FromError("[userid] required as a query string parameter.");
+                return Redirect($"{CommonLinks.CouldNotConfirmEmail}?err=userid is a required field");
 
             _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_1] User: {userid} Code: {code}");
 
             if (string.IsNullOrEmpty(code))
-                return InvokeResult.FromError("[code] required as a query string parameter.");
+                return Redirect($"{CommonLinks.CouldNotConfirmEmail}?err=code is a required field");
 
             _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_2] User: {userid} Code: {code}");
 
             var user = await _userManager.FindByIdAsync(userid);
             if (user == null)
-                return InvokeResult.FromError($"Could not find a user with an id of {userid}.");           
+                return Redirect($"{CommonLinks.CouldNotConfirmEmail}?err=could not find user");
 
             _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_3] User: {user.Name} Code: {code}");
 
-            return await _userVerificationManager.ValidateEmailAsync(new ConfirmEmail() {  ReceivedCode = code}, user.ToEntityHeader());
+            var result = await _userVerificationManager.ValidateEmailAsync(new ConfirmEmail() {  ReceivedCode = code}, user.ToEntityHeader());
+            if (result.Successful)
+                return Redirect(CommonLinks.EmailConfirmed);
+
+            return Redirect(CommonLinks.CouldNotConfirmEmail);
         }
 
         /// <summary>
