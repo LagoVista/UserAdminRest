@@ -18,7 +18,7 @@ namespace LagoVista.UserAdmin.Rest
     [Authorize]
     public class HolidaySetController : LagoVistaBaseController
     {
-        IHolidaySetManager _manager;
+        private readonly IHolidaySetManager _manager;
 
         public HolidaySetController(IHolidaySetManager manager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
