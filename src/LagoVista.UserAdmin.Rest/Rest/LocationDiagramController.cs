@@ -63,5 +63,11 @@ namespace LagoVista.UserAdmin.Rest
         {
             return DetailResponse<LocationDiagramShape>.Create();
         }
+
+        [HttpGet("/api/org/location/diagram/group")]
+        public DetailResponse<LocationDiagramShapeGroup> CreateDiagramShapeGroup()
+        {
+            return DetailResponse<LocationDiagramShapeGroup>.Create();
+        }
     }
 }
