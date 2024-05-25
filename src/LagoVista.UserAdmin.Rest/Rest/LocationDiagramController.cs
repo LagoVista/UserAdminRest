@@ -1,4 +1,6 @@
-﻿using LagoVista.Core.Models.UIMetaData;
+﻿using DocumentFormat.OpenXml.Office2013.PowerPoint.Roaming;
+using DocumentFormat.OpenXml.Wordprocessing;
+using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
@@ -43,6 +45,13 @@ namespace LagoVista.UserAdmin.Rest
             return DetailResponse<LocationDiagram>.Create(diagram);
         }
 
+
+        [HttpDelete("/api/org/location/diagram/{id}")]
+        public Task<InvokeResult> DeleteOrgLocation(string id)
+        {
+            return _diagramManager.DeleteLocationDiagramAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
         [HttpGet("/api/org/location/diagrams")]
         public Task<ListResponse<LocationDiagramSummary>> GetDiagrams()
         {
@@ -55,6 +64,12 @@ namespace LagoVista.UserAdmin.Rest
             var location = DetailResponse<LocationDiagram>.Create();
             SetOwnedProperties(location.Model);
             SetAuditProperties(location.Model);
+            location.Model.Layers.Add(new LocationDiagramLayer()
+            {
+                Name = "Layer 1",
+                Key = "layer1"
+            });
+
             return location;
         }
 
@@ -64,10 +79,17 @@ namespace LagoVista.UserAdmin.Rest
             return DetailResponse<LocationDiagramShape>.Create();
         }
 
-        [HttpGet("/api/org/location/diagram/group")]
+        [HttpGet("/api/org/location/diagram/group/factory")]
         public DetailResponse<LocationDiagramShapeGroup> CreateDiagramShapeGroup()
         {
             return DetailResponse<LocationDiagramShapeGroup>.Create();
+        }
+
+
+        [HttpGet("/api/org/location/diagram/layer/factory")]
+        public DetailResponse<LocationDiagramLayer> CreateDiagramLayer()
+        {
+            return DetailResponse<LocationDiagramLayer>.Create();
         }
     }
 }
