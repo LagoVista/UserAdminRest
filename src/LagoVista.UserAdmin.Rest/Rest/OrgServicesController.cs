@@ -180,14 +180,18 @@ namespace LagoVista.UserAdmin.Rest
 			return InvokeResult.Success;
 		}
 
+        [HttpDelete("/api/org/{orgid}/user/{userid}")]
+		public  Task<InvokeResult> RemoveUserFromOrgAsync(string orgId, string userId)
+		{
+			return _orgManager.RemoveUserFromOrganizationAsync(orgId, userId, OrgEntityHeader, UserEntityHeader);
+		}
 
-
-		/// <summary>
-		/// Orgs Service - Add an Organization
-		/// </summary>
-		/// <param name="org"></param>
-		/// <returns></returns>
-		[HttpPut("/api/org")]
+        /// <summary>
+        /// Orgs Service - Add an Organization
+        /// </summary>
+        /// <param name="org"></param>
+        /// <returns></returns>
+        [HttpPut("/api/org")]
 		public async Task<InvokeResult> UpdateOrgAsync([FromBody] Organization org)
 		{
 			return await _orgManager.UpdateOrganizationAsync(org, OrgEntityHeader, UserEntityHeader);
@@ -465,6 +469,8 @@ namespace LagoVista.UserAdmin.Rest
 		{
 			return _orgManager.GetOwnedObjectsForOrgAsync(id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
 		}
+
+		
 
 
 		[HttpDelete("/sys/api/user/{id}")]

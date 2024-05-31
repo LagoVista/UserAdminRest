@@ -102,9 +102,19 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/verify/email")]
         public async Task<IActionResult> ValidateEmailAsync(string userid, string code)
         {
+            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync] User: {userid} Raw Code: {code}");
+            code = code.Replace("%2B", "+");
+            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync] User: {userid} %2B Replaced: {code}");
+
+            // URL Decode recods %2B as a space?!?!?!  It really needs to be decoded as a +
+            // pretty close to 100% sure this will bite us in the ass at some point.
+            // sorry...KDW 5/31/2024.
             code = System.Net.WebUtility.UrlDecode(code);
 
-            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync] User: {userid} Code: {code}");
+            // set it back to +...sorry...it will go BOOM at some point...
+            code = code.Replace(" ", "+");
+
+            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync] User: {userid} Url Decoded Code: {code}");
 
             if (string.IsNullOrEmpty(userid))
                 return Redirect($"{CommonLinks.CouldNotConfirmEmail}?err=userid is a required field");
@@ -126,7 +136,7 @@ namespace LagoVista.UserAdmin.Rest
             if (result.Successful)
                 return Redirect(CommonLinks.EmailConfirmed);
 
-            return Redirect(CommonLinks.CouldNotConfirmEmail);
+            return Redirect($"{CommonLinks.CouldNotConfirmEmail}?err={result.ErrorMessage}");
         }
 
         /// <summary>
