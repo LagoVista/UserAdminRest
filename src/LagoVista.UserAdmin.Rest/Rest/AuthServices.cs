@@ -355,15 +355,20 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/auth/invite/accept/{inviteid}")]
         public async Task<IActionResult> AcceptInvite(string inviteid)
         {
+            
+
             Response.Cookies.Append("nuviotinvite", inviteid);
             if (User.Identity.IsAuthenticated)
             {
+                await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, UserEntityHeader, extras:"Accepting Invite, authenticated.", inviteId: inviteid);
                 var result = await _orgmanager.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
                 if(result.Successful)                    
                     return Redirect($"/auth/invite/accepted/{inviteid}");
 
                 return Redirect($"/auth/invite/failed/{inviteid}?err={result.ErrorMessage}");
             }
+
+            await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, userId:"?", extras:"Not Authenticated, Rediret to Accept Invite Page", inviteId: inviteid);
 
             return Redirect($"/auth/invite/accept/{inviteid}");            
         }
