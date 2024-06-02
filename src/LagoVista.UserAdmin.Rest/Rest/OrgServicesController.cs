@@ -55,12 +55,22 @@ namespace LagoVista.UserAdmin.Rest
 			return ListResponse<OrgUser>.Create(orgsForUser);
 		}
 
-		/// <summary>
-		/// Orgs Service - Get Orgs for User
-		/// </summary>
-		/// <param name="userid"></param>
-		/// <returns></returns>
-		[HttpGet("/api/user/{userid}/orgs")]
+        /// <summary>
+        /// Orgs Service - Get Orgs for User
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/user/orgs/cache/clear")]
+        public async Task<InvokeResult> ClearOrgUserCache()
+        {
+            return await _orgManager.ClearOrgUserCache(OrgEntityHeader, UserEntityHeader);
+        }
+
+        /// <summary>
+        /// Orgs Service - Get Orgs for User
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/user/{userid}/orgs")]
 		public async Task<ListResponse<OrgUser>> GetOrgsForUserAsync(string userid)
 		{
 			var orgsForUser = await _orgManager.GetOrganizationsForUserAsync(userid, OrgEntityHeader, UserEntityHeader);
