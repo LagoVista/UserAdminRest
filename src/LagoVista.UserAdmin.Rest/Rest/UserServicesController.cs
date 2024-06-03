@@ -20,6 +20,7 @@ using LagoVista.UserAdmin.Models.Auth;
 using LagoVista.UserAdmin.Repos.Repos.Account;
 using LagoVista.UserAdmin.Interfaces;
 using LagoVista.Core.Interfaces;
+using DocumentFormat.OpenXml.Office2010.Excel;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -146,6 +147,23 @@ namespace LagoVista.UserManagement.Rest
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// User Service - Get User by Email
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet("/api/userbyemail/testing")]
+        public async Task<DetailResponse<UserInfo>> TestGetUserByEmailAsync(String email)
+        {
+            if (_appConfig.Environment == Environments.Production ||
+                _appConfig.Environment == Environments.Staging)
+                throw new NotSupportedException();
+
+            var appUser = await _appUserManager.GetUserByUserNameAsync(email, null, null);
+            return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
         }
 
         [HttpDelete("/api/user/{id}")]
