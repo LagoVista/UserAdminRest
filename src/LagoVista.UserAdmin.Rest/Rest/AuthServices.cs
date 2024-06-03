@@ -30,6 +30,7 @@ using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
 using System.Diagnostics;
 using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 using Microsoft.VisualStudio.Services.Aad;
+using Org.BouncyCastle.Ocsp;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -131,6 +132,9 @@ namespace LagoVista.UserAdmin.Rest
         [AllowAnonymous]
         public async Task<InvokeResult<AuthResponse>> AuthFromBody([FromBody] AuthRequest req)
         {
+            req.InviteId = Request.Cookies["inviteid"];
+            Response.Cookies.Delete("inviteid");
+
             var result = await HandleAuthRequest(req);
             if(result.Successful)
                 UserLogin.WithLabels("auth-request").Inc();
@@ -187,6 +191,9 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/v1/login")]
         public async Task<InvokeResult<UserLoginResponse>> CookieAuthFromForm([FromBody] LoginModel model)
         {
+            model.InviteId = Request.Cookies["inviteid"];
+            Response.Cookies.Delete("inviteid");
+
             var result = await _signInManager.PasswordSignInAsync(model.GetAuthRequest());
             Console.WriteLine("resource=>" + result.Successful.ToString());
 
@@ -354,23 +361,22 @@ namespace LagoVista.UserAdmin.Rest
         [AllowAnonymous]
         [HttpGet("/api/auth/invite/accept/{inviteid}")]
         public async Task<IActionResult> AcceptInvite(string inviteid)
-        {
-            
-
-            Response.Cookies.Append("nuviotinvite", inviteid);
+        {            
             if (User.Identity.IsAuthenticated)
             {
-                await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, UserEntityHeader, extras:"Accepting Invite, authenticated.", inviteId: inviteid);
+                await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, UserEntityHeader, OrgEntityHeader, extras: "Accepting direct invite, authenticated.", inviteId: inviteid);
                 var result = await _orgmanager.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
-                if(result.Successful)                    
-                    return Redirect($"/auth/invite/accepted/{inviteid}");
-
-                return Redirect($"/auth/invite/failed/{inviteid}?err={result.ErrorMessage}");
+                var redirect = result.Result.RedirectPage;
+                await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptedInvite, UserEntityHeader, OrgEntityHeader, extras: "Done accepted direct invite, authenticated.", redirectUri: redirect, inviteId: inviteid);
+                return Redirect(redirect);
             }
-
-            await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, userId:"?", extras:"Not Authenticated, Rediret to Accept Invite Page", inviteId: inviteid);
-
-            return Redirect($"/auth/invite/accept/{inviteid}");            
+            else
+            {
+                Response.Cookies.Append("inviteid", inviteid);
+                var redirect = CommonLinks.AcceptInviteId.Replace("{inviteid}", inviteid);
+                await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, userId: "?", redirectUri: redirect, extras: "Not Authenticated, Rediret to Accept Invite Page", inviteId: inviteid);
+                return Redirect(redirect);
+            }
         }
 
         /// <summary>

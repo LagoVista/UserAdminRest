@@ -38,9 +38,10 @@ namespace LagoVista.UserManagement.Rest
         private readonly IMostRecentlyUsedManager _mruManager;
         private readonly IAppUserInboxManager _appUserInboxManager;
         private readonly IAppConfig _appConfig;
+        private readonly IAuthenticationLogManager _authLogManager;
 
         public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, IUserManager usrManager, IAppUserInboxManager appUserInboxManager,
-            IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
+          IAuthenticationLogManager authLogManager, IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
             _usrManager = usrManager;
@@ -50,6 +51,7 @@ namespace LagoVista.UserManagement.Rest
             _mruManager = mruManager;
             _appUserInboxManager = appUserInboxManager;
             _appConfig = appConfig;
+            _authLogManager = authLogManager;
 
         }
 
@@ -125,7 +127,6 @@ namespace LagoVista.UserManagement.Rest
             await _appUserManager.UpdateUserAsync(appUser.ToUserInfo(), OrgEntityHeader, UserEntityHeader);
         }
 
-        [AllowAnonymous]
         [HttpDelete("/api/user")]
         public async Task<InvokeResult> DeleteUserByEmail(string username)
          {
@@ -134,17 +135,21 @@ namespace LagoVista.UserManagement.Rest
                 _appConfig.Environment == Environments.Staging)
                 throw new NotSupportedException();
 
-            var user = await _appUserManager.GetUserByUserNameAsync(username, null, null);
+            var user = await _appUserManager.GetUserByUserNameAsync(username, OrgEntityHeader, UserEntityHeader);
             if (user == null)
+            {
+                await _authLogManager.AddAsync(UserAdmin.Models.Security.AuthLogTypes.DeleteUserFailed, userName: username, errors: $"Could not find a user with email address: {username}");
                 return InvokeResult.FromError("Could not load user.");
+            }
 
             var id = user.Id;
-
-            var result = await _appUserManager.DeleteUserAsync(id, null, EntityHeader.Create(id, "dontcare"));
-            if (id == UserEntityHeader.Id && result.Successful)
+            var result = await _appUserManager.DeleteUserAsync(id, OrgEntityHeader, UserEntityHeader);
+            if(result.Successful)
             {
-                await _signInManager.SignOutAsync();
+                await _authLogManager.AddAsync(UserAdmin.Models.Security.AuthLogTypes.DeletedUser, userName: username, errors: result.ErrorMessage);
             }
+            else
+                await _authLogManager.AddAsync(UserAdmin.Models.Security.AuthLogTypes.DeleteUserFailed, userName: username, errors: result.ErrorMessage);
 
             return result;
         }
@@ -435,9 +440,12 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("/api/user/register")]
-        public Task<InvokeResult<CreateUserResponse>> CreateNewAsync([FromBody] RegisterUser newUser)
+        public async Task<IActionResult> CreateNewAsync([FromBody] RegisterUser newUser)
         {
-            return _appUserManager.CreateUserAsync(newUser);
+            newUser.InviteId = Request.Cookies["inviteid"];
+            var response = await _appUserManager.CreateUserAsync(newUser);
+            return Redirect(response.RedirectURL);
+
         }
 
         [HttpGet("/api/user/{id}/ssn")]

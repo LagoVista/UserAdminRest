@@ -480,9 +480,6 @@ namespace LagoVista.UserAdmin.Rest
 			return _orgManager.GetOwnedObjectsForOrgAsync(id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
 		}
 
-		
-
-
 		[HttpDelete("/sys/api/user/{id}")]
 		public Task<InvokeResult> DeleteUserAsync(string id)
 		{
