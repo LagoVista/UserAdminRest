@@ -23,6 +23,7 @@ using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.Core.Exceptions;
 using LagoVista.Core;
 using LagoVista.UserAdmin.Models.Auth;
+using LagoVista.UserAdmin.Models.Security;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -440,13 +441,15 @@ namespace LagoVista.UserAdmin.Rest
 		IAuthTokenManager _authTokenManager;
 		ISignInManager _signInManager;
 		IAppUserManager _appUserManager;
+		IModuleManager _moduleManager;
 
-		public SysAdminOrgServicesController(IAppUserManager appUserManager, ISignInManager signInManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+		public SysAdminOrgServicesController(IAppUserManager appUserManager, IModuleManager moduleManager, ISignInManager signInManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
 		{
 			_orgManager = orgManager;
 			_authTokenManager = authTokenManager;
 			_signInManager = signInManager;
 			_appUserManager = appUserManager;
+			_moduleManager = moduleManager;
 		}
 
 		[HttpGet("/sys/api/orgs/all")]
@@ -455,11 +458,18 @@ namespace LagoVista.UserAdmin.Rest
 			return _orgManager.GetAllOrgsAsync(OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
 		}
 
-		/// <summary>
-		/// Orgs Service - Get Users for Org
-		/// </summary>
-		/// <returns></returns>
-		[HttpGet("/sys/api/org/{orgid}/users")]
+        [HttpGet("/sys/api/orgs/search")]
+        public Task<ListResponse<OrganizationSummary>> GetAllOrgsAsync(string filter)
+        {
+            return _orgManager.SearchAllOrgsAsync(filter, UserEntityHeader, GetListRequestFromHeader());
+        }
+
+
+        /// <summary>
+        /// Orgs Service - Get Users for Org
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/sys/api/org/{orgid}/users")]
 		public async Task<ListResponse<UserInfoSummary>> GetUserForOrgAsync(string orgid)
 		{
 			var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
@@ -486,10 +496,29 @@ namespace LagoVista.UserAdmin.Rest
 			return _appUserManager.DeleteUserAsync(id, OrgEntityHeader, UserEntityHeader);
 		}
 
-		[HttpDelete("/sys/api/org/{id}")]
+
+        [HttpPut("/sys/api/org")]
+        public Task<InvokeResult> UpdateOrgAsync([FromBody] Organization org)
+        {
+            return _orgManager.SysAdminUpdateOrgAsync(org, UserEntityHeader);
+        }
+
+        [HttpGet("/sys/api/org/{id}")]
+        public Task<InvokeResult<Organization>> GetOrgAsync(string id)
+        {
+            return _orgManager.SysAdminGetOrgAsync(id, UserEntityHeader);
+        }
+
+        [HttpDelete("/sys/api/org/{id}")]
 		public Task<InvokeResult> DeleteOrgAsync(string id)
 		{
 			return _orgManager.DeleteOrgAsync(id, OrgEntityHeader, UserEntityHeader);
+		}
+
+		[HttpGet("/sys/api/modules/all")]
+		public Task<ListResponse<ModuleSummary>> GetAllModulesAsync()
+		{
+			return _moduleManager.GetAllModulesAsync(UserEntityHeader, GetListRequestFromHeader());
 		}
 	}
 }
