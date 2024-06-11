@@ -231,12 +231,22 @@ namespace LagoVista.UserAdmin.Rest
 			return DetailResponse<Organization>.Create(org);
 		}
 
+        /// <summary>
+        /// Orgs Service - Return Currently Organization
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/org/current/summary")]
+        public async Task<InvokeResult<OrganizationSummary>> GetCurrentOrgSummaryAsync()
+        {
+            var org = await _orgManager.GetOrganizationAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+			return InvokeResult<OrganizationSummary>.Create(org.CreateSummary());
+        }
 
-		/// <summary>
-		/// Orgs Service - Org Factory
-		/// </summary>
-		/// <returns></returns>
-		[HttpGet("/api/org/factory")]
+        /// <summary>
+        /// Orgs Service - Org Factory
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/org/factory")]
 		public DetailResponse<CreateOrganizationViewModel> CreateOrgFactory()
 		{
 			return DetailResponse<CreateOrganizationViewModel>.Create();
