@@ -3,15 +3,13 @@ using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
-using LagoVista.UserAdmin.Interfaces.Repos.Security;
-using LagoVista.UserAdmin.Managers;
 using LagoVista.UserAdmin.Models.Orgs;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Net;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LagoVista.UserAdmin.Rest
@@ -51,6 +49,40 @@ namespace LagoVista.UserAdmin.Rest
         {
             return _orgManager.GetLocationsForOrganizationsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
+
+        [HttpPost("/api/org/location/{id}/diagram")]
+        public async Task<InvokeResult> AddDiagramLocation(string id, [FromBody]  OrgLocationDiagramReference reference)
+        {
+            var location = await _orgManager.GetOrgLocationAsync(id, OrgEntityHeader, UserEntityHeader);
+            location.DiagramReferences.Add(reference);
+            return await UpdateLocationAsync(location);
+        }
+
+        [HttpPut("/api/org/location/{id}/diagram")]
+        public async Task<InvokeResult> UpdateDiagramLocation(string id, [FromBody] OrgLocationDiagramReference reference)
+        {
+            var location = await _orgManager.GetOrgLocationAsync(id, OrgEntityHeader, UserEntityHeader);
+            var diagramReference = location.DiagramReferences.FirstOrDefault(drg => drg.Id == reference.Id);
+            if(diagramReference != null)
+                location.DiagramReferences.Remove(diagramReference);
+
+            location.DiagramReferences.Add(reference);
+
+            return await UpdateLocationAsync(location);
+        }
+
+
+        [HttpDelete("/api/org/location/{id}/diagram/{refid}")]
+        public async Task<InvokeResult> UpdateDiagramLocation(string id, string refid)
+        {
+            var location = await _orgManager.GetOrgLocationAsync(id, OrgEntityHeader, UserEntityHeader);
+            var diagramReference = location.DiagramReferences.FirstOrDefault(drg => drg.Id == refid);
+            if (diagramReference != null)
+                location.DiagramReferences.Remove(diagramReference);
+
+            return await UpdateLocationAsync(location);
+        }
+
 
         [HttpGet("/api/org/location/factory")]
         public DetailResponse<OrgLocation> CreateOrgLocation()
