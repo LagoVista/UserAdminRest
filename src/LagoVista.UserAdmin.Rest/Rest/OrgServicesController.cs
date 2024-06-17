@@ -525,10 +525,17 @@ namespace LagoVista.UserAdmin.Rest
 			return _orgManager.DeleteOrgAsync(id, OrgEntityHeader, UserEntityHeader);
 		}
 
-		[HttpGet("/sys/api/modules/all")]
+        [HttpGet("/sys/api/modules/all")]
 		public Task<ListResponse<ModuleSummary>> GetAllModulesAsync()
 		{
 			return _moduleManager.GetAllModulesAsync(UserEntityHeader, GetListRequestFromHeader());
 		}
-	}
+
+        [HttpGet("/sys/api/modules/{orgid}/all")]
+        public Task<ListResponse<ModuleSummary>> GetAllModulesAsync(string orgid)
+        {
+            return _moduleManager.SysAdminGetModuleAsync(orgid, UserEntityHeader);
+        }
+
+    }
 }
