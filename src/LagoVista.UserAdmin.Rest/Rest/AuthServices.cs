@@ -366,9 +366,18 @@ namespace LagoVista.UserAdmin.Rest
             {
                 await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, UserEntityHeader, OrgEntityHeader, extras: "Accepting direct invite, authenticated.", inviteId: inviteid);
                 var result = await _orgmanager.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
-                var redirect = result.Result.RedirectPage;
-                await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptedInvite, UserEntityHeader, OrgEntityHeader, extras: "Done accepted direct invite, authenticated.", redirectUri: redirect, inviteId: inviteid);
-                return Redirect(redirect);
+                if(result.Successful)
+                {
+                    var redirect = result.Result.RedirectPage;
+                    await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptedInvite, UserEntityHeader, OrgEntityHeader, extras: "Done accepted direct invite, authenticated - success.", redirectUri: redirect, inviteId: inviteid);
+                    return Redirect(redirect);
+                }
+                else
+                {
+                    var redirect = result.RedirectURL;
+                    await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptedInvite, UserEntityHeader, OrgEntityHeader, extras: "Done accepted direct invite, authenticated - failed.", redirectUri: redirect, inviteId: inviteid, errors: result.ErrorMessage);
+                    return Redirect(redirect);
+                }
             }
             else
             {
