@@ -97,11 +97,11 @@ namespace LagoVista.UserManagement.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/user")]
-        public async Task<DetailResponse<UserInfo>> ReturnCurrentUserAsync()
+        public async Task<DetailResponse<AppUser>> ReturnCurrentUserAsync()
         {
             var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
             //No need to send the password has down there, need to be careful when doing an update...
-            return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
+            return DetailResponse<AppUser>.Create(appUser);
         }
 
         [SystemAdmin]
