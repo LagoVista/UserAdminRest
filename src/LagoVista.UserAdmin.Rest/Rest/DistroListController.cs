@@ -3,6 +3,7 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Runtime.Core.Users;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Orgs;
@@ -21,10 +22,12 @@ namespace LagoVista.UserAdmin.Rest
     public class DistroListController : LagoVistaBaseController
     {
         private readonly IDistributionManager _distorManager;
+        private readonly ISystemUsers _systemUser;
 
-        public DistroListController(IDistributionManager distroManager,  UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public DistroListController(IDistributionManager distroManager, ISystemUsers systemUsers,  UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
-            _distorManager = distroManager ?? throw new ArgumentNullException();
+            _distorManager = distroManager ?? throw new ArgumentNullException(nameof(distroManager));
+            _systemUser = systemUsers ?? throw new ArgumentNullException(nameof(systemUsers));
         }
 
         /// <summary>
@@ -69,6 +72,37 @@ namespace LagoVista.UserAdmin.Rest
         {
             return _distorManager.CheckInUse(id, OrgEntityHeader, UserEntityHeader);
         }
+
+
+        /// <summary>
+        /// Distro List - In Use
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("/api/distro/{id}/sendconfirmmessage")]
+        public Task<InvokeResult> SendTestAsync(String id)
+        {
+            return _distorManager.SendTestAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("/api/distro/{id}/confirm/external/{contactid}/{contactmethod}")]
+        public async Task<IActionResult> ConfirmExternalContact(string orgId, string id, string contactid, string contactmethod)
+        {
+            var result = await _distorManager.ConfirmExternalContact(id, contactid, contactmethod);
+
+            return Content($"<html>{result.Result}</html>", "text/html");
+        }
+
+        [AllowAnonymous]
+        [HttpGet("/api/distro/{id}/confirm/appuser/{appuserid}/{contactmethod}")]
+        public async Task<IActionResult> ConfirmAppUser(string id, string appuserid, string contactmethod)
+        {
+            var result = await _distorManager.ConfirmExternalContact(id, appuserid, contactmethod);
+
+            return Content($"<html>{result.Result}</html>", "text/html");
+        }
+
 
         /// <summary>
         /// Distro List - Get
