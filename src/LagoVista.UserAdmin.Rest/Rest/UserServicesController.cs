@@ -440,12 +440,12 @@ namespace LagoVista.UserManagement.Rest
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("/api/user/register")]
-        public async Task<IActionResult> CreateNewAsync([FromBody] RegisterUser newUser)
+        public async Task<InvokeResult<CreateUserResponse>> CreateNewAsync([FromBody] RegisterUser newUser)
         {
-            newUser.InviteId = Request.Cookies["inviteid"];
-            var response = await _appUserManager.CreateUserAsync(newUser);
-            return Redirect(response.RedirectURL);
+            if(String.IsNullOrEmpty(newUser.InviteId))
+                newUser.InviteId = Request.Cookies["inviteid"];
 
+            return await _appUserManager.CreateUserAsync(newUser);
         }
 
         [HttpGet("/api/user/{id}/ssn")]
