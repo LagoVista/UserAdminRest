@@ -537,5 +537,10 @@ namespace LagoVista.UserAdmin.Rest
             return _moduleManager.SysAdminGetModuleAsync(orgid, UserEntityHeader);
         }
 
+		[HttpGet("/sys/api/org/isproductline/{flag}")]
+		public Task<InvokeResult> SetIsProductLine(bool flag) {
+			return _orgManager.SetIsProductLineOrgAsync(flag, OrgEntityHeader, UserEntityHeader);
+		}
+
     }
 }
