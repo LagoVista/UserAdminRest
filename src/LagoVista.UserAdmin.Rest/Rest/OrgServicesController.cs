@@ -110,12 +110,23 @@ namespace LagoVista.UserAdmin.Rest
 			return ListResponse<UserInfoSummary>.Create(orgUsers);
 		}
 
+        /// <summary>
+        /// Orgs Service - Get Users for Org
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/org/{orgid}/users")]
+        public async Task<ListResponse<UserInfoSummary>> GetUserForOrgAsync(string orgid)
+        {
+            var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
+            return ListResponse<UserInfoSummary>.Create(orgUsers);
+        }
 
-		/// <summary>
-		/// Orgs Service - Get Users for Org
-		/// </summary>
-		/// <returns></returns>
-		[HttpGet("/api/users/active")]
+
+        /// <summary>
+        /// Orgs Service - Get Users for Org
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/users/active")]
 		public async Task<ListResponse<UserInfoSummary>> GetActiveUserForOrgAsync()
 		{
 			var orgUsers = await _orgManager.GetActiveUsersForOrganizationsAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
