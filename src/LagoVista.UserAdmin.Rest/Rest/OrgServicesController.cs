@@ -1,5 +1,4 @@
 ﻿using LagoVista.Core.Models.UIMetaData;
-using LagoVista.Core.PlatformSupport;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
@@ -13,8 +12,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using LagoVista.Core.Authentication.Models;
 using LagoVista.UserAdmin.Interfaces.Repos.Security;
@@ -24,26 +21,28 @@ using LagoVista.Core.Exceptions;
 using LagoVista.Core;
 using LagoVista.UserAdmin.Models.Auth;
 using LagoVista.UserAdmin.Models.Security;
+using System.Diagnostics;
 
 namespace LagoVista.UserAdmin.Rest
 {
-	/// <summary>
-	/// Orgs Services
-	/// </summary>
-	[Authorize]
+    /// <summary>
+    /// Orgs Services
+    /// </summary>
+    [Authorize]
 	public class OrgServicesController : LagoVistaBaseController
 	{
-		IOrganizationManager _orgManager;
-		IAuthTokenManager _authTokenManager;
-		ISignInManager _signInManager;
+        readonly IOrganizationManager _orgManager;
+        readonly IAuthTokenManager _authTokenManager;
+        readonly ISignInManager _signInManager;
+		readonly IAdminLogger _adminLogger;
 
-		public OrgServicesController(IAppUserManager appUserManager, ISignInManager signInManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+		public OrgServicesController(ISignInManager signInManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
 		{
-			_orgManager = orgManager;
-			_authTokenManager = authTokenManager;
-			_signInManager = signInManager;
+			_orgManager = orgManager ?? throw new ArgumentNullException(nameof(orgManager));
+            _authTokenManager = authTokenManager ?? throw new ArgumentNullException(nameof(authTokenManager));
+            _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
+            _adminLogger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
-
 
 		/// <summary>
 		/// Orgs Service - Get Orgs for User
@@ -231,11 +230,11 @@ namespace LagoVista.UserAdmin.Rest
 			return DetailResponse<Organization>.Create(org);
 		}
 
-		/// <summary>
-		/// Orgs Service - Return Currently Organization
-		/// </summary>
-		/// <returns></returns>
-		[HttpGet("/api/org/current")]
+        /// <summary>
+        /// Orgs Service - Return Currently Organization
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/org/current")]
 		public async Task<DetailResponse<Organization>> GetCurrentOrgAsync()
 		{
 			var org = await _orgManager.GetOrganizationAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
@@ -263,12 +262,23 @@ namespace LagoVista.UserAdmin.Rest
 			return DetailResponse<CreateOrganizationViewModel>.Create();
 		}
 
-		/// <summary>
-		/// Orgs Service - Invite User to Join Org
-		/// </summary>
-		/// <param name="inviteUser"></param>
-		/// <returns></returns>
-		[OrgAdmin]
+        /// <summary>
+        /// Orgs Service - Sub Location Factory
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/org/location/sublocation/factory")]
+        public DetailResponse<SubLocation> CreateSubLocationFactory()
+        {
+            return DetailResponse<SubLocation>.Create();
+        }
+
+
+        /// <summary>
+        /// Orgs Service - Invite User to Join Org
+        /// </summary>
+        /// <param name="inviteUser"></param>
+        /// <returns></returns>
+        [OrgAdmin]
 		[HttpPost("/api/org/inviteuser/send")]
 		public Task<InvokeResult<Invitation>> InviteToOrgAsync([FromBody] InviteUser inviteUser)
 		{
@@ -295,32 +305,6 @@ namespace LagoVista.UserAdmin.Rest
 		public Task<ListResponse<Invitation>> GetInvitationsAsync()
 		{
 			return _orgManager.GetActiveInvitationsForOrgAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
-		}
-
-		/// <summary>
-		/// Orgs Service - Get Invitation
-		/// </summary>
-		/// <param name="invitationid"></param>
-		/// <returns></returns>
-		[AllowAnonymous]
-		[HttpGet("/api/org/invitation/{invitationid}")]
-		public Task<Invitation> GetInvitationAsync(string invitationid)
-		{
-			return _orgManager.GetInvitationAsync(invitationid);
-		}
-
-		/// <summary>
-		/// Orgs Service - Get Invitation
-		/// </summary>
-		/// <param name="invitationid"></param>
-		/// <returns></returns>
-		[AllowAnonymous]
-		[HttpGet("/api/org/invitation/form/{invitationid}")]
-		public async Task<DetailResponse<InviteUserViewModel>> GetInvitationFormAsync(string invitationid)
-		{
-			var rawData = await _orgManager.GetInvitationAsync(invitationid);
-			var model = new InviteUserViewModel { Email = rawData.Email, Message = rawData.Message, Name = rawData.Name };
-			return DetailResponse<InviteUserViewModel>.Create(model);
 		}
 
 		/// <summary>
@@ -405,19 +389,6 @@ namespace LagoVista.UserAdmin.Rest
 
 
 		/// <summary>
-		/// Orgs Service - Check if Invitation is Still Available
-		/// </summary>
-		/// <param name="inviteid"></param>
-		/// <returns></returns>
-		[AllowAnonymous]
-		[HttpGet("/api/org/inviteuser/{inviteid}/isavailable")]
-		public async Task<bool> GetIsInviteActiveAsync(string inviteid)
-		{
-			return await _orgManager.GetIsInvigationActiveAsync(inviteid);
-		}
-
-
-		/// <summary>
 		/// Orgs Service - Switch To New Org
 		/// </summary>
 		/// <param name="authRequest"></param>
@@ -454,7 +425,51 @@ namespace LagoVista.UserAdmin.Rest
 		}
 	}
 
-	[Authorize]
+	public class PublicOrgController : Controller
+    {
+        readonly IAdminLogger _adminLogger;
+		readonly IOrganizationManager _orgManager;
+
+        public PublicOrgController(IAdminLogger adminLogger, IOrganizationManager orgManager)
+		{
+			_adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
+            _orgManager = orgManager ?? throw new ArgumentNullException(nameof(orgManager));
+        }
+
+        [HttpGet("/api/org/inviteuser/{inviteid}/isavailable")]
+        public async Task<bool> GetIsInviteActiveAsync(string inviteid)
+        {
+            return await _orgManager.GetIsInvigationActiveAsync(inviteid);
+        }
+
+        /// <summary>
+        /// Orgs Service - Return Organization
+        /// </summary>
+        /// <param name="orgns">Org Namespace</param>
+        /// <returns></returns>
+        [HttpGet("/api/org/{orgns}/public/summary")]
+        public Task<PublicOrgInformation> GetPublicSummaryForOrg(string orgns)
+        {
+            _adminLogger.Trace($"[OrgServicesController__GetPublicSummaryForOrg] GetPublicOrginfoAsync - Org Namespace {orgns}");
+            return _orgManager.GetPublicOrginfoAsync(orgns);
+        }
+
+        [HttpGet("/api/org/invitation/{invitationid}")]
+        public Task<Invitation> GetInvitationAsync(string invitationid)
+        {
+            return _orgManager.GetInvitationAsync(invitationid);
+        }
+
+		[HttpGet("/api/org/invitation/form/{invitationid}")]
+		public async Task<DetailResponse<InviteUserViewModel>> GetInvitationFormAsync(string invitationid)
+		{
+			var rawData = await _orgManager.GetInvitationAsync(invitationid);
+			var model = new InviteUserViewModel { Email = rawData.Email, Message = rawData.Message, Name = rawData.Name };
+			return DetailResponse<InviteUserViewModel>.Create(model);
+		}
+    }
+
+    [Authorize]
 	[SystemAdmin]
 	public class SysAdminOrgServicesController : LagoVistaBaseController
 	{
