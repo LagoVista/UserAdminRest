@@ -1,4 +1,5 @@
-﻿using LagoVista.Core.Models.UIMetaData;
+﻿using LagoVista.Core.Interfaces;
+using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
@@ -18,11 +19,13 @@ namespace LagoVista.UserAdmin.Rest
     [Authorize]
     public class OrgLocationService : LagoVistaBaseController
     {
-        IOrganizationManager _orgManager;
+        private readonly IOrganizationManager _orgManager;
+        private readonly ITimeZoneServices _timeZoneServices;
 
-        public OrgLocationService( IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public OrgLocationService( IOrganizationManager orgManager, UserManager<AppUser> userManager, ITimeZoneServices timeZoneServices, IAdminLogger logger) : base(userManager, logger)
         {
             _orgManager = orgManager ?? throw new ArgumentNullException(nameof(orgManager));
+            _timeZoneServices = timeZoneServices ?? throw new ArgumentNullException(nameof(timeZoneServices));
         }
 
         [HttpPost("/api/org/location/")]
@@ -41,7 +44,9 @@ namespace LagoVista.UserAdmin.Rest
         public async Task<DetailResponse<OrgLocation>> GetOrgLocation(string id)
         {
             var org = await _orgManager.GetOrgLocationAsync(id, OrgEntityHeader, UserEntityHeader);
-            return DetailResponse<OrgLocation>.Create(org);
+            var form =  DetailResponse<OrgLocation>.Create(org);
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+            return form;
         }
 
         [HttpGet("/api/org/locations")]
@@ -71,7 +76,6 @@ namespace LagoVista.UserAdmin.Rest
             return await UpdateLocationAsync(location);
         }
 
-
         [HttpDelete("/api/org/location/{id}/diagram/{refid}")]
         public async Task<InvokeResult> UpdateDiagramLocation(string id, string refid)
         {
@@ -83,11 +87,11 @@ namespace LagoVista.UserAdmin.Rest
             return await UpdateLocationAsync(location);
         }
 
-
         [HttpGet("/api/org/location/factory")]
         public DetailResponse<OrgLocation> CreateOrgLocation()
         {
             var org = DetailResponse<OrgLocation>.Create();
+            org.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
             SetOwnedProperties(org.Model);
             SetAuditProperties(org.Model);
             org.Model.Organization = org.Model.OwnerOrganization;

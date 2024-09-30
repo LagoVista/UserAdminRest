@@ -22,6 +22,8 @@ using LagoVista.Core;
 using LagoVista.UserAdmin.Models.Auth;
 using LagoVista.UserAdmin.Models.Security;
 using System.Diagnostics;
+using LagoVista.Core.Interfaces;
+using System.Linq;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -35,14 +37,16 @@ namespace LagoVista.UserAdmin.Rest
         readonly IAuthTokenManager _authTokenManager;
         readonly ISignInManager _signInManager;
 		readonly IAdminLogger _adminLogger;
+        private readonly ITimeZoneServices _timeZoneServices;
 
-		public OrgServicesController(ISignInManager signInManager, IAuthTokenManager authTokenManager, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public OrgServicesController(ISignInManager signInManager, IAuthTokenManager authTokenManager, ITimeZoneServices timeZoneServices, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
 		{
 			_orgManager = orgManager ?? throw new ArgumentNullException(nameof(orgManager));
             _authTokenManager = authTokenManager ?? throw new ArgumentNullException(nameof(authTokenManager));
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
             _adminLogger = logger ?? throw new ArgumentNullException(nameof(logger));
-		}
+            _timeZoneServices = timeZoneServices ?? throw new ArgumentNullException(nameof(timeZoneServices));
+        }
 
 		/// <summary>
 		/// Orgs Service - Get Orgs for User
@@ -227,8 +231,10 @@ namespace LagoVista.UserAdmin.Rest
 		public async Task<DetailResponse<Organization>> GetOrgAsync(string id)
 		{
 			var org = await _orgManager.GetOrganizationAsync(id, OrgEntityHeader, UserEntityHeader);
-			return DetailResponse<Organization>.Create(org);
-		}
+			var form = DetailResponse<Organization>.Create(org);
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+			return form;
+        }
 
         /// <summary>
         /// Orgs Service - Return Currently Organization
@@ -238,8 +244,11 @@ namespace LagoVista.UserAdmin.Rest
 		public async Task<DetailResponse<Organization>> GetCurrentOrgAsync()
 		{
 			var org = await _orgManager.GetOrganizationAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
-			return DetailResponse<Organization>.Create(org);
-		}
+
+			var form = DetailResponse<Organization>.Create(org);
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+			return form;
+        }
 
         /// <summary>
         /// Orgs Service - Return Currently Organization
@@ -259,7 +268,9 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/org/factory")]
 		public DetailResponse<CreateOrganizationViewModel> CreateOrgFactory()
 		{
-			return DetailResponse<CreateOrganizationViewModel>.Create();
+			var form = DetailResponse<CreateOrganizationViewModel>.Create();
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+            return form;
 		}
 
         /// <summary>
