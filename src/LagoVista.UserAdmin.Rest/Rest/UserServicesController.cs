@@ -312,8 +312,7 @@ namespace LagoVista.UserManagement.Rest
         [HttpGet("/api/mru")]
         public async Task<InvokeResult<MostRecentlyUsed>> GetMru()
         {
-            var result = await _mruManager.GetMostRecentlyUsedAsync(OrgEntityHeader, UserEntityHeader);
-            return InvokeResult<MostRecentlyUsed>.Create(result);
+            return await _mruManager.GetMostRecentlyUsedAsync(OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>
@@ -324,8 +323,7 @@ namespace LagoVista.UserManagement.Rest
         [HttpPost("/api/mru/item")]
         public async Task<InvokeResult<MostRecentlyUsed>> AddMru([FromBody] MostRecentlyUsedItem mruItem)
         {
-            var result = await _mruManager.AddMostRecentlyUsedAsync(mruItem, OrgEntityHeader, UserEntityHeader);
-            return InvokeResult<MostRecentlyUsed>.Create(result);
+            return await _mruManager.AddMostRecentlyUsedAsync(mruItem, OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>
