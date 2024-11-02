@@ -497,12 +497,18 @@ namespace LagoVista.UserManagement.Rest
 			return DetailResponse<RegisterViewModel>.Create();
 		}
 
-		/// <summary>
-		/// User Service - Disable user account
-		/// </summary>
-		/// <param name="userid"></param>
-		/// <returns></returns>
-		[OrgAdmin]
+        [HttpGet("/api/address/factory")]
+        public DetailResponse<Address> CreateAddress()
+        {
+            return DetailResponse<Address>.Create();
+        }
+
+        /// <summary>
+        /// User Service - Disable user account
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [OrgAdmin]
         [HttpGet("/api/user/{userid}/disable")]
         public Task<InvokeResult> DisableUserAccount(string userid)
         {
