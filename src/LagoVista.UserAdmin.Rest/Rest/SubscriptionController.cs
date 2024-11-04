@@ -34,7 +34,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="subscription"></param>
         /// <returns></returns>
         [HttpPost("/api/subscription")]
-        public Task<InvokeResult> AddHostAsync([FromBody] Subscription subscription)
+        public Task<InvokeResult> AddHostAsync([FromBody] SubscriptionDTO subscription)
         {
             return _subscriptionManager.AddSubscriptionAsync(subscription, UserEntityHeader, OrgEntityHeader);
         }
@@ -45,7 +45,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="subscription"></param>
         /// <returns></returns>
         [HttpPut("/api/subscription")]
-        public Task<InvokeResult> UpdateSubscriptionAsync([FromBody] Subscription subscription)
+        public Task<InvokeResult> UpdateSubscriptionAsync([FromBody] SubscriptionDTO subscription)
         {
             subscription.LastUpdatedById = UserEntityHeader.Id;
             subscription.LastUpdatedDate = DateTime.UtcNow;
@@ -58,12 +58,12 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/subscription/{id}")]
-        public async Task<DetailResponse<Subscription>> GetSubscriptionAsync(string id)
+        public async Task<DetailResponse<SubscriptionDTO>> GetSubscriptionAsync(string id)
         {
             if (Guid.TryParse(id, out Guid subscrptionId))
             {
                 var subscription = await _subscriptionManager.GetSubscriptionAsync(subscrptionId, OrgEntityHeader, UserEntityHeader);
-                return DetailResponse<Subscription>.Create(subscription);
+                return DetailResponse<SubscriptionDTO>.Create(subscription);
             }
             else
             {
@@ -117,9 +117,9 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/subscription/factory")]
-        public DetailResponse<Subscription> CreateSubscriptionAsync()
+        public DetailResponse<SubscriptionDTO> CreateSubscriptionAsync()
         {
-            var response = DetailResponse<Subscription>.Create();
+            var response = DetailResponse<SubscriptionDTO>.Create();
             response.Model.Id = Guid.NewGuid();
             response.Model.OrgId = OrgEntityHeader.Id;
             response.Model.Status = "active";
