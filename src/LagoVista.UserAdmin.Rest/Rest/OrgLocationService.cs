@@ -1,6 +1,7 @@
 ﻿using LagoVista.Core;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
+using LagoVista.Core.Models.Geo;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -86,6 +88,12 @@ namespace LagoVista.UserAdmin.Rest
             location.DiagramReferences.Add(reference);
 
             return await UpdateLocationAsync(location);
+        }
+
+        [HttpGet("/api/org/location/{id}/boundingbox")]
+        public Task<InvokeResult<List<GeoLocation>>> GetBoundingBoxForLocationAsync(string id)
+        {
+            return _orgManager.GetBoundingBoxForLocationAsync(id, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpDelete("/api/org/location/{id}/diagram/{refid}")]
