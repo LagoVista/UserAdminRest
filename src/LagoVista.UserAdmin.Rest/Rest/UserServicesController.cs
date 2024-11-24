@@ -21,6 +21,7 @@ using LagoVista.UserAdmin.Repos.Repos.Account;
 using LagoVista.UserAdmin.Interfaces;
 using LagoVista.Core.Interfaces;
 using DocumentFormat.OpenXml.Office2010.Excel;
+using System.Diagnostics;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -323,7 +324,10 @@ namespace LagoVista.UserManagement.Rest
         [HttpPost("/api/mru/item")]
         public async Task<InvokeResult<MostRecentlyUsed>> AddMru([FromBody] MostRecentlyUsedItem mruItem)
         {
-            return await _mruManager.AddMostRecentlyUsedAsync(mruItem, OrgEntityHeader, UserEntityHeader);
+            var sw = Stopwatch.StartNew();
+            var result = await _mruManager.AddMostRecentlyUsedAsync(mruItem, OrgEntityHeader, UserEntityHeader);
+            result.Timings.Add(new ResultTiming() { Key = "totalprocessing", Ms = sw.Elapsed.TotalMilliseconds } );
+            return result;  
         }
 
         /// <summary>
