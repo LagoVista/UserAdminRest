@@ -20,7 +20,6 @@ using LagoVista.UserAdmin.Models.Auth;
 using LagoVista.UserAdmin.Repos.Repos.Account;
 using LagoVista.UserAdmin.Interfaces;
 using LagoVista.Core.Interfaces;
-using DocumentFormat.OpenXml.Office2010.Excel;
 using System.Diagnostics;
 
 namespace LagoVista.UserManagement.Rest
@@ -53,7 +52,6 @@ namespace LagoVista.UserManagement.Rest
             _appUserInboxManager = appUserInboxManager;
             _appConfig = appConfig;
             _authLogManager = authLogManager;
-
         }
 
         /// <summary>
@@ -324,9 +322,11 @@ namespace LagoVista.UserManagement.Rest
         [HttpPost("/api/mru/item")]
         public async Task<InvokeResult<MostRecentlyUsed>> AddMru([FromBody] MostRecentlyUsedItem mruItem)
         {
+            Console.WriteLine("vvv Add MRU =============================================");
             var sw = Stopwatch.StartNew();
             var result = await _mruManager.AddMostRecentlyUsedAsync(mruItem, OrgEntityHeader, UserEntityHeader);
             result.Timings.Add(new ResultTiming() { Key = "totalprocessing", Ms = sw.Elapsed.TotalMilliseconds } );
+            Console.WriteLine("^^^ Add MRU =============================================");
             return result;  
         }
 
