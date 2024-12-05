@@ -63,6 +63,16 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// Distro Lists - Get for Current Org
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/distros/customer/{customerid}")]
+        public Task<ListResponse<DistroListSummary>> GetDistroListForCustomer(string customerid)
+        {
+            return _distorManager.GetListsForCustomerAsync(customerid, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
+
+        /// <summary>
         /// Distro List - In Use
         /// </summary>
         /// <param name="id"></param>

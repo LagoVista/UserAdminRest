@@ -58,6 +58,13 @@ namespace LagoVista.UserAdmin.Rest
             return _diagramManager.GetLocationDiagramsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
+
+        [HttpGet("/api/org/location/diagrams/customer/{customerid}")]
+        public Task<ListResponse<LocationDiagramSummary>> GetDiagrams(string customerid)
+        {
+            return _diagramManager.GetLocationDiagramsForCustomerAsync(customerid, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
         [HttpGet("/api/org/location/diagram/factory")]
         public DetailResponse<LocationDiagram> CreateOrgLocation()
         {

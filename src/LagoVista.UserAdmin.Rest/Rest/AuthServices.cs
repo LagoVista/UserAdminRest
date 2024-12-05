@@ -241,7 +241,7 @@ namespace LagoVista.UserAdmin.Rest
             var mileStones = await _mileStoneRepo.GetActiveMileStonesAsync(currentOrgId, ListRequest.CreateForAll());
             data.Milestones = mileStones.Model.ToList();
             data.AddMetric("Load Milestones");
-            data.ToDos = (await _todoRepo.GetOpenToDosAssignedToAsync(userEh.Id, orgEh.Id, ListRequest.CreateForAll())).Model.ToList();
+            data.ToDos = (await _todoRepo.GetOpenToDosAssignedToAsync(userEh.Id, ListRequest.CreateForAll())).Model.ToList();
             data.AddMetric("Load ToDos");
             var projects = await _projectRepo.GetActiveProjectAsync(currentOrgId, ListRequest.CreateForAll());
             data.ActiveProjects = projects.Model.Select(prj => EntityHeader.Create(prj.Id, prj.Key, prj.Name)).ToList();
