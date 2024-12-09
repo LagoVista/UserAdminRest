@@ -1,4 +1,5 @@
 ﻿using LagoVista.Core;
+using LagoVista.Core.Exceptions;
 using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Models.Geo;
@@ -7,7 +8,6 @@ using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.MediaServices.Interfaces;
-using LagoVista.MediaServices.Managers;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
 using LagoVista.UserAdmin.Models.Orgs;
@@ -67,6 +67,12 @@ namespace LagoVista.UserAdmin.Rest
         public Task<ListResponse<OrgLocationSummary>> GetOrgLocations()
         {
             return _orgManager.GetLocationsForOrganizationsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/api/org/locations/customer/{customerid}")]
+        public Task<ListResponse<OrgLocationSummary>> GetOrg(string customerid)
+        {
+            return _orgManager.GetLocationsForCustomerAsync(GetListRequestFromHeader(), customerid, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpPost("/api/org/location/{id}/diagram")]
