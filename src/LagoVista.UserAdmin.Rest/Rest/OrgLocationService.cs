@@ -63,6 +63,12 @@ namespace LagoVista.UserAdmin.Rest
             return form;
         }
 
+        [HttpDelete("/api/org/location/{id}")]
+        public async Task<InvokeResult> DeleteLocatioAsync(string id)
+        {
+            return await _orgManager.DeleteOrgLocationAsync(id, OrgEntityHeader, UserEntityHeader);
+        }
+
         [HttpGet("/api/org/locations")]
         public Task<ListResponse<OrgLocationSummary>> GetOrgLocations()
         {
