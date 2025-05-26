@@ -75,6 +75,16 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// module Lists - Get for Current Org
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/api/modules/tree")]
+        public Task<List<Module>> GetFullAppTreeAsync()
+        {
+            return _userAccessManager.GetFullAppTreeForUserAsync(UserEntityHeader.Id, OrgEntityHeader.Id);
+        }
+
+        /// <summary>
         /// module Lists - Get for a user id
         /// </summary>
         /// <returns></returns>
