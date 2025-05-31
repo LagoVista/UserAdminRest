@@ -62,6 +62,15 @@ namespace LagoVista.UserAdmin.Rest
             return DetailResponse<FunctionMap>.Create(functionMap);
         }
 
+
+        [HttpGet("/api/function/map/key/{key}")]
+        public async Task<DetailResponse<FunctionMap>> GetFunctionMapByKey(String key)
+        {
+            var functionMap = await _manager.GetFunctionMapByKeyAsync(key, OrgEntityHeader, UserEntityHeader);
+
+            return DetailResponse<FunctionMap>.Create(functionMap);
+        }
+
         [HttpDelete("/api/function/map/{id}")]
         public Task<InvokeResult> DeleteFunctionMapAsync(string id)
         {
