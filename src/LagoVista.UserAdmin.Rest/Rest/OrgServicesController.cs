@@ -268,9 +268,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/org/factory")]
 		public DetailResponse<CreateOrganizationViewModel> CreateOrgFactory()
 		{
-			var form = DetailResponse<CreateOrganizationViewModel>.Create();
-            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
-            return form;
+			return DetailResponse<CreateOrganizationViewModel>.Create();
 		}
 
         /// <summary>

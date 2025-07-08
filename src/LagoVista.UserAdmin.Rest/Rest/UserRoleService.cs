@@ -62,5 +62,12 @@ namespace LagoVista.UserAdmin.Rest
         {
             return _userRoleManager.GetRolesForUserAsync(userid, OrgEntityHeader, UserEntityHeader);
         }
+
+
+        [HttpGet("/app/user/roles")]
+        public Task<List<UserRole>> GetRolesForUserAsync()
+        {
+            return _userRoleManager.GetRolesForUserAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+        }
     }
 }
