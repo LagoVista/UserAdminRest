@@ -21,6 +21,7 @@ using LagoVista.UserAdmin.Repos.Repos.Account;
 using LagoVista.UserAdmin.Interfaces;
 using LagoVista.Core.Interfaces;
 using System.Diagnostics;
+using LagoVista.MediaServices.Interfaces;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -39,8 +40,9 @@ namespace LagoVista.UserManagement.Rest
         private readonly IAppUserInboxManager _appUserInboxManager;
         private readonly IAppConfig _appConfig;
         private readonly IAuthenticationLogManager _authLogManager;
+        private readonly IMediaServicesManager _mediaServicesManager;
 
-        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, IUserManager usrManager, IAppUserInboxManager appUserInboxManager,
+        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, IUserManager usrManager, IAppUserInboxManager appUserInboxManager, IMediaServicesManager mediaServicesManager,
           IAuthenticationLogManager authLogManager, IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
@@ -52,6 +54,7 @@ namespace LagoVista.UserManagement.Rest
             _appUserInboxManager = appUserInboxManager;
             _appConfig = appConfig;
             _authLogManager = authLogManager;
+            _mediaServicesManager = mediaServicesManager;
         }
 
         /// <summary>
@@ -554,6 +557,33 @@ namespace LagoVista.UserManagement.Rest
         public Task<ListResponse<UserInfoSummary>> GetDeviceUsers(string repoid)
         {
             return _appUserManager.GetDeviceUsersAsync(repoid, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
+
+        /// <returns></returns>
+        [HttpPost("/api/user/profile/picture/upload")]
+        public async Task<InvokeResult<ImageDetails>> UploadMediaAsync(IFormFile file)
+        {
+            using (var strm = file.OpenReadStream())
+            { 
+                return await _mediaServicesManager.AddImageAsPngAsync(strm, "profilepics", true, 255, 255);
+            }
+        }
+
+        [OrgAdmin]
+        [HttpPut("/api/user/profile/{id}/picture")]
+        public async Task<InvokeResult> SetProfileImage([FromBody] ImageDetails profilePicture, string id)
+        {
+            var user = await _appUserManager.GetUserByIdAsync(id, OrgEntityHeader, UserEntityHeader);
+            user.ProfileImage = profilePicture; 
+            return await _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpPut("/api/user/profile/picture")]
+        public async Task<InvokeResult> SetProfileImage([FromBody] ImageDetails profilePicture)
+        {
+            var user = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            user.ProfileImage = profilePicture;
+            return await _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
         }
     }
 }
