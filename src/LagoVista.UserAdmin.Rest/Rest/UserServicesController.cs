@@ -571,19 +571,15 @@ namespace LagoVista.UserManagement.Rest
 
         [OrgAdmin]
         [HttpPut("/api/user/profile/{id}/picture")]
-        public async Task<InvokeResult> SetProfileImage([FromBody] ImageDetails profilePicture, string id)
+        public Task<InvokeResult> SetProfileImage([FromBody] ImageDetails profilePicture, string id)
         {
-            var user = await _appUserManager.GetUserByIdAsync(id, OrgEntityHeader, UserEntityHeader);
-            user.ProfileImage = profilePicture; 
-            return await _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+            return _appUserManager.SetProfileImageAsync(id, profilePicture, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpPut("/api/user/profile/picture")]
-        public async Task<InvokeResult> SetProfileImage([FromBody] ImageDetails profilePicture)
+        public  Task<InvokeResult> SetProfileImage([FromBody] ImageDetails profilePicture)
         {
-            var user = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
-            user.ProfileImage = profilePicture;
-            return await _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+            return _appUserManager.SetProfileImageAsync(UserEntityHeader.Id, profilePicture, OrgEntityHeader, UserEntityHeader);
         }
     }
 }

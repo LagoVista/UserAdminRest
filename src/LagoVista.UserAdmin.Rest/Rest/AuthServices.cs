@@ -230,7 +230,7 @@ namespace LagoVista.UserAdmin.Rest
             var data = new PortalPageData(result.Result);
             var orgUsers = await _orgUserRepo.GetUsersForOrgAsync(result.Result.User.CurrentOrganization.Id);
             data.AddMetric("Load Org Users");
-            var activeUsers = (await _appUserRepo.GetUserSummaryForListAsync(orgUsers)).Where(usr => !usr.IsAccountDisabled && !usr.IsRuntimeUser && !usr.IsUserDevice).OrderBy(usr => usr.Name);
+            var activeUsers = (await _appUserRepo.GetUserSummaryForListAsync(orgUsers, true)).Where(usr => !usr.IsAccountDisabled && !usr.IsRuntimeUser && !usr.IsUserDevice).OrderBy(usr => usr.Name);
             data.ActiveUsers = activeUsers.Select(au => EntityHeader.Create(au.Id, au.Name)).ToList();
             data.AddMetric("Load Active Users");
 

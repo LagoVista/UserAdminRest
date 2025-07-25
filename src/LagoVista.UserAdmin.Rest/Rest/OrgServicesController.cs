@@ -107,9 +107,9 @@ namespace LagoVista.UserAdmin.Rest
 		/// </summary>
 		/// <returns></returns>
 		[HttpGet("/api/users")]
-		public async Task<ListResponse<UserInfoSummary>> GetUserForOrgAsync()
+		public async Task<ListResponse<UserInfoSummary>> GetUserForOrgAsync(bool cached=true)
 		{
-			var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+			var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(OrgEntityHeader.Id, cached, OrgEntityHeader, UserEntityHeader);
 			return ListResponse<UserInfoSummary>.Create(orgUsers);
 		}
 
@@ -118,9 +118,9 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/org/{orgid}/users")]
-        public async Task<ListResponse<UserInfoSummary>> GetUserForOrgAsync(string orgid)
+        public async Task<ListResponse<UserInfoSummary>> GetUserForOrgAsync(string orgid, bool cached = true)
         {
-            var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
+            var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(orgid, cached, OrgEntityHeader, UserEntityHeader);
             return ListResponse<UserInfoSummary>.Create(orgUsers);
         }
 
@@ -130,9 +130,9 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/users/active")]
-		public async Task<ListResponse<UserInfoSummary>> GetActiveUserForOrgAsync()
+		public async Task<ListResponse<UserInfoSummary>> GetActiveUserForOrgAsync(bool cached = true)
 		{
-			var orgUsers = await _orgManager.GetActiveUsersForOrganizationsAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+			var orgUsers = await _orgManager.GetActiveUsersForOrganizationsAsync(OrgEntityHeader.Id, cached, OrgEntityHeader, UserEntityHeader);
 			return ListResponse<UserInfoSummary>.Create(orgUsers);
 		}
 
@@ -515,9 +515,9 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/sys/api/org/{orgid}/users")]
-		public async Task<ListResponse<UserInfoSummary>> GetUserForOrgAsync(string orgid)
+		public async Task<ListResponse<UserInfoSummary>> GetUserForOrgAsync(string orgid, bool cached = true)
 		{
-			var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(orgid, OrgEntityHeader, UserEntityHeader);
+			var orgUsers = await _orgManager.GetUsersForOrganizationsAsync(orgid, cached, OrgEntityHeader, UserEntityHeader);
 			return ListResponse<UserInfoSummary>.Create(orgUsers);
 		}
 
