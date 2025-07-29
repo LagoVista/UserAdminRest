@@ -24,6 +24,9 @@ using LagoVista.UserAdmin.Models.Security;
 using System.Diagnostics;
 using LagoVista.Core.Interfaces;
 using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
+using LagoVista.IoT.Deployment.Admin.Managers;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -33,10 +36,10 @@ namespace LagoVista.UserAdmin.Rest
     [Authorize]
 	public class OrgServicesController : LagoVistaBaseController
 	{
-        readonly IOrganizationManager _orgManager;
-        readonly IAuthTokenManager _authTokenManager;
-        readonly ISignInManager _signInManager;
-		readonly IAdminLogger _adminLogger;
+        private readonly IOrganizationManager _orgManager;
+        private readonly IAuthTokenManager _authTokenManager;
+        private readonly ISignInManager _signInManager;
+        private readonly IAdminLogger _adminLogger;
         private readonly ITimeZoneServices _timeZoneServices;
 
         public OrgServicesController(ISignInManager signInManager, IAuthTokenManager authTokenManager, ITimeZoneServices timeZoneServices, IOrganizationManager orgManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
@@ -232,7 +235,7 @@ namespace LagoVista.UserAdmin.Rest
 		{
 			var org = await _orgManager.GetOrganizationAsync(id, OrgEntityHeader, UserEntityHeader);
 			var form = DetailResponse<Organization>.Create(org);
-            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Id = tz.Id, Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
 			return form;
         }
 
@@ -246,7 +249,7 @@ namespace LagoVista.UserAdmin.Rest
 			var org = await _orgManager.GetOrganizationAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
 
 			var form = DetailResponse<Organization>.Create(org);
-            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Id = tz.Id, Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
 			return form;
         }
 
@@ -438,11 +441,13 @@ namespace LagoVista.UserAdmin.Rest
     {
         readonly IAdminLogger _adminLogger;
 		readonly IOrganizationManager _orgManager;
+        private readonly ITimeZoneServices _timeZoneServices;
 
-        public PublicOrgController(IAdminLogger adminLogger, IOrganizationManager orgManager)
+        public PublicOrgController(IAdminLogger adminLogger, ITimeZoneServices timeZoneServices, IOrganizationManager orgManager)
 		{
 			_adminLogger = adminLogger ?? throw new ArgumentNullException(nameof(adminLogger));
             _orgManager = orgManager ?? throw new ArgumentNullException(nameof(orgManager));
+			_timeZoneServices = timeZoneServices ?? throw new ArgumentNullException(nameof(timeZoneServices));
         }
 
         [HttpGet("/api/org/inviteuser/{inviteid}/isavailable")]
@@ -476,6 +481,25 @@ namespace LagoVista.UserAdmin.Rest
 			var model = new InviteUserViewModel { Email = rawData.Email, Message = rawData.Message, Name = rawData.Name };
 			return DetailResponse<InviteUserViewModel>.Create(model);
 		}
+
+		// Time Zone Info does not serialize with camelcase, so create this little guy to make sure we have consistant casing on the server.
+		public class CamelCaseTimeZoneInfo
+		{
+			public string Id { get; set;  }
+			public string DisplayName { get; set; }
+            public string StandardName { get; set; }
+            public string DaylightName { get; set; }
+            public bool SupportsDaylightSavingTime { get; set; }
+            public double BaseUtcOffset { get; set; }
+        }
+
+
+        [HttpGet("/api/timezones")]
+        public IEnumerable<CamelCaseTimeZoneInfo> GetTimeZones()
+        {
+			return _timeZoneServices.GetTimeZones().Select( tz=> new CamelCaseTimeZoneInfo() { Id = tz.Id , BaseUtcOffset = tz.BaseUtcOffset.Hours, DisplayName = tz.DisplayName, StandardName = tz.StandardName, DaylightName = tz.DaylightName, SupportsDaylightSavingTime = tz.SupportsDaylightSavingTime});
+        }
+
     }
 
     [Authorize]
@@ -576,6 +600,5 @@ namespace LagoVista.UserAdmin.Rest
 		public Task<InvokeResult> SetIsProductLine(bool flag) {
 			return _orgManager.SetIsProductLineOrgAsync(flag, OrgEntityHeader, UserEntityHeader);
 		}
-
     }
 }

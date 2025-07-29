@@ -31,6 +31,9 @@ using System.Diagnostics;
 using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 using Microsoft.VisualStudio.Services.Aad;
 using Org.BouncyCastle.Ocsp;
+using ReverseMarkdown.Converters;
+using System.Security.Cryptography;
+using System.Collections.Generic;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -442,6 +445,12 @@ namespace LagoVista.UserAdmin.Rest
         public Task<ListResponse<AuthenticationLog>> GetAllAuthAsyncForOrg()
         {
             return _authenticationLogManager.GetAllAsync(OrgEntityHeader.Id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+        [HttpGet("/auth/user/claims")]
+        public IEnumerable<String> GetClaims()
+        {
+            return HttpContext.User.Claims.Select(clm=>$"{clm.Type}={clm.Value}");
         }
     }
 }

@@ -22,6 +22,7 @@ using LagoVista.UserAdmin.Interfaces;
 using LagoVista.Core.Interfaces;
 using System.Diagnostics;
 using LagoVista.MediaServices.Interfaces;
+using System.Linq;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -41,8 +42,9 @@ namespace LagoVista.UserManagement.Rest
         private readonly IAppConfig _appConfig;
         private readonly IAuthenticationLogManager _authLogManager;
         private readonly IMediaServicesManager _mediaServicesManager;
+        private readonly ITimeZoneServices _timeZoneServices;
 
-        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, IUserManager usrManager, IAppUserInboxManager appUserInboxManager, IMediaServicesManager mediaServicesManager,
+        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, ITimeZoneServices timeZoneServices, IUserManager usrManager, IAppUserInboxManager appUserInboxManager, IMediaServicesManager mediaServicesManager,
           IAuthenticationLogManager authLogManager, IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
@@ -55,6 +57,7 @@ namespace LagoVista.UserManagement.Rest
             _appConfig = appConfig;
             _authLogManager = authLogManager;
             _mediaServicesManager = mediaServicesManager;
+            _timeZoneServices = timeZoneServices;
         }
 
         /// <summary>
@@ -66,7 +69,9 @@ namespace LagoVista.UserManagement.Rest
         public async Task<DetailResponse<UserInfo>> GetUserAsync(String id)
         {
             var appUser = await _appUserManager.GetUserByIdAsync(id, OrgEntityHeader, UserEntityHeader);
-            return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
+            var form = DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Id = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+            return form;
         }
 
         /// <summary>
@@ -78,7 +83,9 @@ namespace LagoVista.UserManagement.Rest
         public async Task<DetailResponse<UserInfo>> GetUserByEmailAsync(String email)
         {
             var appUser = await _appUserManager.GetUserByIdAsync(email, OrgEntityHeader, UserEntityHeader);
-            return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
+            var form = DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Id = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+            return form;
         }
 
 
@@ -102,8 +109,10 @@ namespace LagoVista.UserManagement.Rest
         public async Task<DetailResponse<AppUser>> ReturnCurrentUserAsync()
         {
             var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            var form = DetailResponse<AppUser>.Create(appUser);
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Id = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
             //No need to send the password has down there, need to be careful when doing an update...
-            return DetailResponse<AppUser>.Create(appUser);
+            return form;
         }
 
         [SystemAdmin]
@@ -170,7 +179,9 @@ namespace LagoVista.UserManagement.Rest
                 throw new NotSupportedException();
 
             var appUser = await _appUserManager.GetUserByUserNameAsync(email, null, null);
-            return DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
+            var form = DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Id = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+            return form;
         }
 
         [HttpDelete("/api/user/{id}")]
