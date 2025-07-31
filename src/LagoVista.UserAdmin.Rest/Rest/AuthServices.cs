@@ -447,7 +447,7 @@ namespace LagoVista.UserAdmin.Rest
             return _authenticationLogManager.GetAllAsync(OrgEntityHeader.Id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
-        [HttpGet("/auth/user/claims")]
+        [HttpGet("/user/claims")]
         public IEnumerable<String> GetClaims()
         {
             return HttpContext.User.Claims.Select(clm=>$"{clm.Type}={clm.Value}");
