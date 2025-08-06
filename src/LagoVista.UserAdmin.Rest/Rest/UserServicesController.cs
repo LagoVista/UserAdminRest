@@ -592,5 +592,61 @@ namespace LagoVista.UserManagement.Rest
         {
             return _appUserManager.SetProfileImageAsync(UserEntityHeader.Id, profilePicture, OrgEntityHeader, UserEntityHeader);
         }
+
+        public class SvgElement
+        {
+            public string Svg;
+        }
+
+        [HttpPost("/api/user/svg/signature")]
+        public Task<InvokeResult> AddSignature([FromBody] SvgElement element)
+        {
+            return _appUserManager.AddUserSvgSignatureAsync(element.Svg, UserEntityHeader);
+        }
+
+
+        [HttpPost("/api/user/svg/initials")]
+        public Task<InvokeResult> AddInitials([FromBody] SvgElement element)
+        {
+            return _appUserManager.AddUserSvgInitialsAsync(element.Svg, UserEntityHeader);
+        }
+
+        [HttpGet("/api/user/svg/signature")]
+        public Task<InvokeResult<string>> GetSignature()
+        {
+            return _appUserManager.GetUserSvgSignatureAsync(UserEntityHeader);
+        }
+
+        [HttpGet("/api/user/svg/initials")]
+        public Task<InvokeResult<string>> GetInitials()
+        {
+            return _appUserManager.GetUserSvgInitialsAsync(UserEntityHeader);
+        }
+
+        [HttpDelete("/api/user/svg/signature")]
+        public Task<InvokeResult> RemoveSignature()
+        {
+            return _appUserManager.ClearUserSvgSignatureAsync(UserEntityHeader);
+        }
+
+
+        [HttpDelete("/api/user/svg/initials")]
+        public Task<InvokeResult> RemoveInitials()
+        {
+            return _appUserManager.ClearUserSvgInitialsAsync(UserEntityHeader);
+        }
+
+
+        [HttpGet("/api/user/svg/signature/b64png")]
+        public Task<InvokeResult<string>> GetSignatureB64Png()
+        {
+            return _appUserManager.GetUserSvgSignatureAsB64PngAsync(UserEntityHeader);
+        }
+
+        [HttpGet("/api/user/svg/initials/b64png")]
+        public Task<InvokeResult<string>> GetInitialsB64Png()
+        {
+            return _appUserManager.GetUserSvgInitialsAsB64PngAsync(UserEntityHeader);
+        }
     }
 }
