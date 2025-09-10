@@ -10,6 +10,7 @@ using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using RingCentral;
 using System;
 using System.Threading.Tasks;
 
@@ -20,11 +21,10 @@ namespace LagoVista.UserAdmin.Rest
     {
         private readonly ILocationDiagramManager _diagramManager;
 
-        public LocationDiagramController(ILocationDiagramManager diagramManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public LocationDiagramController(ILocationDiagramManager diagramManager,UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _diagramManager = diagramManager ?? throw new ArgumentNullException(nameof(diagramManager));
         }
-
 
         [HttpPost("/api/org/location/diagram")]
         public Task<InvokeResult> AddLocationAsync([FromBody] LocationDiagram diagram)
@@ -59,14 +59,8 @@ namespace LagoVista.UserAdmin.Rest
         }
 
 
-        [HttpGet("/api/org/location/diagrams/customer/{customerid}")]
-        public Task<ListResponse<LocationDiagramSummary>> GetDiagrams(string customerid)
-        {
-            return _diagramManager.GetLocationDiagramsForCustomerAsync(customerid, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
-        }
-
         [HttpGet("/api/org/location/diagram/factory")]
-        public DetailResponse<LocationDiagram> CreateOrgLocation()
+        public DetailResponse<LocationDiagram> CreateDiagram()
         {
             var location = DetailResponse<LocationDiagram>.Create();
             SetOwnedProperties(location.Model);
