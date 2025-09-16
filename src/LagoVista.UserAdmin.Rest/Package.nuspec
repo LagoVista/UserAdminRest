@@ -2,30 +2,23 @@
 <package>
   <metadata>
     <id>LagoVista.UserAdmin.Rest</id>
-    <version>3.0.1963.1055</version>
+    <version>3.0.3044.0727</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <projectUrl>https://www.nuviot.com</projectUrl>
     <iconUrl>http://bytemaster.blob.core.windows.net/icons/LagoVistaIcon.png</iconUrl>
     <description>REST Services for User, Organization, Locations and Roles Administration and Management</description>
-    <copyright>Copyright Software Logistics - 2022</copyright>
+    <copyright>Copyright Software Logistics - 2025</copyright>
     <tags>HomeAutomation IoT</tags>
     <icon>LagoVistaIcon.png</icon>
-    <releaseNotes>Build Date: 10/1/2022 2:55:01 PM UTC</releaseNotes>
+    <releaseNotes>Build Date: 9/16/2025 11:27:06 AM UTC</releaseNotes>
     <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
     <dependencies>
       <group targetFramework="net6.0">
-        <dependency id="LagoVista.AspNetCore.Identity" version="3.0.1963.1055" />
-        <dependency id="LagoVista.Core" version="3.0.1963.1055" />
-        <dependency id="LagoVista.Core.Authentication" version="3.0.1963.1055" />
-        <dependency id="LagoVista.IoT.Deployment.Admin" version="3.0.1963.1055" />
-        <dependency id="LagoVista.IoT.Logging" version="3.0.1963.1055" />
-        <dependency id="LagoVista.IoT.Web.Common" version="3.0.1963.1055" />
-        <dependency id="LagoVista.UserAdmin" version="3.0.1963.1055" />
-        <dependency id="LagoVista.UserAdmin.Models" version="3.0.1963.1055" />
-        <dependency id="Newtonsoft.Json" version="13.0.1" />
-        <dependency id="System.IdentityModel.Tokens.Jwt" version="6.23.1" />
+        <dependency id="LagoVista.IoT.Deployment.Admin" version="3.0.3044.0727" />
+        <dependency id="LagoVista.IoT.Web.Common" version="3.0.3044.0727" />
+        <dependency id="LagoVista.ProjectManagement.Core" version="3.0.3044.0727" />
       </group>
     </dependencies>
   </metadata>
