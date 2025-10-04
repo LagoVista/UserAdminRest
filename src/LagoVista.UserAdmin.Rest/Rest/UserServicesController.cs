@@ -23,6 +23,8 @@ using LagoVista.Core.Interfaces;
 using System.Diagnostics;
 using LagoVista.MediaServices.Interfaces;
 using System.Linq;
+using LagoVista.IoT.Billing.Managers;
+using LagoVista.IoT.Billing.Models;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -43,9 +45,10 @@ namespace LagoVista.UserManagement.Rest
         private readonly IAuthenticationLogManager _authLogManager;
         private readonly IMediaServicesManager _mediaServicesManager;
         private readonly ITimeZoneServices _timeZoneServices;
+        private readonly ICustomerManager _customerManager;
 
         public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, ITimeZoneServices timeZoneServices, IUserManager usrManager, IAppUserInboxManager appUserInboxManager, IMediaServicesManager mediaServicesManager,
-          IAuthenticationLogManager authLogManager, IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
+          ICustomerManager customerManager, IAuthenticationLogManager authLogManager, IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
             _usrManager = usrManager;
@@ -57,6 +60,7 @@ namespace LagoVista.UserManagement.Rest
             _appConfig = appConfig;
             _authLogManager = authLogManager;
             _mediaServicesManager = mediaServicesManager;
+            _customerManager = customerManager;
             _timeZoneServices = timeZoneServices;
         }
 
@@ -121,7 +125,6 @@ namespace LagoVista.UserManagement.Rest
         {
             return await _appUserManager.GetAllUsersAsync(emailconfirmed, smsconfirmed, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
         }
-
 
         [SystemAdmin]
         [HttpGet("/sys/api/users/active")]
@@ -461,7 +464,30 @@ namespace LagoVista.UserManagement.Rest
             if(String.IsNullOrEmpty(newUser.InviteId))
                 newUser.InviteId = Request.Cookies["inviteid"];
 
-            return await _appUserManager.CreateUserAsync(newUser);
+            if (!EntityHeader.IsNullOrEmpty(newUser.EndUserAppOrg))
+            {
+                newUser.OrgId = newUser.EndUserAppOrg.Id;
+            }
+
+            var response = await _appUserManager.CreateUserAsync(newUser);
+
+            if (newUser.LoginType == LoginTypes.AppEndUser)
+            {
+                var appuser = response.Result.AppUser;
+
+                var createCustomerRequest = CreateCustomerRequest.FromRegisterUser(newUser);
+                createCustomerRequest.CreatedByUser = appuser.ToEntityHeader();
+
+                var customerResponse = await _customerManager.CreateCustomer(createCustomerRequest);
+
+                var customer = customerResponse.Result.ToEntityHeader();
+                var contact = customerResponse.Result.PrimaryContact;
+                await _appUserManager.UpdateAppUserCompanyContactAsync(appuser.Id, customer, contact, appuser.CurrentOrganization.ToEntityHeader(), appuser.ToEntityHeader());
+                
+
+            }
+
+            return response;
         }
 
         [HttpGet("/api/user/{id}/ssn")]
