@@ -471,7 +471,7 @@ namespace LagoVista.UserManagement.Rest
 
             var response = await _appUserManager.CreateUserAsync(newUser);
 
-            if (newUser.LoginType == LoginTypes.AppEndUser)
+            if (response.Successful && newUser.LoginType == LoginTypes.AppEndUser)
             {
                 var appuser = response.Result.AppUser;
 
@@ -483,9 +483,7 @@ namespace LagoVista.UserManagement.Rest
                 var customer = customerResponse.Result.ToEntityHeader();
                 var contact = customerResponse.Result.PrimaryContact;
                 await _appUserManager.UpdateAppUserCompanyContactAsync(appuser.Id, customer, contact, appuser.CurrentOrganization.ToEntityHeader(), appuser.ToEntityHeader());
-                
-
-            }
+           }
 
             return response;
         }

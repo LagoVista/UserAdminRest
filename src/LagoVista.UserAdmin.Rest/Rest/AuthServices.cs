@@ -47,6 +47,7 @@ namespace LagoVista.UserAdmin.Rest
     {
         public class LoginModel
         {
+            public string EndUserAppOrgId { get; set; }
             public string Module { get; set; }
             public string Email { get; set; }
             public string InviteId { get; set; }
