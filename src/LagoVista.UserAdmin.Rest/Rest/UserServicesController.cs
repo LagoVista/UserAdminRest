@@ -25,6 +25,7 @@ using LagoVista.MediaServices.Interfaces;
 using System.Linq;
 using LagoVista.IoT.Billing.Managers;
 using LagoVista.IoT.Billing.Models;
+using RingCentral;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -46,8 +47,9 @@ namespace LagoVista.UserManagement.Rest
         private readonly IMediaServicesManager _mediaServicesManager;
         private readonly ITimeZoneServices _timeZoneServices;
         private readonly ICustomerManager _customerManager;
+        private readonly IUserRegistrationManager _userRegistrationManager;
 
-        public UserServicesController(IAppUserManager appUserManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, ITimeZoneServices timeZoneServices, IUserManager usrManager, IAppUserInboxManager appUserInboxManager, IMediaServicesManager mediaServicesManager,
+        public UserServicesController(IAppUserManager appUserManager, IUserRegistrationManager userRegistrationManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, ITimeZoneServices timeZoneServices, IUserManager usrManager, IAppUserInboxManager appUserInboxManager, IMediaServicesManager mediaServicesManager,
           ICustomerManager customerManager, IAuthenticationLogManager authLogManager, IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
@@ -62,6 +64,7 @@ namespace LagoVista.UserManagement.Rest
             _mediaServicesManager = mediaServicesManager;
             _customerManager = customerManager;
             _timeZoneServices = timeZoneServices;
+            _userRegistrationManager = userRegistrationManager;
         }
 
         /// <summary>
@@ -469,9 +472,9 @@ namespace LagoVista.UserManagement.Rest
                 newUser.OrgId = newUser.EndUserAppOrg.Id;
             }
 
-            var response = await _appUserManager.CreateUserAsync(newUser);
+            var response = await _userRegistrationManager.CreateUserAsync(newUser);
 
-            if (response.Successful && newUser.LoginType == LoginTypes.AppEndUser)
+             if (response.Successful && newUser.LoginType == LoginTypes.AppEndUser)
             {
                 var appuser = response.Result.AppUser;
 
@@ -482,7 +485,11 @@ namespace LagoVista.UserManagement.Rest
 
                 var customer = customerResponse.Result.ToEntityHeader();
                 var contact = customerResponse.Result.PrimaryContact;
-                await _appUserManager.UpdateAppUserCompanyContactAsync(appuser.Id, customer, contact, appuser.CurrentOrganization.ToEntityHeader(), appuser.ToEntityHeader());
+                var appUser = await _appUserManager.UpdateAppUserCompanyContactAsync(appuser.Id, customer, contact, appuser.CurrentOrganization.ToEntityHeader(), appuser.ToEntityHeader());
+
+
+
+                await _signInManager.SignInAsync(appUser, true);
            }
 
             return response;
@@ -518,7 +525,7 @@ namespace LagoVista.UserManagement.Rest
         [HttpPost("/api/user/create")]
         public async Task<InvokeResult<UserInfoSummary>> CreateAuthorizedNewAsync([FromBody] RegisterUser newUser)
         {
-            var result = await _appUserManager.CreateUserAsync(newUser, false);
+            var result = await _userRegistrationManager.CreateUserAsync(newUser, false);
             if (!result.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(result.ToInvokeResult());
             var setAuthResult = await _appUserManager.SetApprovedAsync(result.Result.User.Id, OrgEntityHeader, UserEntityHeader);
             if (!setAuthResult.Successful) return InvokeResult<UserInfoSummary>.FromInvokeResult(setAuthResult.ToInvokeResult());
