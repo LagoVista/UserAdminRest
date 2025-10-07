@@ -58,8 +58,9 @@ namespace LagoVista.UserAdmin.Rest
             {
                 return new AuthLoginRequest()
                 {
+                    EndUserAppOrgId = EndUserAppOrgId,
                     InviteId = InviteId,
-                    UserName = Email,
+                    Email = Email,
                     Password = Password,
                     RememberMe = RememberMe,
                 };
