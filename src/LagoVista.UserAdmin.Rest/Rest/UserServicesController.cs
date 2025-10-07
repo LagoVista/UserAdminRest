@@ -486,10 +486,10 @@ namespace LagoVista.UserManagement.Rest
                 var customer = customerResponse.Result.ToEntityHeader();
                 var contact = customerResponse.Result.PrimaryContact;
                 var appUser = await _appUserManager.UpdateAppUserCompanyContactAsync(appuser.Id, customer, contact, appuser.CurrentOrganization.ToEntityHeader(), appuser.ToEntityHeader());
-
-
-
-                await _signInManager.SignInAsync(appUser, true);
+                if (appUser.Successful)
+                    await _signInManager.SignInAsync(appUser.Result, true);
+                else
+                    return InvokeResult<CreateUserResponse>.FromInvokeResult(appUser.ToInvokeResult());
            }
 
             return response;
