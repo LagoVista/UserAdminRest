@@ -26,6 +26,8 @@ using System.Linq;
 using LagoVista.IoT.Billing.Managers;
 using LagoVista.IoT.Billing.Models;
 using RingCentral;
+using LagoVista.Core;
+using LagoVista.Core.Exceptions;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -46,11 +48,12 @@ namespace LagoVista.UserManagement.Rest
         private readonly IAuthenticationLogManager _authLogManager;
         private readonly IMediaServicesManager _mediaServicesManager;
         private readonly ITimeZoneServices _timeZoneServices;
+        private readonly ILocalizationService _localizationService;
         private readonly ICustomerManager _customerManager;
         private readonly IUserRegistrationManager _userRegistrationManager;
 
         public UserServicesController(IAppUserManager appUserManager, IUserRegistrationManager userRegistrationManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, ITimeZoneServices timeZoneServices, IUserManager usrManager, IAppUserInboxManager appUserInboxManager, IMediaServicesManager mediaServicesManager,
-          ICustomerManager customerManager, IAuthenticationLogManager authLogManager, IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
+          ILocalizationService localizationService, ICustomerManager customerManager, IAuthenticationLogManager authLogManager, IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
             _usrManager = usrManager;
@@ -63,6 +66,7 @@ namespace LagoVista.UserManagement.Rest
             _authLogManager = authLogManager;
             _mediaServicesManager = mediaServicesManager;
             _customerManager = customerManager;
+            _localizationService = localizationService;
             _timeZoneServices = timeZoneServices;
             _userRegistrationManager = userRegistrationManager;
         }
@@ -73,12 +77,85 @@ namespace LagoVista.UserManagement.Rest
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/user/{id}")]
-        public async Task<DetailResponse<UserInfo>> GetUserAsync(String id)
+        public async Task<DetailResponse<AppUser>> GetUserAsync(String id)
         {
             var appUser = await _appUserManager.GetUserByIdAsync(id, OrgEntityHeader, UserEntityHeader);
-            var form = DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
-            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Id = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+            var form = DetailResponse<AppUser>.Create(appUser);
+            form.View[nameof(AppUser.TimeZone).CamelCase()].Options = _timeZoneServices.GetTimeZoneEnumOptions();
+            form.View[nameof(AppUser.Language).CamelCase()].Options = _localizationService.GetCultureEnumOptions();
             return form;
+        }
+
+        void AuthorizeUserEditing(AppUser user)
+        {
+            if (IsSysAdmin)
+                return;
+
+            if(IsOrgAdmin && user.Organizations.Any(org => org.Id == OrgEntityHeader.Id))
+                return;
+
+            throw new NotAuthorizedException("You are not authorized to edit this user.  You must be logged in to an organization that this user is a part of.");
+        }
+
+        [SystemAdmin]
+        [HttpGet("/api/sys/user/search")]
+        public async Task<ListResponse<UserInfoSummary>> SearchUsers([FromQuery] string email, [FromQuery] string firstname, [FromQuery] string lastname)
+        {
+            return await _appUserManager.SearchUsersAsync(email, firstname, lastname, OrgEntityHeader, UserEntityHeader, GetListRequestFromHeader());
+        }
+
+        /// <summary>
+        /// User Service - force the user to have a confirmed email address.
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/sys/user/{userid}/email/confirm")]
+        public async Task<InvokeResult<AppUser>> ConfirmUserEmaililAsync(String userid)
+        {
+       
+            var appUser = await _appUserManager.GetUserByIdAsync(userid, OrgEntityHeader, UserEntityHeader);
+            AuthorizeUserEditing(appUser);
+
+            appUser.EmailConfirmed = true;
+            appUser.SetLastUpdatedFields(UserEntityHeader);
+            appUser.AddChange(nameof(AppUser.EmailConfirmed), false.ToString(), true.ToString());
+            await _appUserManager.UpdateUserAsync(appUser, OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<AppUser>.Create(appUser);
+        }
+
+        /// <summary>
+        /// User Service - force the user to have a confirmed phone number.
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/sys/user/{userid}/phone/confirm")]
+        public async Task<InvokeResult< AppUser>> ConfirmUserPhoneAsync(String userid)
+        {
+            var appUser = await _appUserManager.GetUserByIdAsync(userid, OrgEntityHeader, UserEntityHeader);
+            AuthorizeUserEditing(appUser);
+
+            appUser.PhoneNumberConfirmed = true;
+            appUser.SetLastUpdatedFields(UserEntityHeader);
+            appUser.AddChange(nameof(AppUser.PhoneNumberConfirmed), false.ToString(), true.ToString());
+            await _appUserManager.UpdateUserAsync(appUser, OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<AppUser>.Create(appUser);
+        }
+
+        /// <summary>
+        /// User Service - add user to org
+        /// </summary>
+        /// <param name="orgid"></param>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/sys/org/{orgid}/user/{userid}/add")]
+        public async Task<InvokeResult<AppUser>> ConfirmUserPhoneAsync(string orgid, String userid)
+        {
+            var appUser = await _appUserManager.GetUserByIdAsync(userid, OrgEntityHeader, UserEntityHeader);
+            if (!IsSysAdmin)
+                throw new NotAuthorizedException("Must be a system admin to add a user to organization.");
+
+            await _orgManager.AddUserToOrgAsync(orgid, userid, OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<AppUser>.Create(appUser);
         }
 
         /// <summary>
@@ -91,7 +168,7 @@ namespace LagoVista.UserManagement.Rest
         {
             var appUser = await _appUserManager.GetUserByIdAsync(email, OrgEntityHeader, UserEntityHeader);
             var form = DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
-            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Id = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+            form.View[nameof(AppUser.TimeZone).CamelCase()].Options = _timeZoneServices.GetTimeZoneEnumOptions();
             return form;
         }
 
@@ -117,7 +194,7 @@ namespace LagoVista.UserManagement.Rest
         {
             var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
             var form = DetailResponse<AppUser>.Create(appUser);
-            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Id = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
+            form.View[nameof(AppUser.TimeZone).CamelCase()].Options = _timeZoneServices.GetTimeZoneEnumOptions();
             //No need to send the password has down there, need to be careful when doing an update...
             return form;
         }
@@ -186,8 +263,7 @@ namespace LagoVista.UserManagement.Rest
 
             var appUser = await _appUserManager.GetUserByUserNameAsync(email, null, null);
             var form = DetailResponse<UserInfo>.Create(appUser.ToUserInfo());
-            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Key = tz.Id, Id = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
-            return form;
+            form.View[nameof(AppUser.TimeZone).CamelCase()].Options = _timeZoneServices.GetTimeZoneEnumOptions(); return form;
         }
 
         [HttpDelete("/api/user/{id}")]
