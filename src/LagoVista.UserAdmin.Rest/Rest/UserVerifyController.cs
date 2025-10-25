@@ -39,6 +39,12 @@ namespace LagoVista.UserAdmin.Rest
             return _userVerificationManager.CheckConfirmedAsync(UserEntityHeader);
         }
 
+        [SystemAdmin]
+        [HttpGet("/api/verify/{userid}/email/confirmationcode/send")]
+        public Task<InvokeResult<string>> SendConfirmationEmailAsync(string userid)
+        {
+            return _userVerificationManager.SendConfirmationEmailAsync(userid);
+        }
         /// <summary>
         /// Verify User - Send Confirmation Email
         /// </summary>
@@ -46,7 +52,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/verify/email/confirmationcode/send")]
         public Task<InvokeResult<string>> SendConfirmationEmailAsync()
         {
-            return _userVerificationManager.SendConfirmationEmailAsync(UserEntityHeader);
+            return _userVerificationManager.SendConfirmationEmailAsync(UserEntityHeader.Id);
         }
 
         /// <summary>

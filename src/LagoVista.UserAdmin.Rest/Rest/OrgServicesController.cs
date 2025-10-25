@@ -469,9 +469,9 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         [HttpGet("/api/org/invitation/{invitationid}")]
-        public Task<Invitation> GetInvitationAsync(string invitationid)
+        public async Task<InvokeResult<Invitation>> GetInvitationAsync(string invitationid)
         {
-            return _orgManager.GetInvitationAsync(invitationid);
+            return InvokeResult<Invitation>.Create(await _orgManager.GetInvitationAsync(invitationid));
         }
 
 		[HttpGet("/api/org/invitation/form/{invitationid}")]

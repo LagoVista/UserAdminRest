@@ -28,6 +28,7 @@ using LagoVista.IoT.Billing.Models;
 using RingCentral;
 using LagoVista.Core;
 using LagoVista.Core.Exceptions;
+using LagoVista.UserAdmin.Models.Security;
 
 namespace LagoVista.UserManagement.Rest
 {
@@ -124,6 +125,67 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
+        /// User Service - force the user to have a confirmed email address.
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/sys/user/{userid}/email/confirm/send")]
+        public async Task<InvokeResult<AppUser>> SendConfirmUserEmaililAsync(String userid)
+        {
+
+            var appUser = await _appUserManager.GetUserByIdAsync(userid, OrgEntityHeader, UserEntityHeader);
+            AuthorizeUserEditing(appUser);
+
+            appUser.EmailConfirmed = true;
+            appUser.SetLastUpdatedFields(UserEntityHeader);
+            appUser.AddChange(nameof(AppUser.EmailConfirmed), false.ToString(), true.ToString());
+            await _appUserManager.UpdateUserAsync(appUser, OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<AppUser>.Create(appUser);
+        }
+
+        /// <summary>
+        /// User Service - force the user to have a confirmed email address.
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <param name="logintype"></param>
+        /// <returns></returns>
+        [HttpGet("/api/sys/user/{userid}/logintype/{logintype}")]
+        public async Task<InvokeResult<AppUser>> SetLoginType(string userid, String logintype)
+        {
+            if (Enum.TryParse<LoginTypes>(logintype, true, out var loginType))
+            {
+                var appUser = await _appUserManager.GetUserByIdAsync(userid, OrgEntityHeader, UserEntityHeader);
+                AuthorizeUserEditing(appUser);
+
+                appUser.SetLastUpdatedFields(UserEntityHeader);
+                appUser.AddChange(nameof(AppUser.LoginType), appUser.LoginType.ToString(), loginType.ToString());
+                appUser.LoginType = loginType;
+                await _appUserManager.UpdateUserAsync(appUser, OrgEntityHeader, UserEntityHeader);
+                return InvokeResult<AppUser>.Create(appUser);
+            }
+            else
+            {
+                return InvokeResult<AppUser>.FromError($"Could not parse login type: {logintype}");
+            }
+        }
+
+        [SystemAdmin]
+        [HttpGet("/api/sys/user/{userid}/auth/log")]
+        public async Task<ListResponse<AuthenticationLog>> GetUserAuthLogAsync(String userid)
+        {
+            return await _authLogManager.GetForUserIdAsync(userid, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+
+        [SystemAdmin]
+        [HttpGet("/api/sys/user/email/auth/log")]
+        public async Task<ListResponse<AuthenticationLog>> GetForUserEmailAsync([FromQuery] String email)
+        {
+            return await _authLogManager.GetForUserNameAsync(email, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+        }
+
+
+        /// <summary>
         /// User Service - force the user to have a confirmed phone number.
         /// </summary>
         /// <param name="userid"></param>
@@ -142,13 +204,32 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
+        /// User Service - force the user to have a confirmed phone number.
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [HttpGet("/api/sys/user/{userid}/phone/confirm/send")]
+        public async Task<InvokeResult<AppUser>> SendConfirmUserPhoneAsync(String userid)
+        {
+            var appUser = await _appUserManager.GetUserByIdAsync(userid, OrgEntityHeader, UserEntityHeader);
+            AuthorizeUserEditing(appUser);
+
+            appUser.PhoneNumberConfirmed = true;
+            appUser.SetLastUpdatedFields(UserEntityHeader);
+            appUser.AddChange(nameof(AppUser.PhoneNumberConfirmed), false.ToString(), true.ToString());
+            await _appUserManager.UpdateUserAsync(appUser, OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<AppUser>.Create(appUser);
+        }
+
+
+        /// <summary>
         /// User Service - add user to org
         /// </summary>
         /// <param name="orgid"></param>
         /// <param name="userid"></param>
         /// <returns></returns>
         [HttpGet("/api/sys/org/{orgid}/user/{userid}/add")]
-        public async Task<InvokeResult<AppUser>> ConfirmUserPhoneAsync(string orgid, String userid)
+        public async Task<InvokeResult<AppUser>> AddUsertOrgAsync(string orgid, String userid)
         {
             var appUser = await _appUserManager.GetUserByIdAsync(userid, OrgEntityHeader, UserEntityHeader);
             if (!IsSysAdmin)
