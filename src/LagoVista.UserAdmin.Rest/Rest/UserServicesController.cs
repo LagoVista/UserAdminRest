@@ -655,6 +655,50 @@ namespace LagoVista.UserManagement.Rest
             return response;
         }
 
+
+        [SystemAdmin]
+        [HttpGet("/api/sys/user/{userid}/financeadmin/set")]
+        public async Task<InvokeResult<AppUser>> SetFinanceAdmin(string userid)
+        {
+            var user = await _appUserManager.GetUserByIdAsync(userid, OrgEntityHeader, UserEntityHeader);
+            if(user.IsFinanceAdmin)
+                return InvokeResult<AppUser>.FromError("User is already a finance admin, no need to set again.");
+
+            SetUpdatedProperties(user);
+            user.IsFinanceAdmin = true;
+            user.AddChange(nameof(AppUser.IsFinanceAdmin), "false", "true");
+
+            var result = await _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+            if(result.Successful)
+                return InvokeResult<AppUser>.Create(user);  
+        
+            return InvokeResult<AppUser>.FromInvokeResult(result);
+        }
+
+        [SystemAdmin]
+        [HttpGet("/api/sys/user/{id}/financeadmin/clear")]
+        public async Task<InvokeResult<AppUser>> ClearFinanceAdmin(string userid)
+        {
+
+            var user = await _appUserManager.GetUserByIdAsync(userid, OrgEntityHeader, UserEntityHeader);
+            if (!user.IsFinanceAdmin)
+                return InvokeResult<AppUser>.FromError("User was not a finance admin, can not clear");
+
+            user.IsFinanceAdmin = false;
+
+            SetUpdatedProperties(user);
+
+            user.AddChange(nameof(AppUser.IsFinanceAdmin), "false", "true");
+
+            var result = await _appUserManager.UpdateUserAsync(user, OrgEntityHeader, UserEntityHeader);
+            if (result.Successful)
+                return InvokeResult<AppUser>.Create(user);
+
+            return InvokeResult<AppUser>.FromInvokeResult(result);
+        }
+
+
+
         [HttpGet("/api/user/{id}/ssn")]
         public Task<InvokeResult<string>> GetSSNForUserAsync(string id)
         {
