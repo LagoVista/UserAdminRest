@@ -140,7 +140,14 @@ namespace LagoVista.UserAdmin.Rest
 
             var result = await _userVerificationManager.ValidateEmailAsync(new ConfirmEmail() {  ReceivedCode = code}, user.ToEntityHeader());
             if (result.Successful)
-                return Redirect(CommonLinks.EmailConfirmed);
+            {
+                if(String.IsNullOrEmpty(result.RedirectURL))
+                {
+                    return Redirect(CommonLinks.EmailConfirmed);
+                }
+
+                return Redirect(result.RedirectURL);
+            }
 
             return Redirect($"{CommonLinks.CouldNotConfirmEmail}?err={result.ErrorMessage}");
         }
