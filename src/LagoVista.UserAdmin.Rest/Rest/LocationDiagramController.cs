@@ -1,4 +1,8 @@
-﻿using DocumentFormat.OpenXml.Office2013.PowerPoint.Roaming;
+// --- BEGIN CODE INDEX META (do not edit) ---
+// ContentHash: 67742d8f3657b57f345c1fa079ae480b304c520f422b30bc643f3faece1442a3
+// IndexVersion: 2
+// --- END CODE INDEX META ---
+using DocumentFormat.OpenXml.Office2013.PowerPoint.Roaming;
 using DocumentFormat.OpenXml.Wordprocessing;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;

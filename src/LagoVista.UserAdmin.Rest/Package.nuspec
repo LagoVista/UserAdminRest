@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>LagoVista.UserAdmin.Rest</id>
-    <version>3.0.3044.0727</version>
+    <version>3.0.3099.1426</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -12,19 +12,20 @@
     <copyright>Copyright Software Logistics - 2025</copyright>
     <tags>HomeAutomation IoT</tags>
     <icon>LagoVistaIcon.png</icon>
-    <releaseNotes>Build Date: 9/16/2025 11:27:06 AM UTC</releaseNotes>
+    <releaseNotes>Build Date: 11/10/2025 7:26:05 PM UTC</releaseNotes>
     <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
     <dependencies>
-      <group targetFramework="net6.0">
-        <dependency id="LagoVista.IoT.Deployment.Admin" version="3.0.3044.0727" />
-        <dependency id="LagoVista.IoT.Web.Common" version="3.0.3044.0727" />
-        <dependency id="LagoVista.ProjectManagement.Core" version="3.0.3044.0727" />
+      <group targetFramework="net9.0">
+        <dependency id="LagoVista.IoT.Deployment.Admin" version="3.0.3099.1426" />
+        <dependency id="LagoVista.IoT.Billing.Managers" version="3.0.3099.1426" />
+        <dependency id="LagoVista.IoT.Web.Common" version="3.0.3099.1426" />
+        <dependency id="LagoVista.ProjectManagement.Core" version="3.0.3099.1426" />
       </group>
     </dependencies>
   </metadata>
   <files>
     <file src="LagoVistaIcon.png" target="LagoVistaIcon.png" />
-    <file src="bin\release\net6.0\LagoVista.UserAdmin.Rest.dll" target="lib\net6.0\LagoVista.UserAdmin.Rest.dll" />
-    <file src="bin\release\net6.0\LagoVista.UserAdmin.Rest.pdb" target="lib\net6.0\LagoVista.UserAdmin.Rest.pdb" />
+    <file src="bin\release\net9.0\LagoVista.UserAdmin.Rest.dll" target="lib\net9.0\LagoVista.UserAdmin.Rest.dll" />
+    <file src="bin\release\net9.0\LagoVista.UserAdmin.Rest.pdb" target="lib\net9.0\LagoVista.UserAdmin.Rest.pdb" />
   </files>
 </package>
