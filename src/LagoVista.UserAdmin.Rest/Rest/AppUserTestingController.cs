@@ -1,6 +1,7 @@
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Testing;
@@ -15,6 +16,7 @@ namespace LagoVista.UserAdmin.Rest
     /// App User Testing endpoints.
     /// Security will be applied externally (custom) - this controller is a thin pass-through to IAppUserTestingManager.
     /// </summary>
+    [ConfirmedUser]
     public class AppUserTestingController : LagoVistaBaseController
     {
         private readonly IAppUserTestingManager _appUserTestingManager;
@@ -26,68 +28,100 @@ namespace LagoVista.UserAdmin.Rest
 
         #region Preconditions / Setup
 
-        [HttpPost("/api/appuser/testing/signin")]
-        public Task<InvokeResult> SignInTestUser() => _appUserTestingManager.SignInTestUser();
+        [HttpDelete("/api/sys/testing/user")]
+        public Task<InvokeResult> DeleteTestUserAsync() => _appUserTestingManager.DeleteTestUserAsync(OrgEntityHeader, UserEntityHeader);
 
-        [HttpPost("/api/appuser/testing/signout")]
-        public Task<InvokeResult> SignOutTestUser() => _appUserTestingManager.SignOutTestUser();
+        [HttpPost("/api/sys/testing/setup")]
+        public Task<InvokeResult> ApplySetupAsync([FromBody] AuthTenantStateSnapshot request) => _appUserTestingManager.ApplySetupAsync(request, OrgEntityHeader, UserEntityHeader);
 
-        [HttpDelete("/api/appuser/testing/user")]
-        public Task<InvokeResult> DeleteTestUserAsync() => _appUserTestingManager.DeleteTestUserAsync();
+        [HttpGet("/api/sys/testing/token/email/last")]
+        public Task<InvokeResult<string>> GetLastEmailTokenAsync() => _appUserTestingManager.GetLastEmailTokenAsync(OrgEntityHeader, UserEntityHeader);
 
-        public class ApplySetupRequest
+        [HttpGet("/api/sys/testing/token/sms/last")]
+        public Task<InvokeResult<string>> GetLastSmsTokenAsync() => _appUserTestingManager.GetLastSmsTokenAsync(OrgEntityHeader, UserEntityHeader);
+
+        #endregion
+
+
+        #region Auth View Management
+
+        [HttpPost("/api/sys/testing/auth/view")]
+        public Task<InvokeResult> CreateAuthViewAsync([FromBody] AuthView view) => _appUserTestingManager.AddAuthViewAsync(view, OrgEntityHeader, UserEntityHeader);
+
+        [HttpPut("/api/sys/testing/auth/view")]
+        public async Task<InvokeResult> UpdateAuthViewAsync([FromBody] AuthView scenario)
         {
-            public AuthTenantStateSnapshot Preconditions { get; set; }
-            public bool LoginUser { get; set; }
+            SetUpdatedProperties(scenario);
+            return await _appUserTestingManager.UpdateAuthViewAsync(scenario, OrgEntityHeader, UserEntityHeader);
         }
 
-        [HttpPost("/api/appuser/testing/setup")]
-        public Task<InvokeResult> ApplySetupAsync([FromBody] ApplySetupRequest request) => _appUserTestingManager.ApplySetupAsync(request.Preconditions, request.LoginUser);
+        [HttpGet("/api/sys/testing/auth/view/{id}")]
+        public async Task<DetailResponse<AuthView>> GetAuthViewAsync(string id)
+        {
+            var authView = await _appUserTestingManager.GetAuthViewAsync(id, OrgEntityHeader, UserEntityHeader);
+            return DetailResponse<AuthView>.Create(authView);
+        }
 
-        [HttpGet("/api/appuser/testing/token/email/last")]
-        public Task<InvokeResult<string>> GetLastEmailTokenAsync() => _appUserTestingManager.GetLastEmailTokenAsync();
+        [HttpGet("/api/sys/testing/auth/view/factory")]
+        public DetailResponse<AuthView> CreateAuthView()
+        {
+            var response = DetailResponse<AuthView>.Create();
+            SetOwnedProperties(response.Model);
+            SetAuditProperties(response.Model);
+            return response;
+        }
 
-        [HttpGet("/api/appuser/testing/token/sms/last")]
-        public Task<InvokeResult<string>> GetLastSmsTokenAsync() => _appUserTestingManager.GetLastSmsTokenAsync();
+        [HttpPost("/api/sys/testing/auth/views")]
+        public Task<ListResponse<AuthViewSummary>> GetAuthViewsAsync() => _appUserTestingManager.GetAuthViewsForOrgAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+
+        [HttpDelete("/api/sys/testing/auth/view/{id}")]
+        public Task<InvokeResult> DeleteAuthViewAsync(string id) => _appUserTestingManager.DeleteAuthViewAsync(id, OrgEntityHeader, UserEntityHeader);
 
         #endregion
 
-        #region Snapshot Getter
+        #region Test Scenario Management
 
-        [HttpGet("/api/appuser/testing/snapshot")]
-        public Task<InvokeResult<AuthTenantStateSnapshot>> GetUserSnapshotAsync([FromQuery] string ceremonyId = null) => _appUserTestingManager.GetUserSnapshotAsync(ceremonyId);
+        [HttpPost("/api/sys/testing/auth/scenario")]
+        public Task<InvokeResult> CreateTesteScanarioAsync([FromBody] AppUserTestScenario scenario) => _appUserTestingManager.AddTestScenarioAsync(scenario, OrgEntityHeader, UserEntityHeader);
 
-        [HttpGet("/api/appuser/testing/verification")]
-        public Task<InvokeResult<TestRunVerification>> GetVerificationAsync([FromQuery] string ceremonyId = null) => _appUserTestingManager.GetVerificationAsync(ceremonyId);
+        [HttpPut("/api/sys/testing/auth/scenario")]
+        public async Task<InvokeResult> UpdateTestScenarioAsync([FromBody] AppUserTestScenario scenario)
+        {
+            SetUpdatedProperties(scenario);
+            return await _appUserTestingManager.UpdateTestScenarioAsync(scenario, OrgEntityHeader, UserEntityHeader);
+        }
 
-        #endregion
+        [HttpGet("/api/sys/testing/auth/scenario/{id}")]
+        public async Task<DetailResponse<AppUserTestScenario>> GetTestScenarioAsync(string id)
+        {
+            var scenario = await _appUserTestingManager.GetTestScenarioAsync(id, OrgEntityHeader, UserEntityHeader);
+            return DetailResponse<AppUserTestScenario>.Create(scenario);
+        }
 
-        #region DSL Case Management
+        [HttpGet("/api/sys/testing/auth/scenario/factory")]
+        public DetailResponse<AppUserTestScenario> CreateTestScenario()
+        {
+            var response = DetailResponse<AppUserTestScenario>.Create();
+            SetOwnedProperties(response.Model);
+            SetAuditProperties(response.Model);
+            return response;
+        }
 
-        [HttpPost("/api/appuser/testing/dsl")]
-        public Task<InvokeResult> CreateDslAsync([FromBody] AppUserTestingDSL dsl) => _appUserTestingManager.CreateDslAsync(dsl);
+        [HttpPost("/api/sys/testing/auth/scenarios")]
+        public Task<ListResponse<AppUserTestScenarioSummary>> GetTestScenariosAsync() => _appUserTestingManager.GetTestScenariosForOrganizationAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
 
-        [HttpPut("/api/appuser/testing/dsl")]
-        public Task<InvokeResult> UpdateDslAsync([FromBody] AppUserTestingDSL dsl) => _appUserTestingManager.UpdateDslAsync(dsl);
-
-        [HttpGet("/api/appuser/testing/dsl/{id}")]
-        public Task<InvokeResult<AppUserTestingDSL>> GetDslAsync(string id) => _appUserTestingManager.GetDslAsync(id);
-
-        [HttpPost("/api/appuser/testing/dsls")]
-        public Task<ListResponse<AppUserTestingDSLSummary>> ListDslAsync() => _appUserTestingManager.ListDslAsync(GetListRequestFromHeader());
-
-        [HttpDelete("/api/appuser/testing/dsl/{id}")]
-        public Task<InvokeResult> DeleteDslAsync(string id) => _appUserTestingManager.DeleteDslAsync(id);
+        [HttpDelete("/api/sys/testing/auth/scenario/{id}")]
+        public Task<InvokeResult> DeleteTestScanarioAsync(string id) => _appUserTestingManager.DeleteTestScenarioAsync(id, OrgEntityHeader, UserEntityHeader);
 
         #endregion
 
         #region Run Persistence
 
-        [HttpPost("/api/appuser/testing/run")]
-        public Task<InvokeResult<AppUserTestRun>> CreateRunAsync([FromBody] AppUserTestRun run) => _appUserTestingManager.CreateRunAsync(run);
+        [HttpPost("/api/sys/testing/auth/run")]
+        public Task<InvokeResult> CreateRunAsync([FromBody] AppUserTestRun run) => _appUserTestingManager.AddTestRunAsync(run, OrgEntityHeader, UserEntityHeader);
 
-        [HttpPost("/api/appuser/testing/run/{runId}/event")]
-        public Task<InvokeResult> AppendRunEventAsync(string runId, [FromBody] AppUserTestRunEvent evt) => _appUserTestingManager.AppendRunEventAsync(runId, evt);
+        [HttpPost("/api/sys/testing/auth/run/{runId}/event")]
+        public Task<InvokeResult> AppendRunEventAsync(string runId, [FromBody] AppUserTestRunEvent evt) => _appUserTestingManager.AppendRunEventAsync(runId, evt, OrgEntityHeader, UserEntityHeader);
 
         public class FinishRunRequest
         {
@@ -95,31 +129,29 @@ namespace LagoVista.UserAdmin.Rest
             public TestRunVerification Verification { get; set; }
         }
 
-        [HttpPost("/api/appuser/testing/run/{runId}/finish")]
-        public Task<InvokeResult<AppUserTestRun>> FinishRunAsync(string runId, [FromBody] FinishRunRequest request)
+        [HttpPost("/api/sys/testing/auth/run/{runId}/finish")]
+        public Task<InvokeResult> FinishRunAsync(string runId, [FromBody] FinishRunRequest request)
         {
-            if (request == null)
-            {
-                return Task.FromResult(InvokeResult<AppUserTestRun>.FromError("Missing request body."));
-            }
-
-            return _appUserTestingManager.FinishRunAsync(runId, request.Status, request.Verification);
+            return _appUserTestingManager.FinishRunAsync(runId, request.Status, OrgEntityHeader, UserEntityHeader, request.Verification);
         }
 
-        [HttpPost("/api/appuser/testing/runs")]
-        public Task<ListResponse<AppUserTestRunSummary>> GetTestRunsAsync()
-            => _appUserTestingManager.GetTestRunsAsync(GetListRequestFromHeader());
+        [HttpPost("/api/sys/testing/auth/runs")]
+        public Task<ListResponse<AppUserTestRunSummary>> GetTestRunsAsync() => _appUserTestingManager.GetTestRunsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
 
-        [HttpGet("/api/appuser/testing/run/{runId}")]
-        public Task<InvokeResult<AppUserTestRun>> GetRunAsync(string runId) => _appUserTestingManager.GetRunAsync(runId);
+        [HttpGet("/api/sys/testing/auth/run/{runId}")]
+        public async Task<InvokeResult<AppUserTestRun>> GetRunAsync(string runId)
+        {
+            var result = await  _appUserTestingManager.GetTestRunAsync(runId, OrgEntityHeader, UserEntityHeader);
+            return InvokeResult<AppUserTestRun>.Create(result);
+        }
 
         #endregion
 
         #region Auth Log Review
 
-        [HttpGet("/api/appuser/testing/authlog/review")]
+        [HttpGet("/api/sys/testing/authlog/review")]
         public Task<InvokeResult<AuthLogReviewSummary>> GetAuthLogReviewAsync([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc)
-            => _appUserTestingManager.GetAuthLogReviewAsync(fromUtc, toUtc);
+            => _appUserTestingManager.GetAuthLogReviewAsync(fromUtc, toUtc, OrgEntityHeader, UserEntityHeader);
 
         #endregion
     }
