@@ -1,13 +1,20 @@
+using LagoVista.Core;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
+using LagoVista.IoT.Billing.Models;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Testing;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LagoVista.UserAdmin.Rest
@@ -71,7 +78,29 @@ namespace LagoVista.UserAdmin.Rest
             return response;
         }
 
-        [HttpPost("/api/sys/testing/auth/views")]
+        [HttpGet("/api/sys/testing/auth/view/field/factory")]
+        public DetailResponse<AuthViewField> CreateAuthViewField()
+        {
+            var response = DetailResponse<AuthViewField>.Create();
+            return response;
+        }
+
+        [HttpGet("/api/sys/testing/auth/scenario/usersnapshot/factory")]
+        public DetailResponse<AuthTenantStateSnapshot> CreateAuthTenantStateSnapshot()
+        {
+            var response = DetailResponse<AuthTenantStateSnapshot>.Create();
+            return response;
+        }
+
+
+        [HttpGet("/api/sys/testing/auth/view/action/factory")]
+        public DetailResponse<AuthFieldAction> CreateAction()
+        {
+            var response = DetailResponse<AuthFieldAction>.Create();
+            return response;
+        }
+
+        [HttpGet("/api/sys/testing/auth/views")]
         public Task<ListResponse<AuthViewSummary>> GetAuthViewsAsync() => _appUserTestingManager.GetAuthViewsForOrgAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
 
         [HttpDelete("/api/sys/testing/auth/view/{id}")]
@@ -98,16 +127,54 @@ namespace LagoVista.UserAdmin.Rest
             return DetailResponse<AppUserTestScenario>.Create(scenario);
         }
 
+        [HttpGet("/api/sys/testing/auth/scenario/{id}/plan")]
+        public async Task<InvokeResult<AuthRunnerPlan>> GetTestScenarioPlanAsync(string id, bool headless)
+        {
+            return await _appUserTestingManager.BuildRunnerPlanAsync(id, headless, OrgEntityHeader, UserEntityHeader);
+        }
+
+
         [HttpGet("/api/sys/testing/auth/scenario/factory")]
-        public DetailResponse<AppUserTestScenario> CreateTestScenario()
+        public async Task<DetailResponse<AppUserTestScenario>> CreateTestScenario()
         {
             var response = DetailResponse<AppUserTestScenario>.Create();
             SetOwnedProperties(response.Model);
             SetAuditProperties(response.Model);
+
+            var views = await _appUserTestingManager.GetAuthViewsForOrgAsync(ListRequest.CreateForAll(), OrgEntityHeader, UserEntityHeader);
+            var options = views.Model.Select(view => view.CreateEnumDescription()).ToList();
+            options.Insert(0, EnumDescription.CreateSelect());
+            response.View[nameof(AppUserTestScenario.AuthView).CamelCase()].Options = options;
+            response.View[nameof(AppUserTestScenario.ExpectedView).CamelCase()].Options = options;
             return response;
         }
 
-        [HttpPost("/api/sys/testing/auth/scenarios")]
+        public static async Task<byte[]> ReadBytesAsync(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return Array.Empty<byte>();
+
+            await using var ms = new MemoryStream((int)file.Length);
+            await file.CopyToAsync(ms);
+            return ms.ToArray();
+        }
+
+        [HttpPost("/api/sys/testing/auth/run/complete")]
+        public async Task<InvokeResult> CompleteRunAsync([FromForm] string resultJson, List<IFormFile> files)
+        {
+            var runnerResult = JsonConvert.DeserializeObject<AuthRunnerResult>(resultJson);
+            var images = new List<byte[]>();
+            foreach(var file in files)
+            {
+                images.Add(await ReadBytesAsync(file));
+            }
+         
+            await _appUserTestingManager.AddTestRunAsync(runnerResult, files, OrgEntityHeader, UserEntityHeader);
+
+            return InvokeResult.Success;
+        }
+
+        [HttpGet("/api/sys/testing/auth/scenarios")]
         public Task<ListResponse<AppUserTestScenarioSummary>> GetTestScenariosAsync() => _appUserTestingManager.GetTestScenariosForOrganizationAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
 
         [HttpDelete("/api/sys/testing/auth/scenario/{id}")]
