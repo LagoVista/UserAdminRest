@@ -6,6 +6,7 @@ using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
+using LagoVista.UserAdmin.Models.Security;
 using LagoVista.UserAdmin.Models.Testing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -121,7 +122,13 @@ namespace LagoVista.UserAdmin.Rest
         public async Task<DetailResponse<AppUserTestScenario>> GetTestScenarioAsync(string id)
         {
             var scenario = await _appUserTestingManager.GetTestScenarioAsync(id, OrgEntityHeader, UserEntityHeader);
-            return DetailResponse<AppUserTestScenario>.Create(scenario);
+            var view = DetailResponse<AppUserTestScenario>.Create(scenario);
+            var views = await _appUserTestingManager.GetAuthViewsForOrgAsync(ListRequest.CreateForAll(), OrgEntityHeader, UserEntityHeader);
+            var options = views.Model.Select(view => view.CreateEnumDescription()).ToList();
+            options.Insert(0, EnumDescription.CreateSelect());
+            view.View[nameof(AppUserTestScenario.AuthView).CamelCase()].Options = options;
+            view.View[nameof(AppUserTestScenario.ExpectedView).CamelCase()].Options = options;
+            return view;
         }
 
         [HttpGet("/api/sys/testing/auth/scenario/{id}/plan")]
@@ -129,7 +136,6 @@ namespace LagoVista.UserAdmin.Rest
         {
             return await _appUserTestingManager.BuildRunnerPlanAsync(id, headless, OrgEntityHeader, UserEntityHeader);
         }
-
 
         [HttpGet("/api/sys/testing/auth/scenario/factory")]
         public async Task<DetailResponse<AppUserTestScenario>> CreateTestScenario()
@@ -159,6 +165,12 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/sys/testing/auth/run/complete")]
         public async Task<InvokeResult> CompleteRunAsync([FromForm] string resultJson, List<IFormFile> files)
         {
+            Console.WriteLine("[api] - arrived.");
+            Console.WriteLine($"[api] - fileCount {files.Count}.");
+
+
+            Console.WriteLine($"[JSON.TESTRUN]={resultJson}");
+
             var runnerResult = JsonConvert.DeserializeObject<AppUserTestRun>(resultJson);
 
             var testArtifacts = new List<ArtifactFlie>();
@@ -210,8 +222,7 @@ namespace LagoVista.UserAdmin.Rest
         #region Auth Log Review
 
         [HttpGet("/api/sys/testing/authlog/review")]
-        public Task<InvokeResult<AuthLogReviewSummary>> GetAuthLogReviewAsync([FromQuery] DateTime fromUtc, [FromQuery] DateTime toUtc)
-            => _appUserTestingManager.GetAuthLogReviewAsync(fromUtc, toUtc, OrgEntityHeader, UserEntityHeader);
+        public Task<ListResponse<AuthenticationLog>> GetAuthLogReviewAsync() => _appUserTestingManager.GetAuthLogReviewAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
 
         #endregion
     }
