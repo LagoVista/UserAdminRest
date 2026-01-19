@@ -38,9 +38,6 @@ namespace LagoVista.UserAdmin.Rest
         [HttpDelete("/api/sys/testing/user")]
         public Task<InvokeResult> DeleteTestUserAsync() => _appUserTestingManager.DeleteTestUserAsync(OrgEntityHeader, UserEntityHeader);
 
-        [HttpPost("/api/sys/testing/setup")]
-        public Task<InvokeResult> ApplySetupAsync([FromBody] AuthTenantStateSnapshot request) => _appUserTestingManager.ApplySetupAsync(request, OrgEntityHeader, UserEntityHeader);
-
         [HttpGet("/api/sys/testing/token/email/last")]
         public Task<InvokeResult<string>> GetLastEmailTokenAsync() => _appUserTestingManager.GetLastEmailTokenAsync(OrgEntityHeader, UserEntityHeader);
 
@@ -162,14 +159,21 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/sys/testing/auth/run/complete")]
         public async Task<InvokeResult> CompleteRunAsync([FromForm] string resultJson, List<IFormFile> files)
         {
-            var runnerResult = JsonConvert.DeserializeObject<AuthRunnerResult>(resultJson);
-            var images = new List<byte[]>();
-            foreach(var file in files)
+            var runnerResult = JsonConvert.DeserializeObject<AppUserTestRun>(resultJson);
+
+            var testArtifacts = new List<ArtifactFlie>();
+
+            foreach (var file in files)
             {
-                images.Add(await ReadBytesAsync(file));
+                testArtifacts.Add(new ArtifactFlie()
+                {
+                    FileName = file.FileName,
+                    Buffer = await ReadBytesAsync(file),
+                    ContentType = file.ContentType
+                }); 
             }
          
-            await _appUserTestingManager.AddTestRunAsync(runnerResult, files, OrgEntityHeader, UserEntityHeader);
+            await _appUserTestingManager.AddTestRunAsync(runnerResult, testArtifacts, OrgEntityHeader, UserEntityHeader);
 
             return InvokeResult.Success;
         }
@@ -184,24 +188,13 @@ namespace LagoVista.UserAdmin.Rest
 
         #region Run Persistence
 
-        [HttpPost("/api/sys/testing/auth/run")]
-        public Task<InvokeResult> CreateRunAsync([FromBody] AppUserTestRun run) => _appUserTestingManager.AddTestRunAsync(run, OrgEntityHeader, UserEntityHeader);
-
-        [HttpPost("/api/sys/testing/auth/run/{runId}/event")]
-        public Task<InvokeResult> AppendRunEventAsync(string runId, [FromBody] AppUserTestRunEvent evt) => _appUserTestingManager.AppendRunEventAsync(runId, evt, OrgEntityHeader, UserEntityHeader);
-
         public class FinishRunRequest
         {
             public TestRunStatus Status { get; set; }
             public TestRunVerification Verification { get; set; }
         }
 
-        [HttpPost("/api/sys/testing/auth/run/{runId}/finish")]
-        public Task<InvokeResult> FinishRunAsync(string runId, [FromBody] FinishRunRequest request)
-        {
-            return _appUserTestingManager.FinishRunAsync(runId, request.Status, OrgEntityHeader, UserEntityHeader, request.Verification);
-        }
-
+        
         [HttpPost("/api/sys/testing/auth/runs")]
         public Task<ListResponse<AppUserTestRunSummary>> GetTestRunsAsync() => _appUserTestingManager.GetTestRunsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
 
