@@ -7,6 +7,7 @@ using LagoVista.Core.Models;
 using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
+using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Orgs;
@@ -19,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace LagoVista.UserAdmin.Rest
 {
-    [Authorize]
+    [ConfirmedUser]
     public class HolidaySetController : LagoVistaBaseController
     {
         private readonly IHolidaySetManager _manager;
