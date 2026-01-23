@@ -299,11 +299,11 @@ namespace LagoVista.UserManagement.Rest
         }
 
         [HttpGet("/api/users/welcome/show/{state}")]
-        public async Task ShowWelcomeOnLogin(bool state)
+        public async Task<InvokeResult> ShowWelcomeOnLogin(bool state)
         {
             var appUser = await _appUserManager.GetUserByIdAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
             appUser.ShowWelcome = state;
-            await _appUserManager.UpdateUserAsync(appUser.ToUserInfo(), OrgEntityHeader, UserEntityHeader);
+            return await _appUserManager.UpdateUserAsync(appUser.ToUserInfo(), OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpDelete("/api/user")]
