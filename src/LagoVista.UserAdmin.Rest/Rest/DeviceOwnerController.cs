@@ -57,7 +57,7 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         [HttpPost("/api/sysadmin/deviceowner")]
-        public Task SaveDeviceOwner([FromBody] DeviceOwnerUser user)
+        public Task SaveDeviceOwner([FromBody]DeviceOwnerUser user)
         {
             return _deviceOwnerRepo.AddUserAsync(user);
         }
