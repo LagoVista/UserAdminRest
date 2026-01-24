@@ -137,6 +137,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
+        [HttpPost("/api/auth/login")]
         [HttpPost("/api/v1/auth")]
         [AllowAnonymous]
         public async Task<InvokeResult<AuthResponse>> AuthFromBody([FromBody] AuthRequest req)
@@ -197,6 +198,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
+        [HttpPost("/api/auth/v1/login")]
         [HttpPost("/api/v1/login")]
         public async Task<InvokeResult<UserLoginResponse>> CookieAuthFromForm([FromBody] LoginModel model)
         {
@@ -348,6 +350,7 @@ namespace LagoVista.UserAdmin.Rest
         /// Auth by Form Post with Simple Email Address and Password, will set cookie rather than JWT
         /// </summary>
         /// <returns></returns>
+        [HttpGet("/api/auth/v1/logoff")]
         [HttpGet("/api/v1/logoff")]
         public async Task<InvokeResult> Logoff()
         {
