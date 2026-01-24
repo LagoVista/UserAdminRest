@@ -57,13 +57,13 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         [HttpPost("/api/sysadmin/deviceowner")]
-        public Task SaveDeviceOwner(DeviceOwnerUser user)
+        public Task SaveDeviceOwner([FromBody]DeviceOwnerUser user)
         {
             return _deviceOwnerRepo.AddUserAsync(user);
         }
 
         [HttpPut("/api/sysadmin/deviceowner")]
-        public Task UpdateDeviceOwner(DeviceOwnerUser user)
+        public Task UpdateDeviceOwner([FromBody] DeviceOwnerUser user)
         {
             return _deviceOwnerRepo.UpdateUserAsync(user);
         }
