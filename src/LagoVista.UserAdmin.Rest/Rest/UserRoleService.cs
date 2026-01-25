@@ -29,12 +29,14 @@ namespace LagoVista.UserAdmin.Rest
             _userRoleManager = userRoleManager ?? throw new ArgumentNullException(nameof(userRoleManager));
         }
 
+        [HttpGet("/api/user/{userid}/role/{roleid}/grant")]
         [HttpGet("/app/user/{userid}/role/{roleid}/grant")]
         public Task<InvokeResult<UserRole>> GrantAsync(string userid, string roleid)
         {
             return _userRoleManager.GrantUserRoleAsync(userid, roleid, OrgEntityHeader, UserEntityHeader);
         }
 
+        [HttpPost("/api/user/{userid}/roles/grant")]
         [HttpPost("/app/user/{userid}/roles/grant")]
         public async Task<InvokeResult<List<UserRole>>> GrantAsync([FromBody] List<string> roles, string userid)
         {
@@ -55,12 +57,14 @@ namespace LagoVista.UserAdmin.Rest
             return results;
         }
 
+        [HttpDelete("/api/user/role/revoke/{userroleid}")]
         [HttpDelete("/app/user/role/revoke/{userroleid}")]
         public Task<InvokeResult> RevokeAsync(string userroleid)
         {
             return _userRoleManager.RevokeUserRoleAsync(userroleid, OrgEntityHeader, UserEntityHeader);
         }
 
+        [HttpGet("/api/user/{userid}/roles")]
         [HttpGet("/app/user/{userid}/roles")]
         public Task<List<UserRole>> GetRolesForUserAsync(string userid)
         {
@@ -68,6 +72,7 @@ namespace LagoVista.UserAdmin.Rest
         }
 
 
+        [HttpGet("/api/user/roles")]
         [HttpGet("/app/user/roles")]
         public Task<List<UserRole>> GetRolesForUserAsync()
         {

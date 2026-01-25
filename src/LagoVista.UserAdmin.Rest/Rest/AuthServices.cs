@@ -47,7 +47,7 @@ namespace LagoVista.UserAdmin.Rest
     /// Authentication Services
     /// </summary>
     [AllowAnonymous]
-    public class AuthServices : LagoVistaBaseController
+    public class PublicAuthServices : LagoVistaBaseController
     {
         public class LoginModel
         {
@@ -73,10 +73,10 @@ namespace LagoVista.UserAdmin.Rest
 
         private readonly UserManager<AppUser> _userManager;
         private readonly IAuthTokenManager _tokenManager;
-        private readonly IPasswordManager _passwordMangaer;
+        private readonly IPasswordManager _passwordManager;
         private readonly ISignInManager _signInManager;
 		private readonly IClientAppManager _clientAppManager;
-        private readonly IOrganizationManager _orgmanager;
+        private readonly IOrganizationManager _organizationManager;
         private readonly IAuthenticationLogManager _authenticationLogManager;
         private readonly IMileStoneRepo _mileStoneRepo;
         private readonly IProjectRepo _projectRepo;
@@ -89,15 +89,15 @@ namespace LagoVista.UserAdmin.Rest
         protected static readonly Counter UserLogin = Metrics.CreateCounter("nuviot_login", "successful user login.", "source");
         protected static readonly Counter UserLoginFailed = Metrics.CreateCounter("nuviot_login_failed", "unsuccessful user login.", "source", "reason");
 
-        public AuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, IMileStoneRepo mileStoneRepo, IProjectRepo projectRepo, IOrganizationManager orgManager, UserManager<AppUser> userManager, IToDoRepo todoRepo,
+        public PublicAuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, IMileStoneRepo mileStoneRepo, IProjectRepo projectRepo, IOrganizationManager orgManager, UserManager<AppUser> userManager, IToDoRepo todoRepo,
             IAuthenticationLogManager authenticationLogManager, IAppUserRepo appUserRepo, IOrgUserRepo orgUserRepo, IDeploymentInstanceManager instanceManager, IIUserAccessManager userAccessManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
         {
             _userManager = userManager;
             _tokenManager = tokenManager;
-            _passwordMangaer = passwordManager;
+            _passwordManager = passwordManager;
             _signInManager = signInManager;
 			_clientAppManager = clientAppManager;
-            _orgmanager = orgManager;
+            _organizationManager = orgManager;
             _authenticationLogManager = authenticationLogManager;
             _mileStoneRepo = mileStoneRepo;
             _projectRepo = projectRepo;
@@ -307,7 +307,7 @@ namespace LagoVista.UserAdmin.Rest
                     //                  new Claim(ClaimsFactory.IsPreviewUser, false.ToString()),
                     //              };
 
-                    var currentOrg = await _orgmanager.GetOrganizationAsync(clientApp.OwnerOrganization.Id, clientApp.OwnerOrganization, clientApp.CreatedBy);
+                    var currentOrg = await _organizationManager.GetOrganizationAsync(clientApp.OwnerOrganization.Id, clientApp.OwnerOrganization, clientApp.CreatedBy);
                     
 
       //              var identity = new ClaimsIdentity(claims);
@@ -367,7 +367,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/auth/resetpassword/sendlink")]
         public Task<InvokeResult> SendResetPasswordLinkAsync([FromBody] SendResetPasswordLink sendResetPasswordLink)
         {
-            return _passwordMangaer.SendResetPasswordLinkAsync(sendResetPasswordLink);
+            return _passwordManager.SendResetPasswordLinkAsync(sendResetPasswordLink);
         }
 
         [AllowAnonymous]
@@ -377,7 +377,7 @@ namespace LagoVista.UserAdmin.Rest
             if (User.Identity.IsAuthenticated)
             {
                 await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, UserEntityHeader, OrgEntityHeader, extras: "Accepting direct invite, authenticated.", inviteId: inviteid);
-                var result = await _orgmanager.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
+                var result = await _organizationManager.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
                 if(result.Successful)
                 {
                     var redirect = result.Result.RedirectPage;
@@ -408,7 +408,22 @@ namespace LagoVista.UserAdmin.Rest
         [AllowAnonymous]
         public Task<InvokeResult> ResetPasswordAsync([FromBody] ResetPassword resetPassword)
         {
-            return _passwordMangaer.ResetPasswordAsync(resetPassword);
+            return _passwordManager.ResetPasswordAsync(resetPassword);
+        }
+    }
+
+    [Authorize]
+    public class AuthServices : LagoVistaBaseController
+    {
+        private readonly IPasswordManager _passwordManager;
+        private readonly IAuthenticationLogManager _authenticationLogManager;
+
+
+        public AuthServices(IPasswordManager passwordManager, IAuthenticationLogManager authenticationLogManager, UserManager<AppUser> userManager, IAdminLogger logger) 
+        : base(userManager, logger)
+        {
+            _passwordManager = passwordManager ?? throw new ArgumentNullException(nameof(passwordManager));
+            _authenticationLogManager = authenticationLogManager ?? throw new ArgumentNullException(nameof(authenticationLogManager));
         }
 
         /// <summary>
@@ -419,20 +434,20 @@ namespace LagoVista.UserAdmin.Rest
         [Authorize]
         public Task<InvokeResult> ChangePasswordAsync([FromBody] ChangePassword changePassword)
         {
-            return _passwordMangaer.ChangePasswordAsync(changePassword, OrgEntityHeader, UserEntityHeader);
+            return _passwordManager.ChangePasswordAsync(changePassword, OrgEntityHeader, UserEntityHeader);
         }
 
         [SystemAdmin]
+        [HttpGet("/api/sys/auth/log")]
         [HttpGet("/sys/auth/log")]
-        [Authorize]
         public Task<ListResponse<AuthenticationLog>> GetAllAuthAsync()
         {
             return _authenticationLogManager.GetAllAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
         [SystemAdmin]
+        [HttpGet("/api/sys/auth/log/{type}")]
         [HttpGet("/sys/auth/log/{type}")]
-        [Authorize]
         public Task<ListResponse<AuthenticationLog>> GetAuthAsync(string type)
         {
             var authLogType = Enum.Parse<AuthLogTypes>(type, true);
@@ -440,8 +455,9 @@ namespace LagoVista.UserAdmin.Rest
             return _authenticationLogManager.GetAsync(authLogType, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
+        [HttpGet("/api/auth/log/{type}")]
         [HttpGet("/auth/log/{type}")]
-        [Authorize]
+        [SystemAdmin]
         public Task<ListResponse<AuthenticationLog>> GetAuthAsyncForOrg(string type)
         {
             var authLogType = Enum.Parse<AuthLogTypes>(type, true);
@@ -449,13 +465,15 @@ namespace LagoVista.UserAdmin.Rest
             return _authenticationLogManager.GetAsync(OrgEntityHeader.Id, authLogType, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
-        [HttpGet("/auth/log")]
-        [Authorize]
+        [HttpGet("/api/auth/log")]
+        [SystemAdmin]
         public Task<ListResponse<AuthenticationLog>> GetAllAuthAsyncForOrg()
         {
             return _authenticationLogManager.GetAllAsync(OrgEntityHeader.Id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
+
+        [HttpGet("/api/user/claims")]
         [HttpGet("/user/claims")]
         public IEnumerable<String> GetClaims()
         {
