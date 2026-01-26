@@ -50,24 +50,24 @@ namespace LagoVista.UserAdmin.Rest
 
         #region Auth View Management
 
-        [HttpPost("/api/sys/testing/auth/view")]
+        [HttpPost("/api/sys/testing/authview")]
         public Task<InvokeResult> CreateAuthViewAsync([FromBody] AuthView view) => _appUserTestingManager.AddAuthViewAsync(view, OrgEntityHeader, UserEntityHeader);
 
-        [HttpPut("/api/sys/testing/auth/view")]
+        [HttpPut("/api/sys/testing/authview")]
         public async Task<InvokeResult> UpdateAuthViewAsync([FromBody] AuthView scenario)
         {
             SetUpdatedProperties(scenario);
             return await _appUserTestingManager.UpdateAuthViewAsync(scenario, OrgEntityHeader, UserEntityHeader);
         }
 
-        [HttpGet("/api/sys/testing/auth/view/{id}")]
+        [HttpGet("/api/sys/testing/authview/{id}")]
         public async Task<DetailResponse<AuthView>> GetAuthViewAsync(string id)
         {
             var authView = await _appUserTestingManager.GetAuthViewAsync(id, OrgEntityHeader, UserEntityHeader);
             return DetailResponse<AuthView>.Create(authView);
         }
 
-        [HttpGet("/api/sys/testing/auth/view/factory")]
+        [HttpGet("/api/sys/testing/authview/factory")]
         public DetailResponse<AuthView> CreateAuthView()
         {
             var response = DetailResponse<AuthView>.Create();
@@ -76,14 +76,14 @@ namespace LagoVista.UserAdmin.Rest
             return response;
         }
 
-        [HttpGet("/api/sys/testing/auth/view/field/factory")]
+        [HttpGet("/api/sys/testing/authview/field/factory")]
         public DetailResponse<AuthViewField> CreateAuthViewField()
         {
             var response = DetailResponse<AuthViewField>.Create();
             return response;
         }
 
-        [HttpGet("/api/sys/testing/auth/scenario/usersnapshot/factory")]
+        [HttpGet("/api/sys/testing/auth/usersnapshot/factory")]
         public DetailResponse<AuthTenantStateSnapshot> CreateAuthTenantStateSnapshot()
         {
             var response = DetailResponse<AuthTenantStateSnapshot>.Create();
@@ -91,17 +91,17 @@ namespace LagoVista.UserAdmin.Rest
         }
 
 
-        [HttpGet("/api/sys/testing/auth/view/action/factory")]
+        [HttpGet("/api/sys/testing/authview/action/factory")]
         public DetailResponse<AuthFieldAction> CreateAction()
         {
             var response = DetailResponse<AuthFieldAction>.Create();
             return response;
         }
 
-        [HttpGet("/api/sys/testing/auth/views")]
+        [HttpGet("/api/sys/testing/authviews")]
         public Task<ListResponse<AuthViewSummary>> GetAuthViewsAsync() => _appUserTestingManager.GetAuthViewsForOrgAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
 
-        [HttpDelete("/api/sys/testing/auth/view/{id}")]
+        [HttpDelete("/api/sys/testing/authview/{id}")]
         public Task<InvokeResult> DeleteAuthViewAsync(string id) => _appUserTestingManager.DeleteAuthViewAsync(id, OrgEntityHeader, UserEntityHeader);
 
         #endregion
