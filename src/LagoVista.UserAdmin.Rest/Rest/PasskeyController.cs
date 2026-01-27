@@ -186,7 +186,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPut("/api/auth/passkey/{credentialId}/rename")]
         public Task<InvokeResult> RenamePasskeyAsync(
             string credentialId,
-            [FromBody] string name)
+            [FromQuery] string name)
         {
             return _passkeyManager.RenamePasskeyAsync(
                 UserEntityHeader.Id,

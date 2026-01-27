@@ -41,26 +41,37 @@ namespace LagoVista.UserAdmin.Rest
             return _mfaManager.BeginTotpEnrollmentAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
         }
 
+        public class AppUserTotpSecret
+        {
+            public string Totp { get; set; }
+        }
+
+
         /// <summary>
         /// Confirm TOTP enrollment for the current user (returns recovery codes)
         /// </summary>
         [HttpPost("/api/auth/mfatotp/enrollment/confirm")]
-        public Task<InvokeResult<List<string>>> ConfirmTotpEnrollmentAsync([FromBody] string totp)
+        public Task<InvokeResult<List<string>>> ConfirmTotpEnrollmentAsync([FromBody] AppUserTotpSecret totpSecret)
         {
-            return _mfaManager.ConfirmTotpEnrollmentAsync(UserEntityHeader.Id, totp, OrgEntityHeader, UserEntityHeader);
+            return _mfaManager.ConfirmTotpEnrollmentAsync(UserEntityHeader.Id, totpSecret.Totp, OrgEntityHeader, UserEntityHeader);
+        } 
+
+        public class AppUserTotpPost
+        {
+            public string Totp { get; set; }
         }
 
         /* ============================
          * Verification (login or step-up)
-         * ============================ *f/
+         * ============================ */
 
         /// <summary>
         /// Verify TOTP for the current user (login or step-up)
         /// </summary>
         [HttpPost("/api/auth/mfatotp/verify")]
-        public Task<InvokeResult> VerifyTotpAsync([FromQuery] bool stepUp, [FromBody] string totp)
+        public Task<InvokeResult> VerifyTotpAsync([FromQuery] bool stepUp, [FromBody] AppUserTotpPost totpPost)
         {
-            return _mfaManager.VerifyTotpAsync(UserEntityHeader.Id, totp, stepUp, OrgEntityHeader, UserEntityHeader);
+            return _mfaManager.VerifyTotpAsync(UserEntityHeader.Id, totpPost.Totp, stepUp, OrgEntityHeader, UserEntityHeader);
         }
 
         /* ============================
@@ -76,14 +87,19 @@ namespace LagoVista.UserAdmin.Rest
             return _mfaManager.RotateRecoveryCodesAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
         }
 
+        public class RecoveryCodePost
+        {
+            public string RecoveryCode { get; set; }
+        }
+
         /// <summary>
         /// Consume a recovery code for the current user (login or step-up)
         /// </summary>
         [HttpPost("/api/auth/mfarecovery/consume")]
-        public Task<InvokeResult> ConsumeRecoveryCodeAsync([FromQuery] bool stepUp, [FromBody] string recoveryCode)
+        public Task<InvokeResult> ConsumeRecoveryCodeAsync([FromQuery] bool stepUp, [FromBody] RecoveryCodePost recoveryCodePost)
         {
-            return _mfaManager.ConsumeRecoveryCodeAsync(UserEntityHeader.Id, recoveryCode, stepUp, OrgEntityHeader, UserEntityHeader);
-        }
+            return _mfaManager.ConsumeRecoveryCodeAsync(UserEntityHeader.Id, recoveryCodePost.RecoveryCode, stepUp, OrgEntityHeader, UserEntityHeader);
+        }   
 
         /* ============================
          * Reset / disable
