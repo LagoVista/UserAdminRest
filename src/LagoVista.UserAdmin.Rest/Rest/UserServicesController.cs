@@ -628,6 +628,9 @@ namespace LagoVista.UserManagement.Rest
             if(String.IsNullOrEmpty(newUser.InviteId))
                 newUser.InviteId = Request.Cookies["inviteid"];
 
+            newUser.Source = UserCreationSource.UserSelfRegistration;
+
+
             if (!EntityHeader.IsNullOrEmpty(newUser.EndUserAppOrg))
             {
                 newUser.OrgId = newUser.EndUserAppOrg.Id;

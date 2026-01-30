@@ -14,12 +14,12 @@ using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
 namespace LagoVista.UserAdmin.Rest
 {
-    [ConfirmedUser]
     public class PasskeyController : LagoVistaBaseController
     {
         private readonly IAppUserPasskeyManager _passkeyManager;
@@ -130,6 +130,7 @@ namespace LagoVista.UserAdmin.Rest
                 request,
                 OrgEntityHeader,
                 UserEntityHeader);
+
         }
 
         /* ============================

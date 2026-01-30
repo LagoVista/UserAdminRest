@@ -7,10 +7,10 @@
     <RootNamespace>LagoVista.UserAdmin</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LagoVista.IoT.Deployment.Admin" Version="3.0.3099.1426" />
-    <PackageReference Include="LagoVista.IoT.Billing.Managers" Version="3.0.3099.1426" />
-    <PackageReference Include="LagoVista.IoT.Web.Common" Version="3.0.3099.1426" />
-    <PackageReference Include="LagoVista.ProjectManagement.Core" Version="3.0.3099.1426" />
+    <PackageReference Include="LagoVista.IoT.Deployment.Admin" Version="3.0.3179.1928" />
+    <PackageReference Include="LagoVista.IoT.Billing.Managers" Version="3.0.3179.1928" />
+    <PackageReference Include="LagoVista.IoT.Web.Common" Version="3.0.3179.1928" />
+    <PackageReference Include="LagoVista.ProjectManagement.Core" Version="3.0.3179.1928" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="UserAdminRestResources.Designer.cs">
