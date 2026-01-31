@@ -9,6 +9,7 @@ using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers.Passkeys;
+using LagoVista.UserAdmin.Models.Auth.Passkeys;
 using LagoVista.UserAdmin.Models.Security.Passkeys;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
