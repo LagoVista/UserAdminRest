@@ -56,8 +56,9 @@ namespace LagoVista.UserManagement.Rest
         private readonly ILocalizationService _localizationService;
         private readonly ICustomerManager _customerManager;
         private readonly IUserRegistrationManager _userRegistrationManager;
+        private readonly IPendingIdentityManager _pendingIdentityManager;
 
-        public UserServicesController(IAppUserManager appUserManager, IUserRegistrationManager userRegistrationManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, ITimeZoneServices timeZoneServices, IUserManager usrManager, IAppUserInboxManager appUserInboxManager, IMediaServicesManager mediaServicesManager,
+        public UserServicesController(IAppUserManager appUserManager, IUserRegistrationManager userRegistrationManager, IPendingIdentityManager pendingIdentityManager, IOrganizationManager orgManager, IUserFavoritesManager userFavoritesManager, ITimeZoneServices timeZoneServices, IUserManager usrManager, IAppUserInboxManager appUserInboxManager, IMediaServicesManager mediaServicesManager,
           ILocalizationService localizationService, ICustomerManager customerManager, IAuthenticationLogManager authLogManager, IAppConfig appConfig, IMostRecentlyUsedManager mruManager, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAdminLogger adminLogger) : base(userManager, adminLogger)
         {
             _appUserManager = appUserManager;
@@ -74,6 +75,7 @@ namespace LagoVista.UserManagement.Rest
             _localizationService = localizationService;
             _timeZoneServices = timeZoneServices;
             _userRegistrationManager = userRegistrationManager;
+            _pendingIdentityManager = pendingIdentityManager;
         }
 
         /// <summary>
@@ -630,6 +632,11 @@ namespace LagoVista.UserManagement.Rest
 
             newUser.Source = UserCreationSource.UserSelfRegistration;
 
+
+            //await _pendingIdentityManager.AddPendingIdentity(new Security.Models.PendingIdentity()
+            //{
+                 
+            //});
 
             if (!EntityHeader.IsNullOrEmpty(newUser.EndUserAppOrg))
             {
