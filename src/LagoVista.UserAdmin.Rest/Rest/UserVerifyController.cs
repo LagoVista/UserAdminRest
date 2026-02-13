@@ -16,6 +16,7 @@ using LagoVista.IoT.Web.Common.Attributes;
 using Twilio.Types;
 using LagoVista.Core.Interfaces;
 using System;
+using LagoVista.UserAdmin.Managers;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -24,13 +25,15 @@ namespace LagoVista.UserAdmin.Rest
     {
         IUserVerficationManager _userVerificationManager;
         UserManager<AppUser> _userManager;
+        IAppUserManager _appusermanager;
         IAdminLogger _adminLogger;
 
-        public UserVerifyController(IUserVerficationManager userVerificationManager, IAdminLogger logger, UserManager<AppUser> userManager, IAppConfig appConfig) : base(userManager, logger)
+        public UserVerifyController(IUserVerficationManager userVerificationManager, IAdminLogger logger, IAppUserManager appUserManager, UserManager<AppUser> userManager, IAppConfig appConfig) : base(userManager, logger)
         {
             _userVerificationManager = userVerificationManager;
             _adminLogger = logger;
             _userManager = userManager;
+            _appusermanager = appUserManager ?? throw new ArgumentNullException(nameof(appUserManager));
         }
 
         /// <summary>
@@ -154,6 +157,54 @@ namespace LagoVista.UserAdmin.Rest
             }
 
             return Redirect($"{CommonLinks.CouldNotConfirmEmail}?err={result.ErrorMessage}");
+        }
+
+
+        /// <summary>
+        /// Verify User - Confirm Email
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpGet("/api/user/verify/email")]
+        public async Task<InvokeResult<AppUser>> ValidateEmailAsync2(string p, string c)
+        {
+            // Not huge security but p is a little different than u for user...
+            var code = c;
+            var userId = p;
+
+            _adminLogger.Trace($"{this.Tag()} User: {userId} Raw Code: {code}");
+            code = code.Replace("%2B", "+");
+            _adminLogger.Trace($"{this.Tag()} User: {userId} %2B Replaced: {code}");
+
+            // URL Decode recods %2B as a space?!?!?!  It really needs to be decoded as a +
+            // pretty close to 100% sure this will bite us in the ass at some point.
+            // sorry...KDW 5/31/2024.
+            code = System.Net.WebUtility.UrlDecode(code);
+
+            // set it back to +...sorry...it will go BOOM at some point...
+            code = code.Replace(" ", "+");
+
+            _adminLogger.Trace($"{this.Tag()} User: {userId} Url Decoded Code: {code}");
+
+            if (string.IsNullOrEmpty(userId))
+                return InvokeResult<AppUser>.FromError("userid is a required field");
+
+            _adminLogger.Trace($"{this.Tag()} User: {userId} Code: {code}");
+
+            if (string.IsNullOrEmpty(code))
+                return InvokeResult<AppUser>.FromError("code is a required field");
+
+            _adminLogger.Trace($"{this.Tag()} User: {userId} Code: {code}");
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return InvokeResult<AppUser>.FromError("could not find user");
+
+            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_3] User: {user.Name} Code: {code}");
+
+            return await _appusermanager.ValidateEmailTokenAsync(userId, p);
         }
 
         /// <summary>

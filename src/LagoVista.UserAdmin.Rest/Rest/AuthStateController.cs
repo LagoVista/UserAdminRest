@@ -56,7 +56,7 @@ namespace LagoVista.UserAdmin.Rest
             {
                 A = User.Identity.IsAuthenticated,
                 E = User.HasClaim(ClaimsFactory.EmailVerified, true.ToString()),
-                O = User.Claims.Any(clm => clm.Type == ClaimsFactory.CurrentOrgId),
+                O = User.Claims.Any(clm => clm.Type == ClaimsFactory.CurrentOrgId) && User.Claims.First(clm => clm.Type == ClaimsFactory.CurrentOrgId).Value != "-" ,
             };
 
             var mfaTimeStamp = User.Claims.FirstOrDefault(clm => clm.Type == ClaimsFactory.MfaStepUpTimeStamp);

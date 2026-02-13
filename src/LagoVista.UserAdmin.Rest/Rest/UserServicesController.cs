@@ -670,6 +670,12 @@ namespace LagoVista.UserManagement.Rest
         }
 
 
+        [HttpPut("/api/user/info/basic")]
+        public async Task<InvokeResult<AppUser>> UpdateBasicInfo([FromBody] BasicUserInfo userInfo)
+        {
+            return await _appUserManager.UpdateBasicInformationAsync(userInfo, OrgEntityHeader, UserEntityHeader);
+        }
+
         [SystemAdmin]
         [HttpGet("/api/sys/user/{userid}/financeadmin/set")]
         public async Task<InvokeResult<AppUser>> SetFinanceAdmin(string userid)
