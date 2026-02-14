@@ -206,14 +206,11 @@ namespace LagoVista.UserAdmin.Rest
             Response.Cookies.Delete("inviteid");
 
             var result = await _signInManager.PasswordSignInAsync(model.GetAuthRequest());
-            Console.WriteLine("resource=>" + result.Successful.ToString());
 
             if (result.Successful)
                 UserLogin.WithLabels("cookie-auth-request-repo").Inc();
             else
                 UserLoginFailed.WithLabels("cookie-auth-request-repo", "failed").Inc();
-
-
             return result;
         }
 

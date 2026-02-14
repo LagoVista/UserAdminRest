@@ -115,35 +115,9 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/verify/email")]
         public async Task<IActionResult> ValidateEmailAsync(string userid, string code)
         {
-            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync] User: {userid} Raw Code: {code}");
-            code = code.Replace("%2B", "+");
-            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync] User: {userid} %2B Replaced: {code}");
-
-            // URL Decode recods %2B as a space?!?!?!  It really needs to be decoded as a +
-            // pretty close to 100% sure this will bite us in the ass at some point.
-            // sorry...KDW 5/31/2024.
-            code = System.Net.WebUtility.UrlDecode(code);
-
-            // set it back to +...sorry...it will go BOOM at some point...
-            code = code.Replace(" ", "+");
-
-            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync] User: {userid} Url Decoded Code: {code}");
-
-            if (string.IsNullOrEmpty(userid))
-                return Redirect($"{CommonLinks.CouldNotConfirmEmail}?err=userid is a required field");
-
-            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_1] User: {userid} Code: {code}");
-
-            if (string.IsNullOrEmpty(code))
-                return Redirect($"{CommonLinks.CouldNotConfirmEmail}?err=code is a required field");
-
-            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_2] User: {userid} Code: {code}");
-
             var user = await _userManager.FindByIdAsync(userid);
             if (user == null)
                 return Redirect($"{CommonLinks.CouldNotConfirmEmail}?err=could not find user");
-
-            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_3] User: {user.Name} Code: {code}");
 
             var result = await _userVerificationManager.ValidateEmailAsync(new ConfirmEmail() {  ReceivedCode = code}, user.ToEntityHeader());
             if (result.Successful)
@@ -173,38 +147,12 @@ namespace LagoVista.UserAdmin.Rest
             // Not huge security but p is a little different than u for user...
             var code = c;
             var userId = p;
-
-            _adminLogger.Trace($"{this.Tag()} User: {userId} Raw Code: {code}");
-            code = code.Replace("%2B", "+");
-            _adminLogger.Trace($"{this.Tag()} User: {userId} %2B Replaced: {code}");
-
-            // URL Decode recods %2B as a space?!?!?!  It really needs to be decoded as a +
-            // pretty close to 100% sure this will bite us in the ass at some point.
-            // sorry...KDW 5/31/2024.
-            code = System.Net.WebUtility.UrlDecode(code);
-
-            // set it back to +...sorry...it will go BOOM at some point...
-            code = code.Replace(" ", "+");
-
-            _adminLogger.Trace($"{this.Tag()} User: {userId} Url Decoded Code: {code}");
-
-            if (string.IsNullOrEmpty(userId))
-                return InvokeResult<AppUser>.FromError("userid is a required field");
-
-            _adminLogger.Trace($"{this.Tag()} User: {userId} Code: {code}");
-
-            if (string.IsNullOrEmpty(code))
-                return InvokeResult<AppUser>.FromError("code is a required field");
-
-            _adminLogger.Trace($"{this.Tag()} User: {userId} Code: {code}");
-
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-                return InvokeResult<AppUser>.FromError("could not find user");
-
-            _adminLogger.Trace($"[UserVerifyController__ValidateEmailAsync_3] User: {user.Name} Code: {code}");
-
-            return await _appusermanager.ValidateEmailTokenAsync(userId, p);
+            if(String.IsNullOrWhiteSpace(userId) || String.IsNullOrWhiteSpace(code))
+            {
+                return InvokeResult<AppUser>.FromError("Sorry, we could not confirm your email address.");
+            }
+           
+            return await _appusermanager.ValidateEmailTokenAsync(userId, code);
         }
 
         /// <summary>
