@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>LagoVista.UserAdmin.Rest</id>
-    <version>3.0.3179.1935</version>
+    <version>3.0.3208.0451</version>
     <authors>Software Logistics, LLC</authors>
     <owners>Software Logistics, LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -12,14 +12,14 @@
     <copyright>Copyright Software Logistics - 2026</copyright>
     <tags>HomeAutomation IoT</tags>
     <icon>LagoVistaIcon.png</icon>
-    <releaseNotes>Build Date: 1/30/2026 12:35:02 AM UTC</releaseNotes>
+    <releaseNotes>Build Date: 2/27/2026 9:51:24 AM UTC</releaseNotes>
     <repository url="https://www.github.com/lagovista" type="git" branch="master"></repository>
     <dependencies>
       <group targetFramework="net9.0">
-        <dependency id="LagoVista.IoT.Deployment.Admin" version="3.0.3179.1928" />
-        <dependency id="LagoVista.IoT.Billing.Managers" version="3.0.3179.1928" />
-        <dependency id="LagoVista.IoT.Web.Common" version="3.0.3179.1928" />
-        <dependency id="LagoVista.ProjectManagement.Core" version="3.0.3179.1928" />
+        <dependency id="LagoVista.IoT.Deployment.Admin" version="3.0.3208.0451" />
+        <dependency id="LagoVista.IoT.Billing.Managers" version="3.0.3208.0451" />
+        <dependency id="LagoVista.IoT.Web.Common" version="3.0.3208.0451" />
+        <dependency id="LagoVista.ProjectManagement.Core" version="3.0.3208.0451" />
       </group>
     </dependencies>
   </metadata>

@@ -33,6 +33,7 @@ using RingCentral;
 using LagoVista.Core;
 using LagoVista.Core.Exceptions;
 using LagoVista.UserAdmin.Models.Security;
+using LagoVista.IoT.Billing.Managers.Interfaces.Managers;
 
 namespace LagoVista.UserManagement.Rest
 {
