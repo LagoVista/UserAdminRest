@@ -17,6 +17,7 @@ using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
 using LagoVista.UserAdmin.Models.Orgs;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
@@ -165,7 +166,7 @@ namespace LagoVista.UserAdmin.Rest
                 var idx = 1;
                 foreach (var timing in response.Timings)
                 {
-                    Response.Headers.Add($"x-{idx++}-{timing.Key}", $"{timing.Ms}ms");
+                    Response.Headers.Append($"x-{idx++}-{timing.Key}", $"{timing.Ms}ms");
                 }
 
                 Response.Headers[HeaderNames.CacheControl] = "public";
@@ -210,7 +211,7 @@ namespace LagoVista.UserAdmin.Rest
                 var idx = 1;
                 foreach (var timing in response.Timings)
                 {
-                    Response.Headers.Add($"x-{idx++}-{timing.Key}", $"{timing.Ms}ms");
+                    Response.Headers.Append($"x-{idx++}-{timing.Key}", $"{timing.Ms}ms");
                 }
 
                 Response.Headers[HeaderNames.CacheControl] = "public";

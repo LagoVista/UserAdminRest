@@ -38,7 +38,7 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="subscription"></param>
         /// <returns></returns>
         [HttpPost("/api/subscription")]
-        public Task<InvokeResult> AddHostAsync([FromBody] SubscriptionDTO subscription)
+        public Task<InvokeResult> AddHostAsync([FromBody] Subscription subscription)
         {
             return _subscriptionManager.AddSubscriptionAsync(subscription, UserEntityHeader, OrgEntityHeader);
         }
@@ -49,10 +49,9 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="subscription"></param>
         /// <returns></returns>
         [HttpPut("/api/subscription")]
-        public Task<InvokeResult> UpdateSubscriptionAsync([FromBody] SubscriptionDTO subscription)
+        public Task<InvokeResult> UpdateSubscriptionAsync([FromBody] Subscription subscription)
         {
-            subscription.LastUpdatedById = UserEntityHeader.Id;
-            subscription.LastUpdatedDate = DateTime.UtcNow;
+            SetUpdatedProperties(subscription);
             return _subscriptionManager.UpdateSubscriptionAsync(subscription, OrgEntityHeader, UserEntityHeader);
         }
 
@@ -62,12 +61,12 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/subscription/{id}")]
-        public async Task<DetailResponse<SubscriptionDTO>> GetSubscriptionAsync(string id)
+        public async Task<DetailResponse<Subscription>> GetSubscriptionAsync(string id)
         {
             if (Guid.TryParse(id, out Guid subscrptionId))
             {
                 var subscription = await _subscriptionManager.GetSubscriptionAsync(subscrptionId, OrgEntityHeader, UserEntityHeader);
-                return DetailResponse<SubscriptionDTO>.Create(subscription);
+                return DetailResponse<Subscription>.Create(subscription);
             }
             else
             {
@@ -81,23 +80,10 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/subscriptions")]
-        public async Task<ListResponse<SubscriptionSummary>> GetSubscriptionsForOrgAsync()
+        public Task<ListResponse<SubscriptionSummary>> GetSubscriptionsForOrgAsync()
         {
-            var hostSummaries = await _subscriptionManager.GetSubscriptionsForOrgAsync(OrgEntityHeader.Id, UserEntityHeader);
-            return ListResponse<SubscriptionSummary>.Create(hostSummaries);
+            return _subscriptionManager.GetSubscriptionsForOrgAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
-
-
-        /// <summary>
-        /// Subscription - Key In Use
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("/api/subscription/{key}/keyinuse")]
-        public Task<bool> HostKeyInUse(String key)
-        {
-            return _subscriptionManager.QueryKeyInUseAsync(key, OrgEntityHeader);
-        }
-
 
         /// <summary>
         /// Subscription - Get resources for subscription
@@ -121,16 +107,11 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/subscription/factory")]
-        public DetailResponse<SubscriptionDTO> CreateSubscriptionAsync()
+        public DetailResponse<Subscription> CreateSubscriptionAsync()
         {
-            var response = DetailResponse<SubscriptionDTO>.Create();
-            response.Model.Id = Guid.NewGuid();
-            response.Model.OrgId = OrgEntityHeader.Id;
-            response.Model.Status = "active";
-            response.Model.CreatedById = UserEntityHeader.Id;
-            response.Model.CreationDate = DateTime.UtcNow;
-            response.Model.LastUpdatedById = UserEntityHeader.Id;
-            response.Model.LastUpdatedDate = response.Model.CreationDate;
+            var response = DetailResponse<Subscription>.Create();
+            SetOwnedProperties(response.Model);
+            SetAuditProperties(response.Model);
             return response;
         }
     }
