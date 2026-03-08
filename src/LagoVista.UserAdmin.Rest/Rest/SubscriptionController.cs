@@ -61,17 +61,10 @@ namespace LagoVista.UserAdmin.Rest
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("/api/subscription/{id}")]
-        public async Task<DetailResponse<Subscription>> GetSubscriptionAsync(string id)
+        public async Task<DetailResponse<Subscription>> GetSubscriptionAsync(GuidString36 id)
         {
-            if (Guid.TryParse(id, out Guid subscrptionId))
-            {
-                var subscription = await _subscriptionManager.GetSubscriptionAsync(subscrptionId, OrgEntityHeader, UserEntityHeader);
-                return DetailResponse<Subscription>.Create(subscription);
-            }
-            else
-            {
-                throw new Exception("Must pass in subscription id must be a Guid.");
-            }
+            var subscription = await _subscriptionManager.GetSubscriptionAsync(id, OrgEntityHeader, UserEntityHeader);
+            return DetailResponse<Subscription>.Create(subscription);
         }
 
 
@@ -90,16 +83,9 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <returns></returns>
         [HttpGet("/api/subscription/{id}/resources")]
-        public Task<ListResponse<SubscriptionResource>> GetSubscriptionResourcesAsync(string id)
+        public Task<ListResponse<SubscriptionResource>> GetSubscriptionResourcesAsync(GuidString36 id)
         {
-            if (Guid.TryParse(id, out Guid subscriptionId))
-            {
-                return _subscriptionManager.GetResourcesForSubscriptionAsync(subscriptionId, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
-            }
-            else
-            {
-                throw new Exception("Must pass in subscription id must be a Guid.");
-            }
+            return _subscriptionManager.GetResourcesForSubscriptionAsync(id, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>
