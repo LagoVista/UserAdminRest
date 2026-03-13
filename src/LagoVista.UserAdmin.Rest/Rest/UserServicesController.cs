@@ -34,6 +34,8 @@ using LagoVista.Core;
 using LagoVista.Core.Exceptions;
 using LagoVista.UserAdmin.Models.Security;
 using LagoVista.IoT.Billing.Managers.Interfaces.Managers;
+using LagoVista.Marketing.Interfaces;
+using LagoVista.Marketing.Models;
 
 namespace LagoVista.UserManagement.Rest
 {
