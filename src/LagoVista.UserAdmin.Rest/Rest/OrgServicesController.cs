@@ -457,7 +457,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/org/inviteuser/{inviteid}/isavailable")]
         public async Task<bool> GetIsInviteActiveAsync(string inviteid)
         {
-            return await _orgManager.GetIsInvigationActiveAsync(inviteid);
+            return await _orgManager.GetIsInvitationActiveAsync(inviteid);
         }
 
         /// <summary>
