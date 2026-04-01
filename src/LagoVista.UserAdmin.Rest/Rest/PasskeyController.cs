@@ -2,13 +2,13 @@
 // ContentHash: a21c7b6b2d8c8b3f6c3f98fd12b4baf3b4b9b3f7b2a1c9f0e7d6a5b4c3d2e1f0
 // IndexVersion: 2
 // --- END CODE INDEX META ---
+using LagoVista.AspNetCore.Identity.Interfaces;
 using LagoVista.Core;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
-using LagoVista.UserAdmin.Interfaces.Managers.Passkeys;
 using LagoVista.UserAdmin.Models.Auth.Passkeys;
 using LagoVista.UserAdmin.Models.Security.Passkeys;
 using LagoVista.UserAdmin.Models.Users;
