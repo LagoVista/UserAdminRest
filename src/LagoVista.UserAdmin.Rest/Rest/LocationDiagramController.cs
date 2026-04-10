@@ -9,13 +9,17 @@ using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
+using LagoVista.UserAdmin.Interfaces.Services;
 using LagoVista.UserAdmin.Models.Orgs;
 using LagoVista.UserAdmin.Models.Users;
+using LagoVista.UserAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RingCentral;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LagoVista.UserAdmin.Rest
@@ -24,10 +28,12 @@ namespace LagoVista.UserAdmin.Rest
     public class LocationDiagramController : LagoVistaBaseController
     {
         private readonly ILocationDiagramManager _diagramManager;
+        private readonly IDxfLocationDiagramDescriptorConverter _dxfLocationDiagramDescriptorConverter;
 
-        public LocationDiagramController(ILocationDiagramManager diagramManager,UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public LocationDiagramController(ILocationDiagramManager diagramManager, IDxfLocationDiagramDescriptorConverter dxfLocationDiagramDescriptorConverter, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _diagramManager = diagramManager ?? throw new ArgumentNullException(nameof(diagramManager));
+            _dxfLocationDiagramDescriptorConverter = dxfLocationDiagramDescriptorConverter;
         }
 
         [HttpPost("/api/org/location/diagram")]
@@ -49,6 +55,19 @@ namespace LagoVista.UserAdmin.Rest
             return DetailResponse<LocationDiagram>.Create(diagram);
         }
 
+        [HttpPost("/api/locationdiagram/importdxf")]
+        public async Task<InvokeResult<LocationDiagramDescriptor>> ImportDxf(IFormFile file, CancellationToken cancellationToken)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return InvokeResult<LocationDiagramDescriptor>.FromError("Please upload a DXF file.");
+            }
+
+            using var stream = file.OpenReadStream();
+            return await _dxfLocationDiagramDescriptorConverter.ConvertAsync(stream, null, cancellationToken);
+        }
+
+        [HttpGet("/api/org/location/diagram/forlocation/{locationId}")]
 
         [HttpDelete("/api/org/location/diagram/{id}")]
         public Task<InvokeResult> DeleteOrgLocation(string id)
