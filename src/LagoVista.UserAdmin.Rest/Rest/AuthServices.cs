@@ -434,6 +434,16 @@ namespace LagoVista.UserAdmin.Rest
             return _passwordManager.ChangePasswordAsync(changePassword, OrgEntityHeader, UserEntityHeader);
         }
 
+
+        [OrgAdmin]
+        [Authorize]
+        [HttpPost("/api/auth/setuserpassword")]
+        public Task<InvokeResult> SetUserPassword([FromBody] ChangePassword changePassword)
+        {
+            return _passwordManager.SetUserPasswordAsync(changePassword, OrgEntityHeader, UserEntityHeader);
+        }
+
+
         [SystemAdmin]
         [HttpGet("/api/sys/auth/log")]
         [HttpGet("/sys/auth/log")]
