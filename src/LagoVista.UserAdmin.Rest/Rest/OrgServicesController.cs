@@ -239,8 +239,8 @@ namespace LagoVista.UserAdmin.Rest
 		{
 			var org = await _orgManager.GetOrganizationAsync(id, OrgEntityHeader, UserEntityHeader);
 			var form = DetailResponse<Organization>.Create(org);
-            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Id = tz.Id, Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
-			return form;
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZoneEnumOptions();
+            return form;
         }
 
         /// <summary>
@@ -253,8 +253,8 @@ namespace LagoVista.UserAdmin.Rest
 			var org = await _orgManager.GetOrganizationAsync(OrgEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
 
 			var form = DetailResponse<Organization>.Create(org);
-            form.View["timeZone"].Options = _timeZoneServices.GetTimeZones().Select(tz => new EnumDescription() { Id = tz.Id, Key = tz.Id, Label = tz.DisplayName, Name = tz.DisplayName }).ToList();
-			return form;
+            form.View["timeZone"].Options = _timeZoneServices.GetTimeZoneEnumOptions();
+            return form;
         }
 
         /// <summary>
