@@ -10,6 +10,7 @@ using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.ProjectManagement;
 using LagoVista.ProjectManagement.Core;
+using LagoVista.UserAdmin.Authentication;
 using LagoVista.UserAdmin.Interfaces;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
@@ -62,6 +63,7 @@ namespace LagoVista.UserAdmin.Rest
         private readonly ISignInManager _signInManager;
         private readonly IClientAppManager _clientAppManager;
         private readonly IOrganizationManager _organizationManager;
+        private readonly IAuthenticationFlowService _authenticationFlowService;
         private readonly IAuthenticationLogManager _authenticationLogManager;
         private readonly IMileStoneRepo _mileStoneRepo;
         private readonly IProjectRepo _projectRepo;
@@ -75,7 +77,7 @@ namespace LagoVista.UserAdmin.Rest
         protected static readonly Counter UserLoginFailed = Metrics.CreateCounter("nuviot_login_failed", "unsuccessful user login.", "source", "reason");
 
         public PublicAuthServices(IAuthTokenManager tokenManager, IPasswordManager passwordManager, IAdminLogger logger, IAppUserManager appUserManager, IMileStoneRepo mileStoneRepo, IProjectRepo projectRepo, IOrganizationManager orgManager, UserManager<AppUser> userManager, IToDoRepo todoRepo,
-            IAuthenticationLogManager authenticationLogManager, IAppUserRepo appUserRepo, IOrgUserRepo orgUserRepo, IDeploymentInstanceManager instanceManager, IIUserAccessManager userAccessManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager) : base(userManager, logger)
+            IAuthenticationLogManager authenticationLogManager, IAppUserRepo appUserRepo, IOrgUserRepo orgUserRepo, IDeploymentInstanceManager instanceManager, IIUserAccessManager userAccessManager, ISignInManager signInManager, IEmailSender emailSender, IAppConfig appConfig, IClientAppManager clientAppManager, IAuthenticationFlowService authenticationFlowService) : base(userManager, logger)
         {
             _userManager = userManager;
             _tokenManager = tokenManager;
@@ -83,6 +85,7 @@ namespace LagoVista.UserAdmin.Rest
             _signInManager = signInManager;
             _clientAppManager = clientAppManager;
             _organizationManager = orgManager;
+            _authenticationFlowService = authenticationFlowService ?? throw new ArgumentNullException(nameof(authenticationFlowService));
             _authenticationLogManager = authenticationLogManager;
             _mileStoneRepo = mileStoneRepo;
             _projectRepo = projectRepo;
@@ -244,7 +247,7 @@ namespace LagoVista.UserAdmin.Rest
             if (User.Identity.IsAuthenticated)
             {
                 await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, UserEntityHeader, OrgEntityHeader, extras: "Accepting direct invite, authenticated.", inviteId: inviteid);
-                var result = await _organizationManager.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
+                var result = await _authenticationFlowService.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
                 if (result.Successful)
                 {
                     var redirect = result.Result.RedirectPage;
