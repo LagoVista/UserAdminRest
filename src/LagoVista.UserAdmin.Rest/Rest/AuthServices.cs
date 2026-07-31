@@ -246,23 +246,23 @@ namespace LagoVista.UserAdmin.Rest
         {
             if (User.Identity.IsAuthenticated)
             {
-                await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, UserEntityHeader, OrgEntityHeader, extras: "Accepting direct invite, authenticated.", inviteId: inviteid);
-                var result = await _authenticationFlowService.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
+                await _authenticationLogManager.AddAsync(AuthLogTypes.InviteAcceptanceStarted, UserEntityHeader, OrgEntityHeader, extras: "Accepting direct invite, authenticated.", inviteId: inviteid);
+                var result = await _organizationManager.AcceptInvitationAsync(inviteid, UserEntityHeader.Id);
                 if (result.Successful)
                 {
                     var redirect = result.Result.RedirectPage;
-                    await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptedInvite, UserEntityHeader, OrgEntityHeader, extras: "Done accepted direct invite, authenticated - success.", redirectUri: redirect, inviteId: inviteid);
+                    await _authenticationLogManager.AddAsync(AuthLogTypes.InviteAcceptanceSucceeded, UserEntityHeader, OrgEntityHeader, extras: "Done accepted direct invite, authenticated - success.", redirectUri: redirect, inviteId: inviteid);
                     return Redirect(redirect);
                 }
 
                 var failedRedirect = result.RedirectURL;
-                await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptedInvite, UserEntityHeader, OrgEntityHeader, extras: "Done accepted direct invite, authenticated - failed.", redirectUri: failedRedirect, inviteId: inviteid, errors: result.ErrorMessage);
+                await _authenticationLogManager.AddAsync(AuthLogTypes.InviteAcceptanceFailed, UserEntityHeader, OrgEntityHeader, extras: "Done accepted direct invite, authenticated - failed.", redirectUri: failedRedirect, inviteId: inviteid, errors: result.ErrorMessage);
                 return Redirect(failedRedirect);
             }
 
             Response.Cookies.Append("inviteid", inviteid);
             var redirectPage = CommonLinks.AcceptInviteId.Replace("{inviteid}", inviteid);
-            await _authenticationLogManager.AddAsync(AuthLogTypes.AcceptingInvite, userId: "?", redirectUri: redirectPage, extras: "Not Authenticated, Redirect to Accept Invite Page", inviteId: inviteid);
+            await _authenticationLogManager.AddAsync(AuthLogTypes.InviteAcceptanceFailed, userId: "?", redirectUri: redirectPage, extras: "Not Authenticated, Redirect to Accept Invite Page", inviteId: inviteid);
             return Redirect(redirectPage);
         }
 

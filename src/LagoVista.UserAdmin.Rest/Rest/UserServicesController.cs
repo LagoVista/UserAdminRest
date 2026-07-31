@@ -319,10 +319,12 @@ namespace LagoVista.UserManagement.Rest
                 _appConfig.Environment == Environments.Staging)
                 throw new NotSupportedException();
 
+            await _authLogManager.AddAsync(UserAdmin.Models.Security.AuthLogTypes.UserDeletionStarted, userName: username);
+
             var user = await _appUserManager.GetUserByUserNameAsync(username, OrgEntityHeader, UserEntityHeader);
             if (user == null)
             {
-                await _authLogManager.AddAsync(UserAdmin.Models.Security.AuthLogTypes.DeleteUserFailed, userName: username, errors: $"Could not find a user with email address: {username}");
+                await _authLogManager.AddAsync(UserAdmin.Models.Security.AuthLogTypes.UserDeletionFailed, userName: username, errors: $"Could not find a user with email address: {username}");
                 return InvokeResult.FromError("Could not load user.");
             }
 
@@ -330,10 +332,10 @@ namespace LagoVista.UserManagement.Rest
             var result = await _appUserManager.DeleteUserAsync(id, OrgEntityHeader, UserEntityHeader);
             if(result.Successful)
             {
-                await _authLogManager.AddAsync(UserAdmin.Models.Security.AuthLogTypes.DeletedUser, userName: username, errors: result.ErrorMessage);
+                await _authLogManager.AddAsync(UserAdmin.Models.Security.AuthLogTypes.UserDeletionSucceeded, userName: username, errors: result.ErrorMessage);
             }
             else
-                await _authLogManager.AddAsync(UserAdmin.Models.Security.AuthLogTypes.DeleteUserFailed, userName: username, errors: result.ErrorMessage);
+                await _authLogManager.AddAsync(UserAdmin.Models.Security.AuthLogTypes.UserDeletionFailed, userName: username, errors: result.ErrorMessage);
 
             return result;
         }
