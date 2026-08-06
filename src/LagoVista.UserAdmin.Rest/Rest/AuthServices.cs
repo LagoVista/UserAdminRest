@@ -266,6 +266,13 @@ namespace LagoVista.UserAdmin.Rest
             return Redirect(redirectPage);
         }
 
+        [HttpPost("/api/auth/resetpassword/verifycode")]
+        [AllowAnonymous]
+        public Task<InvokeResult<string>> VerifyPasswordRecoveryCodeAsync([FromBody] VerifyPasswordResetCode request)
+        {
+            return _authenticationFlowService.VerifyPasswordRecoveryAsync(request);
+        }
+
         [HttpPost("/api/auth/resetpassword")]
         [AllowAnonymous]
         public Task<InvokeResult> ResetPasswordAsync([FromBody] ResetPassword resetPassword)
