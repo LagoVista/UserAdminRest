@@ -98,7 +98,6 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="confirmEmail"></param>
         /// <returns></returns>
-        [AllowAnonymous]
         [HttpPost("/api/verify/email")]
         public Task<InvokeResult> ValidateEmailAsync([FromBody] ConfirmEmail confirmEmail)
         {
