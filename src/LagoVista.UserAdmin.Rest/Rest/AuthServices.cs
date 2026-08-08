@@ -324,7 +324,7 @@ namespace LagoVista.UserAdmin.Rest
         public Task<ListResponse<AuthenticationLog>> GetAuthAsync(string type)
         {
             var authLogType = Enum.Parse<AuthLogTypes>(type, true);
-            return _authenticationLogManager.GetAsync(authLogType, OrgEntityHeader, UserEntityHeader);
+            return _authenticationLogManager.GetAsync(authLogType, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpGet("/api/auth/log/{type}")]
