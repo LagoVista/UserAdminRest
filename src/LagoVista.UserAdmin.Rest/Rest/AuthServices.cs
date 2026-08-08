@@ -285,11 +285,13 @@ namespace LagoVista.UserAdmin.Rest
     public class AuthServices : LagoVistaBaseController
     {
         private readonly IPasswordManager _passwordManager;
+        private readonly IAuthenticationFlowService _authenticationFlowService;
         private readonly IAuthenticationLogManager _authenticationLogManager;
 
-        public AuthServices(IPasswordManager passwordManager, IAuthenticationLogManager authenticationLogManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public AuthServices(IPasswordManager passwordManager, IAuthenticationFlowService authenticationFlowService, IAuthenticationLogManager authenticationLogManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _passwordManager = passwordManager ?? throw new ArgumentNullException(nameof(passwordManager));
+            _authenticationFlowService = authenticationFlowService ?? throw new ArgumentNullException(nameof(authenticationFlowService));
             _authenticationLogManager = authenticationLogManager ?? throw new ArgumentNullException(nameof(authenticationLogManager));
         }
 
@@ -297,7 +299,7 @@ namespace LagoVista.UserAdmin.Rest
         [Authorize]
         public Task<InvokeResult> ChangePasswordAsync([FromBody] ChangePassword changePassword)
         {
-            return _passwordManager.ChangePasswordAsync(changePassword, OrgEntityHeader, UserEntityHeader);
+            return _authenticationFlowService.ChangePasswordAsync(changePassword, OrgEntityHeader, UserEntityHeader);
         }
 
         [OrgAdmin]
@@ -322,7 +324,7 @@ namespace LagoVista.UserAdmin.Rest
         public Task<ListResponse<AuthenticationLog>> GetAuthAsync(string type)
         {
             var authLogType = Enum.Parse<AuthLogTypes>(type, true);
-            return _authenticationLogManager.GetAsync(authLogType, GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+            return _authenticationLogManager.GetAsync(authLogType, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpGet("/api/auth/log/{type}")]
