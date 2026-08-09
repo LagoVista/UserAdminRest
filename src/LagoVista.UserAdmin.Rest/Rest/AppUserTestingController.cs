@@ -185,9 +185,7 @@ namespace LagoVista.UserAdmin.Rest
                 }); 
             }
          
-            await _appUserTestingManager.AddTestRunAsync(runnerResult, testArtifacts, OrgEntityHeader, UserEntityHeader);
-
-            return InvokeResult.Success;
+            return await _appUserTestingManager.AddTestRunAsync(runnerResult, testArtifacts, OrgEntityHeader, UserEntityHeader);
         }
 
         [HttpGet("/api/sys/testing/auth/scenarios")]
