@@ -20,11 +20,15 @@ namespace LagoVista.UserAdmin.Rest
 
         private readonly IContinuityConversationManager _conversationManager;
         private readonly IContinuitySessionManager _continuitySessionManager;
+        private readonly IAnonymousVisitorPromotionManager _promotionManager;
+        private readonly IAnonymousVisitorPromotionOptions _promotionOptions;
 
-        public ContinuityConversationController(IContinuityConversationManager conversationManager, IContinuitySessionManager continuitySessionManager)
+        public ContinuityConversationController(IContinuityConversationManager conversationManager, IContinuitySessionManager continuitySessionManager, IAnonymousVisitorPromotionManager promotionManager, IAnonymousVisitorPromotionOptions promotionOptions)
         {
             _conversationManager = conversationManager ?? throw new ArgumentNullException(nameof(conversationManager));
             _continuitySessionManager = continuitySessionManager ?? throw new ArgumentNullException(nameof(continuitySessionManager));
+            _promotionManager = promotionManager ?? throw new ArgumentNullException(nameof(promotionManager));
+            _promotionOptions = promotionOptions ?? throw new ArgumentNullException(nameof(promotionOptions));
         }
 
         [Authorize]
@@ -53,6 +57,50 @@ namespace LagoVista.UserAdmin.Rest
 
         [Authorize]
         [AllowAnonymousVisitor]
+        [HttpGet("/api/continuity/promotion")]
+        public InvokeResult<ContinuityPromotionView> GetPromotionAsync()
+        {
+            SetNoStore();
+            var identityResult = GetVisitorIdentity();
+            if (!identityResult.Successful) return InvokeResult<ContinuityPromotionView>.FromInvokeResult(identityResult.ToInvokeResult());
+            if (String.IsNullOrWhiteSpace(_promotionOptions.TermsAndConditionsVersion)) return InvokeResult<ContinuityPromotionView>.FromError("AnonymousVisitor:TermsAndConditionsVersion is not configured.");
+
+            return InvokeResult<ContinuityPromotionView>.Create(new ContinuityPromotionView
+            {
+                TermsAndConditionsVersion = _promotionOptions.TermsAndConditionsVersion
+            });
+        }
+
+        [Authorize]
+        [AllowAnonymousVisitor]
+        [HttpPost("/api/continuity/promotion")]
+        public async Task<InvokeResult<ContinuitySessionView>> PromoteAsync([FromBody] ContinuityPromotionRequest request)
+        {
+            SetNoStore();
+            var identityResult = GetVisitorIdentity();
+            if (!identityResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(identityResult.ToInvokeResult());
+            if (request == null) return InvokeResult<ContinuitySessionView>.FromError("Promotion request is required.");
+
+            var promotionResult = await _promotionManager.PromoteAsync(identityResult.Result.ActorId, HttpContext.Connection.RemoteIpAddress?.ToString(), new AnonymousVisitorPromotionRequest
+            {
+                TermsAndConditionsAccepted = request.TermsAndConditionsAccepted,
+                TermsAndConditionsVersion = request.TermsAndConditionsVersion
+            });
+
+            if (!promotionResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(promotionResult.ToInvokeResult());
+            if (promotionResult.Result == null || String.IsNullOrWhiteSpace(promotionResult.Result.RecoveryToken)) return InvokeResult<ContinuitySessionView>.FromError("Could not establish the provisional continuity session.");
+
+            var sessionResult = await _continuitySessionManager.ResolveAsync(promotionResult.Result.RecoveryToken);
+            if (!sessionResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(sessionResult.ToInvokeResult());
+            if (sessionResult.Result == null || String.IsNullOrWhiteSpace(sessionResult.Result.ContinuityToken)) return InvokeResult<ContinuitySessionView>.FromError("Could not establish the provisional continuity session.");
+
+            Response.Cookies.Delete(ContinuityCookieName, CreateDeleteCookieOptions());
+            Response.Cookies.Append(ContinuityCookieName, sessionResult.Result.ContinuityToken, CreateCookieOptions(sessionResult.Result.IdentityExpiresUtc));
+            return InvokeResult<ContinuitySessionView>.Create(ContinuitySessionView.FromSession(sessionResult.Result));
+        }
+
+        [Authorize]
+        [AllowAnonymousVisitor]
         [AllowProvisionalIdentity]
         [HttpPost("/api/continuity/reset")]
         public async Task<InvokeResult<ContinuitySessionView>> ResetAsync()
@@ -69,9 +117,18 @@ namespace LagoVista.UserAdmin.Rest
             if (!resetResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(resetResult.ToInvokeResult());
             if (resetResult.Result == null || String.IsNullOrWhiteSpace(resetResult.Result.ContinuityToken)) return InvokeResult<ContinuitySessionView>.FromError("Could not establish a fresh continuity session.");
 
-            Response.Cookies.Delete(ContinuityCookieName, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Lax, IsEssential = true, Path = "/" });
+            Response.Cookies.Delete(ContinuityCookieName, CreateDeleteCookieOptions());
             Response.Cookies.Append(ContinuityCookieName, resetResult.Result.ContinuityToken, CreateCookieOptions(resetResult.Result.IdentityExpiresUtc));
             return InvokeResult<ContinuitySessionView>.Create(ContinuitySessionView.FromSession(resetResult.Result));
+        }
+
+        private InvokeResult<RestrictedIdentity> GetVisitorIdentity()
+        {
+            var identityResult = GetRestrictedIdentity();
+            if (!identityResult.Successful) return identityResult;
+            return String.Equals(identityResult.Result.IdentityStage, ClaimsFactory.VisitorIdentityStage, StringComparison.Ordinal)
+                ? identityResult
+                : InvokeResult<RestrictedIdentity>.FromError("A Visitor identity is required.");
         }
 
         private InvokeResult<RestrictedIdentity> GetRestrictedIdentity()
@@ -89,6 +146,11 @@ namespace LagoVista.UserAdmin.Rest
         {
             Response.Headers.CacheControl = "no-store";
             Response.Headers.Pragma = "no-cache";
+        }
+
+        private static CookieOptions CreateDeleteCookieOptions()
+        {
+            return new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Lax, IsEssential = true, Path = "/" };
         }
 
         private static CookieOptions CreateCookieOptions(DateTime expiresUtc)
@@ -109,5 +171,16 @@ namespace LagoVista.UserAdmin.Rest
             public string ActorId { get; set; }
             public string IdentityStage { get; set; }
         }
+    }
+
+    public class ContinuityPromotionRequest
+    {
+        public bool TermsAndConditionsAccepted { get; set; }
+        public string TermsAndConditionsVersion { get; set; }
+    }
+
+    public class ContinuityPromotionView
+    {
+        public string TermsAndConditionsVersion { get; set; }
     }
 }
