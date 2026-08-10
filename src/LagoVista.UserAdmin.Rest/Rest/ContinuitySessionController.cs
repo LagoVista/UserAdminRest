@@ -43,7 +43,7 @@ namespace LagoVista.UserAdmin.Rest
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.None,
                 IsEssential = true,
                 Path = "/",
                 Expires = new DateTimeOffset(DateTime.SpecifyKind(expiresUtc, DateTimeKind.Utc))

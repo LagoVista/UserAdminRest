@@ -146,7 +146,7 @@ namespace LagoVista.UserAdmin.Rest
 
         private static CookieOptions CreateDeleteCookieOptions()
         {
-            return new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Lax, IsEssential = true, Path = "/" };
+            return new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.None, IsEssential = true, Path = "/" };
         }
 
         private static CookieOptions CreateCookieOptions(DateTime expiresUtc)
@@ -155,7 +155,7 @@ namespace LagoVista.UserAdmin.Rest
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.None,
                 IsEssential = true,
                 Path = "/",
                 Expires = new DateTimeOffset(DateTime.SpecifyKind(expiresUtc, DateTimeKind.Utc))
