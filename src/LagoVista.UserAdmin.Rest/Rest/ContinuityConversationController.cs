@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 namespace LagoVista.UserAdmin.Rest
 {
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     public class ContinuityConversationController : ControllerBase
     {
         private const string ContinuityCookieName = "aptix_continuity";
@@ -31,7 +32,6 @@ namespace LagoVista.UserAdmin.Rest
             _promotionOptions = promotionOptions ?? throw new ArgumentNullException(nameof(promotionOptions));
         }
 
-        [Authorize]
         [AllowAnonymousVisitor]
         [AllowProvisionalIdentity]
         [HttpGet("/api/continuity/conversation")]
@@ -43,7 +43,6 @@ namespace LagoVista.UserAdmin.Rest
             return await _conversationManager.GetAsync(identityResult.Result.ActorId);
         }
 
-        [Authorize]
         [AllowAnonymousVisitor]
         [AllowProvisionalIdentity]
         [HttpPost("/api/continuity/conversation/message")]
@@ -55,7 +54,6 @@ namespace LagoVista.UserAdmin.Rest
             return await _conversationManager.SendAsync(identityResult.Result.ActorId, identityResult.Result.IdentityStage, request);
         }
 
-        [Authorize]
         [AllowAnonymousVisitor]
         [HttpGet("/api/continuity/promotion")]
         public InvokeResult<ContinuityPromotionView> GetPromotionAsync()
@@ -71,7 +69,6 @@ namespace LagoVista.UserAdmin.Rest
             });
         }
 
-        [Authorize]
         [AllowAnonymousVisitor]
         [HttpPost("/api/continuity/promotion")]
         public async Task<InvokeResult<ContinuitySessionView>> PromoteAsync([FromBody] ContinuityPromotionRequest request)
@@ -99,7 +96,6 @@ namespace LagoVista.UserAdmin.Rest
             return InvokeResult<ContinuitySessionView>.Create(ContinuitySessionView.FromSession(sessionResult.Result));
         }
 
-        [Authorize]
         [AllowAnonymousVisitor]
         [AllowProvisionalIdentity]
         [HttpPost("/api/continuity/reset")]
