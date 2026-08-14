@@ -18,6 +18,7 @@ using LagoVista.Core.Interfaces;
 using System;
 using LagoVista.UserAdmin.Managers;
 using LagoVista.UserAdmin.Authentication;
+using LagoVista.UserAdmin.Models.Auth;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -63,6 +64,15 @@ namespace LagoVista.UserAdmin.Rest
         public Task<InvokeResult<string>> SendConfirmationEmailAsync()
         {
             return _userVerificationManager.SendConfirmationEmailAsync(UserEntityHeader.Id);
+        }
+
+        /// <summary>
+        /// Canonical email-verification send/resend operation.
+        /// </summary>
+        [HttpPost("/api/verify/email/confirmationcode/send")]
+        public Task<InvokeResult<EmailVerificationSendResult>> SendEmailVerificationCodeAsync()
+        {
+            return _authenticationFlowService.SendEmailVerificationCodeAsync(UserEntityHeader);
         }
 
         /// <summary>
