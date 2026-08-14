@@ -17,6 +17,7 @@ using Twilio.Types;
 using LagoVista.Core.Interfaces;
 using System;
 using LagoVista.UserAdmin.Managers;
+using LagoVista.UserAdmin.Authentication;
 
 namespace LagoVista.UserAdmin.Rest
 {
@@ -24,13 +25,15 @@ namespace LagoVista.UserAdmin.Rest
     public class UserVerifyController : LagoVistaBaseController
     {
         IUserVerficationManager _userVerificationManager;
+        IAuthenticationFlowService _authenticationFlowService;
         UserManager<AppUser> _userManager;
         IAppUserManager _appusermanager;
         IAdminLogger _adminLogger;
 
-        public UserVerifyController(IUserVerficationManager userVerificationManager, IAdminLogger logger, IAppUserManager appUserManager, UserManager<AppUser> userManager, IAppConfig appConfig) : base(userManager, logger)
+        public UserVerifyController(IUserVerficationManager userVerificationManager, IAuthenticationFlowService authenticationFlowService, IAdminLogger logger, IAppUserManager appUserManager, UserManager<AppUser> userManager, IAppConfig appConfig) : base(userManager, logger)
         {
             _userVerificationManager = userVerificationManager;
+            _authenticationFlowService = authenticationFlowService ?? throw new ArgumentNullException(nameof(authenticationFlowService));
             _adminLogger = logger;
             _userManager = userManager;
             _appusermanager = appUserManager ?? throw new ArgumentNullException(nameof(appUserManager));
@@ -101,7 +104,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/verify/email")]
         public Task<InvokeResult> ValidateEmailAsync([FromBody] ConfirmEmail confirmEmail)
         {
-            return _userVerificationManager.ValidateEmailAsync(confirmEmail, UserEntityHeader);
+            return _authenticationFlowService.VerifyEmailAsync(confirmEmail, UserEntityHeader);
         }
 
         /// <summary>
