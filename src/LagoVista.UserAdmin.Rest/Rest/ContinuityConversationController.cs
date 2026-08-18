@@ -25,14 +25,18 @@ namespace LagoVista.UserAdmin.Rest
         private readonly IAnonymousVisitorPromotionManager _promotionManager;
         private readonly IAnonymousVisitorPromotionOptions _promotionOptions;
         private readonly IProvisionalEnvironmentManager _provisionalEnvironmentManager;
+        private readonly IUserManager _userManager;
+        private readonly ISignInManager _signInManager;
 
-        public ContinuityConversationController(IContinuityConversationManager conversationManager, IContinuitySessionManager continuitySessionManager, IAnonymousVisitorPromotionManager promotionManager, IAnonymousVisitorPromotionOptions promotionOptions, IProvisionalEnvironmentManager provisionalEnvironmentManager)
+        public ContinuityConversationController(IContinuityConversationManager conversationManager, IContinuitySessionManager continuitySessionManager, IAnonymousVisitorPromotionManager promotionManager, IAnonymousVisitorPromotionOptions promotionOptions, IProvisionalEnvironmentManager provisionalEnvironmentManager, IUserManager userManager, ISignInManager signInManager)
         {
             _conversationManager = conversationManager ?? throw new ArgumentNullException(nameof(conversationManager));
             _continuitySessionManager = continuitySessionManager ?? throw new ArgumentNullException(nameof(continuitySessionManager));
             _promotionManager = promotionManager ?? throw new ArgumentNullException(nameof(promotionManager));
             _promotionOptions = promotionOptions ?? throw new ArgumentNullException(nameof(promotionOptions));
             _provisionalEnvironmentManager = provisionalEnvironmentManager ?? throw new ArgumentNullException(nameof(provisionalEnvironmentManager));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
         }
 
         [AllowAnonymousVisitor]
@@ -93,6 +97,12 @@ namespace LagoVista.UserAdmin.Rest
             var sessionResult = await _continuitySessionManager.CreatePromotedProvisionalSessionAsync(promotionResult.Result);
             if (!sessionResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(sessionResult.ToInvokeResult());
             if (sessionResult.Result == null || String.IsNullOrWhiteSpace(sessionResult.Result.ContinuityToken)) return InvokeResult<ContinuitySessionView>.FromError("Could not establish the provisional continuity session.");
+
+            var appUser = await _userManager.FindByIdAsync(promotionResult.Result.AppUserId);
+            if (appUser == null) return InvokeResult<ContinuitySessionView>.FromError("Could not load the provisional AppUser for sign-in.");
+
+            await _signInManager.SignOutAsync();
+            await _signInManager.SignInProvisionalAsync(appUser, identityResult.Result.ActorId);
 
             Response.Cookies.Delete(ContinuityCookieName, CreateDeleteCookieOptions());
             Response.Cookies.Append(ContinuityCookieName, sessionResult.Result.ContinuityToken, CreateCookieOptions(sessionResult.Result.IdentityExpiresUtc));
