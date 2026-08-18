@@ -23,7 +23,7 @@ using LagoVista.UserAdmin.Models.Auth;
 
 namespace LagoVista.UserAdmin.Rest
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     public class UserVerifyController : LagoVistaBaseController
     {
         IUserVerficationManager _userVerificationManager;
