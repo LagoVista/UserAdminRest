@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace LagoVista.UserAdmin.Rest
@@ -29,7 +30,8 @@ namespace LagoVista.UserAdmin.Rest
             Response.Headers.Pragma = "no-cache";
 
             Request.Cookies.TryGetValue(ContinuityCookieName, out var continuityToken);
-            var result = await _continuitySessionManager.ResolveAsync(continuityToken);
+            var appUserId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var result = await _continuitySessionManager.ResolveAsync(continuityToken, appUserId);
             if (!result.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(result.ToInvokeResult());
             if (result.Result == null || String.IsNullOrWhiteSpace(result.Result.ContinuityToken)) return InvokeResult<ContinuitySessionView>.FromError("Could not establish the continuity session.");
 

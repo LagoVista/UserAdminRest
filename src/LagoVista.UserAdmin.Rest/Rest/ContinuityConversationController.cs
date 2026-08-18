@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace LagoVista.UserAdmin.Rest
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+    [Authorize(AuthenticationSchemes = "Bearer,Identity.Application")]
     public class ContinuityConversationController : ControllerBase
     {
         private const string ContinuityCookieName = "aptix_continuity";
@@ -41,7 +41,7 @@ namespace LagoVista.UserAdmin.Rest
         public async Task<InvokeResult<ContinuityConversationResponse>> GetConversationAsync()
         {
             SetNoStore();
-            var identityResult = GetRestrictedIdentity();
+            var identityResult = await GetContinuityIdentityAsync();
             if (!identityResult.Successful) return InvokeResult<ContinuityConversationResponse>.FromInvokeResult(identityResult.ToInvokeResult());
             return await _conversationManager.GetAsync(identityResult.Result.ActorId);
         }
@@ -52,7 +52,7 @@ namespace LagoVista.UserAdmin.Rest
         public async Task<InvokeResult<ContinuityConversationResponse>> SendMessageAsync([FromBody] ContinuityConversationMessageRequest request)
         {
             SetNoStore();
-            var identityResult = GetRestrictedIdentity();
+            var identityResult = await GetContinuityIdentityAsync();
             if (!identityResult.Successful) return InvokeResult<ContinuityConversationResponse>.FromInvokeResult(identityResult.ToInvokeResult());
             return await _conversationManager.SendAsync(identityResult.Result.ActorId, identityResult.Result.IdentityStage, request);
         }
@@ -115,14 +115,23 @@ namespace LagoVista.UserAdmin.Rest
         public async Task<InvokeResult<ContinuitySessionView>> ResetAsync()
         {
             SetNoStore();
-            var identityResult = GetRestrictedIdentity();
+            var identityResult = await GetContinuityIdentityAsync();
             if (!identityResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(identityResult.ToInvokeResult());
 
             Request.Cookies.TryGetValue(ContinuityCookieName, out var continuityToken);
             var clearResult = await _conversationManager.ClearAsync(identityResult.Result.ActorId);
             if (!clearResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(clearResult);
 
-            var resetResult = await _continuitySessionManager.ResetAsync(identityResult.Result.ActorId, identityResult.Result.IdentityStage, continuityToken);
+            InvokeResult<ContinuitySessionResponse> resetResult;
+            if (String.Equals(identityResult.Result.IdentityStage, ClaimsFactory.RegisteredIdentityStage, StringComparison.Ordinal))
+            {
+                Response.Cookies.Delete(ContinuityCookieName, CreateDeleteCookieOptions());
+                resetResult = await _continuitySessionManager.ResolveAsync(null);
+            }
+            else
+            {
+                resetResult = await _continuitySessionManager.ResetAsync(identityResult.Result.ActorId, identityResult.Result.IdentityStage, continuityToken);
+            }
             if (!resetResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(resetResult.ToInvokeResult());
             if (resetResult.Result == null || String.IsNullOrWhiteSpace(resetResult.Result.ContinuityToken)) return InvokeResult<ContinuitySessionView>.FromError("Could not establish a fresh continuity session.");
 
@@ -161,6 +170,27 @@ namespace LagoVista.UserAdmin.Rest
             if (!String.Equals(identityStage, ClaimsFactory.VisitorIdentityStage, StringComparison.Ordinal) && !String.Equals(identityStage, ClaimsFactory.ProvisionalIdentityStage, StringComparison.Ordinal)) return InvokeResult<RestrictedIdentity>.FromError("A Visitor or Provisional identity is required.");
 
             return InvokeResult<RestrictedIdentity>.Create(new RestrictedIdentity { ActorId = actorId, IdentityStage = identityStage, AppUserId = appUserId });
+        }
+
+        private async Task<InvokeResult<RestrictedIdentity>> GetContinuityIdentityAsync()
+        {
+            var restrictedIdentity = GetRestrictedIdentity();
+            if (restrictedIdentity.Successful) return restrictedIdentity;
+
+            var appUserId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (String.IsNullOrWhiteSpace(appUserId)) return restrictedIdentity;
+            if (!Request.Cookies.TryGetValue(ContinuityCookieName, out var provisionalEnvironmentId) || String.IsNullOrWhiteSpace(provisionalEnvironmentId))
+                return InvokeResult<RestrictedIdentity>.FromError("The registered continuity workspace cookie is required.");
+
+            var sessionResult = await _continuitySessionManager.GetClaimedSessionAsync(provisionalEnvironmentId, appUserId);
+            if (!sessionResult.Successful) return InvokeResult<RestrictedIdentity>.FromInvokeResult(sessionResult.ToInvokeResult());
+
+            return InvokeResult<RestrictedIdentity>.Create(new RestrictedIdentity
+            {
+                ActorId = sessionResult.Result.ActorId,
+                IdentityStage = sessionResult.Result.IdentityStage,
+                AppUserId = sessionResult.Result.AppUserId
+            });
         }
 
         private void SetNoStore()

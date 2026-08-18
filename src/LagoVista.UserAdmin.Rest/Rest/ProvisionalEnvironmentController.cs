@@ -1,10 +1,12 @@
 using LagoVista.Core.Validation;
+using LagoVista.AspNetCore.Identity.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -17,11 +19,15 @@ namespace LagoVista.UserAdmin.Rest
     [Authorize]
     public class ProvisionalEnvironmentController : LagoVistaBaseController
     {
-        private readonly IProvisionalEnvironmentManager _provisionalEnvironmentManager;
+        private const string ContinuityCookieName = "aptix_continuity";
 
-        public ProvisionalEnvironmentController(IProvisionalEnvironmentManager provisionalEnvironmentManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        private readonly IProvisionalEnvironmentManager _provisionalEnvironmentManager;
+        private readonly IContinuitySessionManager _continuitySessionManager;
+
+        public ProvisionalEnvironmentController(IProvisionalEnvironmentManager provisionalEnvironmentManager, IContinuitySessionManager continuitySessionManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _provisionalEnvironmentManager = provisionalEnvironmentManager ?? throw new ArgumentNullException(nameof(provisionalEnvironmentManager));
+            _continuitySessionManager = continuitySessionManager ?? throw new ArgumentNullException(nameof(continuitySessionManager));
         }
 
         [AllowAnonymous]
@@ -39,9 +45,35 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         [HttpPost("/api/provisional/environment/{provisionalEnvironmentId}/claim")]
-        public Task<InvokeResult> ClaimAsync(string provisionalEnvironmentId)
+        public async Task<InvokeResult<ContinuitySessionView>> ClaimAsync(string provisionalEnvironmentId)
         {
-            return _provisionalEnvironmentManager.ClaimAsync(provisionalEnvironmentId, UserEntityHeader.Id);
+            var claimResult = await _provisionalEnvironmentManager.ClaimAsync(provisionalEnvironmentId, UserEntityHeader.Id);
+            if (!claimResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(claimResult);
+
+            var sessionResult = await _continuitySessionManager.GetClaimedSessionAsync(provisionalEnvironmentId, UserEntityHeader.Id, false);
+            if (!sessionResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(sessionResult.ToInvokeResult());
+
+            Response.Cookies.Delete(ContinuityCookieName, CreateDeleteCookieOptions());
+            Response.Cookies.Append(ContinuityCookieName, sessionResult.Result.ContinuityToken, CreateCookieOptions(sessionResult.Result.IdentityExpiresUtc));
+            return InvokeResult<ContinuitySessionView>.Create(ContinuitySessionView.FromSession(sessionResult.Result));
+        }
+
+        private static CookieOptions CreateDeleteCookieOptions()
+        {
+            return new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.None, IsEssential = true, Path = "/" };
+        }
+
+        private static CookieOptions CreateCookieOptions(DateTime expiresUtc)
+        {
+            return new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                IsEssential = true,
+                Path = "/",
+                Expires = new DateTimeOffset(DateTime.SpecifyKind(expiresUtc, DateTimeKind.Utc))
+            };
         }
 
         [SystemAdmin]
