@@ -2,6 +2,7 @@
 // ContentHash: 50823cabe203ddef93c92eb84ae7c400903c22dd7877f22cd2b58069ecdbaaed
 // IndexVersion: 2
 // --- END CODE INDEX META ---
+using LagoVista.AspNetCore.Identity.Authorization;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
@@ -44,6 +45,7 @@ namespace LagoVista.UserAdmin.Rest
         /// Verify User - Is Email Confirmed
         /// </summary>
         /// <returns></returns>
+        [AllowProvisionalIdentity]
         [HttpGet("/api/verify/isemailconfirmed")]
         public Task<InvokeResult> CheckConfirmedAsync()
         {
@@ -111,6 +113,7 @@ namespace LagoVista.UserAdmin.Rest
         /// </summary>
         /// <param name="confirmEmail"></param>
         /// <returns></returns>
+        [AllowProvisionalIdentity]
         [HttpPost("/api/verify/email")]
         public Task<InvokeResult> ValidateEmailAsync([FromBody] ConfirmEmail confirmEmail)
         {
