@@ -1,3 +1,4 @@
+using LagoVista.AspNetCore.Identity.Authorization;
 using LagoVista.Core.Validation;
 using LagoVista.AspNetCore.Identity.Interfaces;
 using LagoVista.IoT.Logging.Loggers;
@@ -23,11 +24,15 @@ namespace LagoVista.UserAdmin.Rest
 
         private readonly IProvisionalEnvironmentManager _provisionalEnvironmentManager;
         private readonly IContinuitySessionManager _continuitySessionManager;
+        private readonly ISignInManager _signInManager;
+        private readonly UserManager<AppUser> _userManager;
 
-        public ProvisionalEnvironmentController(IProvisionalEnvironmentManager provisionalEnvironmentManager, IContinuitySessionManager continuitySessionManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public ProvisionalEnvironmentController(IProvisionalEnvironmentManager provisionalEnvironmentManager, IContinuitySessionManager continuitySessionManager, ISignInManager signInManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _provisionalEnvironmentManager = provisionalEnvironmentManager ?? throw new ArgumentNullException(nameof(provisionalEnvironmentManager));
             _continuitySessionManager = continuitySessionManager ?? throw new ArgumentNullException(nameof(continuitySessionManager));
+            _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
         [AllowAnonymous]
@@ -44,6 +49,7 @@ namespace LagoVista.UserAdmin.Rest
             return _provisionalEnvironmentManager.RestoreAsync(request);
         }
 
+        [AllowProvisionalIdentity]
         [HttpPost("/api/provisional/environment/{provisionalEnvironmentId}/claim")]
         public async Task<InvokeResult<ContinuitySessionView>> ClaimAsync(string provisionalEnvironmentId)
         {
@@ -52,6 +58,12 @@ namespace LagoVista.UserAdmin.Rest
 
             var sessionResult = await _continuitySessionManager.GetClaimedSessionAsync(provisionalEnvironmentId, UserEntityHeader.Id, false);
             if (!sessionResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(sessionResult.ToInvokeResult());
+
+            var appUser = await _userManager.FindByIdAsync(UserEntityHeader.Id);
+            if (appUser == null) return InvokeResult<ContinuitySessionView>.FromError("Could not reload the claimed AppUser for sign-in.");
+
+            await _signInManager.SignOutAsync();
+            await _signInManager.SignInAsync(appUser);
 
             Response.Cookies.Delete(ContinuityCookieName, CreateDeleteCookieOptions());
             Response.Cookies.Append(ContinuityCookieName, sessionResult.Result.ContinuityToken, CreateCookieOptions(sessionResult.Result.IdentityExpiresUtc));
