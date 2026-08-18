@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace LagoVista.UserAdmin.Rest
@@ -23,13 +24,15 @@ namespace LagoVista.UserAdmin.Rest
         private readonly IContinuitySessionManager _continuitySessionManager;
         private readonly IAnonymousVisitorPromotionManager _promotionManager;
         private readonly IAnonymousVisitorPromotionOptions _promotionOptions;
+        private readonly IProvisionalEnvironmentManager _provisionalEnvironmentManager;
 
-        public ContinuityConversationController(IContinuityConversationManager conversationManager, IContinuitySessionManager continuitySessionManager, IAnonymousVisitorPromotionManager promotionManager, IAnonymousVisitorPromotionOptions promotionOptions)
+        public ContinuityConversationController(IContinuityConversationManager conversationManager, IContinuitySessionManager continuitySessionManager, IAnonymousVisitorPromotionManager promotionManager, IAnonymousVisitorPromotionOptions promotionOptions, IProvisionalEnvironmentManager provisionalEnvironmentManager)
         {
             _conversationManager = conversationManager ?? throw new ArgumentNullException(nameof(conversationManager));
             _continuitySessionManager = continuitySessionManager ?? throw new ArgumentNullException(nameof(continuitySessionManager));
             _promotionManager = promotionManager ?? throw new ArgumentNullException(nameof(promotionManager));
             _promotionOptions = promotionOptions ?? throw new ArgumentNullException(nameof(promotionOptions));
+            _provisionalEnvironmentManager = provisionalEnvironmentManager ?? throw new ArgumentNullException(nameof(provisionalEnvironmentManager));
         }
 
         [AllowAnonymousVisitor]
@@ -96,6 +99,16 @@ namespace LagoVista.UserAdmin.Rest
             return InvokeResult<ContinuitySessionView>.Create(ContinuitySessionView.FromSession(sessionResult.Result));
         }
 
+        [AllowProvisionalIdentity]
+        [HttpPost("/api/continuity/account")]
+        public async Task<InvokeResult<EstablishProvisionalAccountResponse>> EstablishAccountAsync([FromBody] EstablishProvisionalAccountRequest request)
+        {
+            SetNoStore();
+            var identityResult = GetProvisionalIdentity();
+            if (!identityResult.Successful) return InvokeResult<EstablishProvisionalAccountResponse>.FromInvokeResult(identityResult.ToInvokeResult());
+            return await _provisionalEnvironmentManager.EstablishAccountAsync(request, identityResult.Result.AppUserId);
+        }
+
         [AllowAnonymousVisitor]
         [AllowProvisionalIdentity]
         [HttpPost("/api/continuity/reset")]
@@ -127,15 +140,27 @@ namespace LagoVista.UserAdmin.Rest
                 : InvokeResult<RestrictedIdentity>.FromError("A Visitor identity is required.");
         }
 
+        private InvokeResult<RestrictedIdentity> GetProvisionalIdentity()
+        {
+            var identityResult = GetRestrictedIdentity();
+            if (!identityResult.Successful) return identityResult;
+            if (!String.Equals(identityResult.Result.IdentityStage, ClaimsFactory.ProvisionalIdentityStage, StringComparison.Ordinal))
+                return InvokeResult<RestrictedIdentity>.FromError("A Provisional identity is required.");
+            if (String.IsNullOrWhiteSpace(identityResult.Result.AppUserId))
+                return InvokeResult<RestrictedIdentity>.FromError("The provisional AppUser claim is required.");
+            return identityResult;
+        }
+
         private InvokeResult<RestrictedIdentity> GetRestrictedIdentity()
         {
             var actorId = User?.FindFirst(ClaimsFactory.ActorId)?.Value;
             var identityStage = User?.FindFirst(ClaimsFactory.IdentityStage)?.Value;
+            var appUserId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (String.IsNullOrWhiteSpace(actorId)) return InvokeResult<RestrictedIdentity>.FromError("The restricted identity actor claim is required.");
             if (!String.Equals(identityStage, ClaimsFactory.VisitorIdentityStage, StringComparison.Ordinal) && !String.Equals(identityStage, ClaimsFactory.ProvisionalIdentityStage, StringComparison.Ordinal)) return InvokeResult<RestrictedIdentity>.FromError("A Visitor or Provisional identity is required.");
 
-            return InvokeResult<RestrictedIdentity>.Create(new RestrictedIdentity { ActorId = actorId, IdentityStage = identityStage });
+            return InvokeResult<RestrictedIdentity>.Create(new RestrictedIdentity { ActorId = actorId, IdentityStage = identityStage, AppUserId = appUserId });
         }
 
         private void SetNoStore()
@@ -166,6 +191,7 @@ namespace LagoVista.UserAdmin.Rest
         {
             public string ActorId { get; set; }
             public string IdentityStage { get; set; }
+            public string AppUserId { get; set; }
         }
     }
 
