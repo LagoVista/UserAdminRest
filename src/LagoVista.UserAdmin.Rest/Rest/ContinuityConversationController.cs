@@ -90,7 +90,7 @@ namespace LagoVista.UserAdmin.Rest
             if (!promotionResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(promotionResult.ToInvokeResult());
             if (promotionResult.Result == null || String.IsNullOrWhiteSpace(promotionResult.Result.RecoveryToken)) return InvokeResult<ContinuitySessionView>.FromError("Could not establish the provisional continuity session.");
 
-            var sessionResult = await _continuitySessionManager.ResolveAsync(promotionResult.Result.RecoveryToken);
+            var sessionResult = await _continuitySessionManager.CreatePromotedProvisionalSessionAsync(promotionResult.Result);
             if (!sessionResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(sessionResult.ToInvokeResult());
             if (sessionResult.Result == null || String.IsNullOrWhiteSpace(sessionResult.Result.ContinuityToken)) return InvokeResult<ContinuitySessionView>.FromError("Could not establish the provisional continuity session.");
 
