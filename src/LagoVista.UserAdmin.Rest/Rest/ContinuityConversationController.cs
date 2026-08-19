@@ -1,6 +1,7 @@
 using LagoVista.AspNetCore.Identity.Authorization;
 using LagoVista.AspNetCore.Identity.Interfaces;
 using LagoVista.AspNetCore.Identity.Managers;
+using LagoVista.Core.Interfaces;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.UserAdmin;
@@ -31,9 +32,10 @@ namespace LagoVista.UserAdmin.Rest
         private readonly IUserManager _userManager;
         private readonly IAppUserRepo _appUserRepo;
         private readonly IOrganizationRepo _organizationRepo;
+        private readonly ITimeZoneServices _timeZoneServices;
         private readonly ISignInManager _signInManager;
 
-        public ContinuityConversationController(IContinuityConversationManager conversationManager, IContinuitySessionManager continuitySessionManager, IAnonymousVisitorPromotionManager promotionManager, IAnonymousVisitorPromotionOptions promotionOptions, IProvisionalEnvironmentManager provisionalEnvironmentManager, IUserManager userManager, IAppUserRepo appUserRepo, IOrganizationRepo organizationRepo, ISignInManager signInManager)
+        public ContinuityConversationController(IContinuityConversationManager conversationManager, IContinuitySessionManager continuitySessionManager, IAnonymousVisitorPromotionManager promotionManager, IAnonymousVisitorPromotionOptions promotionOptions, IProvisionalEnvironmentManager provisionalEnvironmentManager, IUserManager userManager, IAppUserRepo appUserRepo, IOrganizationRepo organizationRepo, ITimeZoneServices timeZoneServices, ISignInManager signInManager)
         {
             _conversationManager = conversationManager ?? throw new ArgumentNullException(nameof(conversationManager));
             _continuitySessionManager = continuitySessionManager ?? throw new ArgumentNullException(nameof(continuitySessionManager));
@@ -43,6 +45,7 @@ namespace LagoVista.UserAdmin.Rest
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _appUserRepo = appUserRepo ?? throw new ArgumentNullException(nameof(appUserRepo));
             _organizationRepo = organizationRepo ?? throw new ArgumentNullException(nameof(organizationRepo));
+            _timeZoneServices = timeZoneServices ?? throw new ArgumentNullException(nameof(timeZoneServices));
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
         }
 
@@ -115,21 +118,30 @@ namespace LagoVista.UserAdmin.Rest
             if (!String.IsNullOrWhiteSpace(request.ClientTimeZoneId))
             {
                 var timeZoneId = request.ClientTimeZoneId.Trim();
-                if (timeZoneId.Length <= 128)
-                {
-                    var timeZone = EntityHeader.Create(timeZoneId, timeZoneId);
-                    if (appUser.TimeZone?.Id != timeZoneId)
-                    {
-                        appUser.TimeZone = timeZone;
-                        userChanged = true;
-                    }
+                if (timeZoneId.Length > 128) return InvokeResult<ContinuitySessionView>.FromError("ClientTimeZoneId cannot exceed 128 characters.");
 
-                    var organization = await _organizationRepo.GetOrganizationAsync(promotionResult.Result.OrganizationId);
-                    if (organization != null && organization.TimeZone?.Id != timeZoneId)
-                    {
-                        organization.TimeZone = timeZone;
-                        await _organizationRepo.UpdateOrganizationAsync(organization);
-                    }
+                LagoVista.Core.Models.DateTimeTypes.TimeZoneReference timeZoneReference;
+                try
+                {
+                    timeZoneReference = _timeZoneServices.GetTimeZoneReferenceById(timeZoneId);
+                }
+                catch (Exception)
+                {
+                    return InvokeResult<ContinuitySessionView>.FromError($"Unknown client timezone '{timeZoneId}'.");
+                }
+
+                var timeZone = EntityHeader.Create(timeZoneReference.Id, timeZoneReference.DisplayName);
+                if (appUser.TimeZone?.Id != timeZoneReference.Id)
+                {
+                    appUser.TimeZone = timeZone;
+                    userChanged = true;
+                }
+
+                var organization = await _organizationRepo.GetOrganizationAsync(promotionResult.Result.OrganizationId);
+                if (organization != null && organization.TimeZone?.Id != timeZoneReference.Id)
+                {
+                    organization.TimeZone = timeZone;
+                    await _organizationRepo.UpdateOrganizationAsync(organization);
                 }
             }
 
