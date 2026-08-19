@@ -7,6 +7,7 @@ using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
+using LagoVista.UserAdmin.Authentication;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -22,10 +23,12 @@ namespace LagoVista.UserAdmin.Rest
     public class MfaController : LagoVistaBaseController
     {
         private readonly IAppUserMfaManager _mfaManager;
+        private readonly IAuthenticationFlowService _authFlowService;
 
-        public MfaController(IAppUserMfaManager mfaManager, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
+        public MfaController(IAppUserMfaManager mfaManager, IAuthenticationFlowService authFlowService, UserManager<AppUser> userManager, IAdminLogger logger) : base(userManager, logger)
         {
             _mfaManager = mfaManager ?? throw new ArgumentNullException(nameof(mfaManager));
+            _authFlowService = authFlowService ?? throw new ArgumentNullException(nameof(authFlowService));
         }
 
         /* ============================
@@ -84,7 +87,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/auth/mfarecovery/rotate")]
         public Task<InvokeResult<List<string>>> RotateRecoveryCodesAsync()
         {
-            return _mfaManager.RotateRecoveryCodesAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            return _authFlowService.RotateTotpRecoveryCodesAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
         }
 
         public class RecoveryCodePost
@@ -111,7 +114,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/auth/mfadisable")]
         public Task<InvokeResult> DisableMfaAsync()
         {
-            return _mfaManager.DisableMfaAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            return _authFlowService.TurnOffTotpAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
         }
 
         /// <summary>
