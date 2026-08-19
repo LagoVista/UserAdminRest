@@ -93,7 +93,7 @@ namespace LagoVista.UserAdmin.Rest
             if (request?.Passkey == null)
                 return InvokeResult<AuthenticationResponse>.FromError("passkey_request_required");
 
-            var proof = await _emailPasskeyAuthenticationService.CompleteAsync(request.Email, request.Passkey, OrgEntityHeader, UserEntityHeader);
+            var proof = await _emailPasskeyAuthenticationService.CompleteAsync(request.Email, request.Passkey, request.StepUp, OrgEntityHeader, UserEntityHeader);
             if (!proof.Successful || proof.Result == null)
                 return InvokeResult<AuthenticationResponse>.FromInvokeResult(proof.ToInvokeResult());
 
@@ -107,7 +107,7 @@ namespace LagoVista.UserAdmin.Rest
             if (request?.Passkey == null || request.Auth == null)
                 return InvokeResult<AuthResponse>.FromError("passkey_and_auth_request_required");
 
-            var proof = await _emailPasskeyAuthenticationService.CompleteAsync(request.Email, request.Passkey, OrgEntityHeader, UserEntityHeader);
+            var proof = await _emailPasskeyAuthenticationService.CompleteAsync(request.Email, request.Passkey, request.StepUp, OrgEntityHeader, UserEntityHeader);
             if (!proof.Successful || proof.Result == null)
                 return InvokeResult<AuthResponse>.FromInvokeResult(proof.ToInvokeResult());
 
