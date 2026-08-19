@@ -27,5 +27,11 @@ namespace LagoVista.UserAdmin.Rest
 
             return _authenticationFlowService.LoginWithPasswordAsync(request);
         }
+
+        [HttpPost("/api/auth/totp/login")]
+        public Task<InvokeResult<AuthenticationResponse>> AuthenticateWithTotpAsync([FromBody] TotpSignInRequest request)
+        {
+            return _authenticationFlowService.AuthenticateWithTotpAsync(request);
+        }
     }
 }
