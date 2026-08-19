@@ -41,7 +41,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/auth/mfatotp/enrollment/begin")]
         public Task<InvokeResult<AppUserTotpEnrollmentInfo>> BeginTotpEnrollmentAsync()
         {
-            return _mfaManager.BeginTotpEnrollmentAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
+            return _authFlowService.BeginTotpEnrollmentAsync(UserEntityHeader.Id, OrgEntityHeader, UserEntityHeader);
         }
 
         public class AppUserTotpSecret
@@ -56,7 +56,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpPost("/api/auth/mfatotp/enrollment/confirm")]
         public Task<InvokeResult<List<string>>> ConfirmTotpEnrollmentAsync([FromBody] AppUserTotpSecret totpSecret)
         {
-            return _mfaManager.ConfirmTotpEnrollmentAsync(UserEntityHeader.Id, totpSecret.Totp, OrgEntityHeader, UserEntityHeader);
+            return _authFlowService.ConfirmTotpEnrollmentAsync(UserEntityHeader.Id, totpSecret.Totp, OrgEntityHeader, UserEntityHeader);
         } 
 
         public class AppUserTotpPost
