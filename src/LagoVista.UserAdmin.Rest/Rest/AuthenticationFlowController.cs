@@ -1,3 +1,4 @@
+using LagoVista.Core.Authentication.Models;
 using LagoVista.Core.Validation;
 using LagoVista.UserAdmin.Authentication;
 using LagoVista.UserAdmin.Models.Auth;
@@ -32,6 +33,12 @@ namespace LagoVista.UserAdmin.Rest
         public Task<InvokeResult<AuthenticationResponse>> AuthenticateWithTotpAsync([FromBody] TotpSignInRequest request)
         {
             return _authenticationFlowService.AuthenticateWithTotpAsync(request);
+        }
+
+        [HttpPost("/api/auth/totp/token")]
+        public Task<InvokeResult<AuthResponse>> AuthenticateWithTotpTokenAsync([FromBody] AuthRequest request)
+        {
+            return _authenticationFlowService.AuthenticateWithTotpTokenAsync(request);
         }
     }
 }
