@@ -1,9 +1,12 @@
 using LagoVista.AspNetCore.Identity.Authorization;
 using LagoVista.AspNetCore.Identity.Interfaces;
 using LagoVista.AspNetCore.Identity.Managers;
+using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.UserAdmin;
 using LagoVista.UserAdmin.Interfaces.Managers;
+using LagoVista.UserAdmin.Interfaces.Repos.Orgs;
+using LagoVista.UserAdmin.Interfaces.Repos.Users;
 using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -26,9 +29,11 @@ namespace LagoVista.UserAdmin.Rest
         private readonly IAnonymousVisitorPromotionOptions _promotionOptions;
         private readonly IProvisionalEnvironmentManager _provisionalEnvironmentManager;
         private readonly IUserManager _userManager;
+        private readonly IAppUserRepo _appUserRepo;
+        private readonly IOrganizationRepo _organizationRepo;
         private readonly ISignInManager _signInManager;
 
-        public ContinuityConversationController(IContinuityConversationManager conversationManager, IContinuitySessionManager continuitySessionManager, IAnonymousVisitorPromotionManager promotionManager, IAnonymousVisitorPromotionOptions promotionOptions, IProvisionalEnvironmentManager provisionalEnvironmentManager, IUserManager userManager, ISignInManager signInManager)
+        public ContinuityConversationController(IContinuityConversationManager conversationManager, IContinuitySessionManager continuitySessionManager, IAnonymousVisitorPromotionManager promotionManager, IAnonymousVisitorPromotionOptions promotionOptions, IProvisionalEnvironmentManager provisionalEnvironmentManager, IUserManager userManager, IAppUserRepo appUserRepo, IOrganizationRepo organizationRepo, ISignInManager signInManager)
         {
             _conversationManager = conversationManager ?? throw new ArgumentNullException(nameof(conversationManager));
             _continuitySessionManager = continuitySessionManager ?? throw new ArgumentNullException(nameof(continuitySessionManager));
@@ -36,6 +41,8 @@ namespace LagoVista.UserAdmin.Rest
             _promotionOptions = promotionOptions ?? throw new ArgumentNullException(nameof(promotionOptions));
             _provisionalEnvironmentManager = provisionalEnvironmentManager ?? throw new ArgumentNullException(nameof(provisionalEnvironmentManager));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _appUserRepo = appUserRepo ?? throw new ArgumentNullException(nameof(appUserRepo));
+            _organizationRepo = organizationRepo ?? throw new ArgumentNullException(nameof(organizationRepo));
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
         }
 
@@ -94,12 +101,43 @@ namespace LagoVista.UserAdmin.Rest
             if (!promotionResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(promotionResult.ToInvokeResult());
             if (promotionResult.Result == null || String.IsNullOrWhiteSpace(promotionResult.Result.RecoveryToken)) return InvokeResult<ContinuitySessionView>.FromError("Could not establish the provisional continuity session.");
 
+            var appUser = await _userManager.FindByIdAsync(promotionResult.Result.AppUserId);
+            if (appUser == null) return InvokeResult<ContinuitySessionView>.FromError("Could not load the provisional AppUser for sign-in.");
+
+            var userChanged = false;
+            if (appUser.IsAnonymous && String.IsNullOrWhiteSpace(appUser.FirstName) && String.IsNullOrWhiteSpace(appUser.LastName))
+            {
+                appUser.FirstName = "New";
+                appUser.LastName = "User";
+                userChanged = true;
+            }
+
+            if (!String.IsNullOrWhiteSpace(request.ClientTimeZoneId))
+            {
+                var timeZoneId = request.ClientTimeZoneId.Trim();
+                if (timeZoneId.Length <= 128)
+                {
+                    var timeZone = EntityHeader.Create(timeZoneId, timeZoneId);
+                    if (appUser.TimeZone?.Id != timeZoneId)
+                    {
+                        appUser.TimeZone = timeZone;
+                        userChanged = true;
+                    }
+
+                    var organization = await _organizationRepo.GetOrganizationAsync(promotionResult.Result.OrganizationId);
+                    if (organization != null && organization.TimeZone?.Id != timeZoneId)
+                    {
+                        organization.TimeZone = timeZone;
+                        await _organizationRepo.UpdateOrganizationAsync(organization);
+                    }
+                }
+            }
+
+            if (userChanged) await _appUserRepo.UpdateAsync(appUser);
+
             var sessionResult = await _continuitySessionManager.CreatePromotedProvisionalSessionAsync(promotionResult.Result);
             if (!sessionResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(sessionResult.ToInvokeResult());
             if (sessionResult.Result == null || String.IsNullOrWhiteSpace(sessionResult.Result.ContinuityToken)) return InvokeResult<ContinuitySessionView>.FromError("Could not establish the provisional continuity session.");
-
-            var appUser = await _userManager.FindByIdAsync(promotionResult.Result.AppUserId);
-            if (appUser == null) return InvokeResult<ContinuitySessionView>.FromError("Could not load the provisional AppUser for sign-in.");
 
             await _signInManager.SignOutAsync();
             await _signInManager.SignInProvisionalAsync(appUser, identityResult.Result.ActorId);
@@ -239,6 +277,7 @@ namespace LagoVista.UserAdmin.Rest
     {
         public bool TermsAndConditionsAccepted { get; set; }
         public string TermsAndConditionsVersion { get; set; }
+        public string ClientTimeZoneId { get; set; }
     }
 
     public class ContinuityPromotionView
