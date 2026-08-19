@@ -135,9 +135,9 @@ namespace LagoVista.UserAdmin.Rest
                 userChanged = true;
             }
 
-            if (timeZone != null)
+            if (promotionResult.Result.WasResumed && timeZone != null)
             {
-                if (promotionResult.Result.WasResumed && appUser.TimeZone?.Id != timeZone.Id)
+                if (appUser.TimeZone?.Id != timeZone.Id)
                 {
                     appUser.TimeZone = timeZone;
                     userChanged = true;
