@@ -88,7 +88,7 @@ namespace LagoVista.UserAdmin.Rest
         [HttpGet("/api/oauth/client/value/factory")]
         public DetailResponse<OAuthClientSettingValue> CreateOAuthClientSettingValue()
         {
-            return DetailResponse<OAuthClientSettingValue>.Create(new OAuthClientSettingValue());
+            return DetailResponse<OAuthClientSettingValue>.Create();
         }
     }
 }
