@@ -8,9 +8,9 @@ using LagoVista.Core.Authentication.Models;
 using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
-using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Authentication;
+using LagoVista.UserAdmin.Models.Auth;
 using LagoVista.UserAdmin.Models.Auth.Passkeys;
 using LagoVista.UserAdmin.Models.Security.Passkeys;
 using LagoVista.UserAdmin.Models.Users;
@@ -25,15 +25,18 @@ namespace LagoVista.UserAdmin.Rest
     public class PasskeyController : LagoVistaBaseController
     {
         private readonly IAppUserPasskeyManager _passkeyManager;
+        private readonly IEmailPasskeyAuthenticationService _emailPasskeyAuthenticationService;
         private readonly IAuthenticationFlowService _authenticationFlowService;
 
         public PasskeyController(
             IAppUserPasskeyManager passkeyManager,
+            IEmailPasskeyAuthenticationService emailPasskeyAuthenticationService,
             IAuthenticationFlowService authenticationFlowService,
             UserManager<AppUser> userManager,
             IAdminLogger logger) : base(userManager, logger)
         {
             _passkeyManager = passkeyManager ?? throw new ArgumentNullException(nameof(passkeyManager));
+            _emailPasskeyAuthenticationService = emailPasskeyAuthenticationService ?? throw new ArgumentNullException(nameof(emailPasskeyAuthenticationService));
             _authenticationFlowService = authenticationFlowService ?? throw new ArgumentNullException(nameof(authenticationFlowService));
         }
 
@@ -70,6 +73,48 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /* ============================
+         * Email-bound authentication
+         * ============================ */
+
+        [AllowAnonymous]
+        [HttpPost("/api/auth/passkey/email/authentication/begin")]
+        public Task<InvokeResult<PasskeyBeginOptionsResponse>> BeginEmailAuthenticationAsync([FromBody] PasskeyEmailAuthenticationBeginRequest request)
+        {
+            if (request == null)
+                return Task.FromResult(InvokeResult<PasskeyBeginOptionsResponse>.FromError("passkey_request_required"));
+
+            return _emailPasskeyAuthenticationService.BeginAsync(request.Email, request.PasskeyUrl, OrgEntityHeader, UserEntityHeader);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("/api/auth/passkey/email/authentication/complete")]
+        public async Task<InvokeResult<AuthenticationResponse>> CompleteEmailAuthenticationAsync([FromBody] PasskeyEmailAuthenticationCompleteRequest request)
+        {
+            if (request?.Passkey == null)
+                return InvokeResult<AuthenticationResponse>.FromError("passkey_request_required");
+
+            var proof = await _emailPasskeyAuthenticationService.CompleteAsync(request.Email, request.Passkey, OrgEntityHeader, UserEntityHeader);
+            if (!proof.Successful || proof.Result == null)
+                return InvokeResult<AuthenticationResponse>.FromInvokeResult(proof.ToInvokeResult());
+
+            return await _authenticationFlowService.CompleteProvenUserSessionAsync(proof.Result, true);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("/api/auth/passkey/email/authentication/token")]
+        public async Task<InvokeResult<AuthResponse>> CompleteEmailAuthenticationTokenAsync([FromBody] PasskeyEmailAuthenticationTokenCompleteRequest request)
+        {
+            if (request?.Passkey == null || request.Auth == null)
+                return InvokeResult<AuthResponse>.FromError("passkey_and_auth_request_required");
+
+            var proof = await _emailPasskeyAuthenticationService.CompleteAsync(request.Email, request.Passkey, OrgEntityHeader, UserEntityHeader);
+            if (!proof.Successful || proof.Result == null)
+                return InvokeResult<AuthResponse>.FromInvokeResult(proof.ToInvokeResult());
+
+            return await _authenticationFlowService.CompleteProvenUserTokenAsync(request.Auth, proof.Result);
+        }
+
+        /* ============================
          * Passwordless registration
          * ============================ */
 
@@ -100,31 +145,9 @@ namespace LagoVista.UserAdmin.Rest
 
         [AllowAnonymous]
         [HttpPost("/api/auth/passkey/passwordless/authentication/complete")]
-        public async Task<InvokeResult<PasskeySignInResult>> CompletePasswordlessAuthenticationAsync([FromBody] PasskeyAuthenticationCompleteRequest request)
+        public Task<InvokeResult<PasskeySignInResult>> CompletePasswordlessAuthenticationAsync([FromBody] PasskeyAuthenticationCompleteRequest request)
         {
-            var proof = await _passkeyManager.CompletePasswordlessAuthenticationAsync(request, OrgEntityHeader, UserEntityHeader);
-            if (!proof.Successful || proof.Result?.User == null)
-                return proof;
-
-            var session = await _authenticationFlowService.CompleteProvenUserSessionAsync(proof.Result.User, true);
-            if (!session.Successful)
-                return InvokeResult<PasskeySignInResult>.FromInvokeResult(session.ToInvokeResult());
-
-            return proof;
-        }
-
-        [AllowAnonymous]
-        [HttpPost("/api/auth/passkey/passwordless/authentication/token")]
-        public async Task<InvokeResult<AuthResponse>> CompletePasswordlessAuthenticationTokenAsync([FromBody] PasskeyTokenAuthenticationCompleteRequest request)
-        {
-            if (request?.Passkey == null || request.Auth == null)
-                return InvokeResult<AuthResponse>.FromError("passkey_and_auth_request_required");
-
-            var proof = await _passkeyManager.CompletePasswordlessAuthenticationAsync(request.Passkey, OrgEntityHeader, UserEntityHeader);
-            if (!proof.Successful || proof.Result?.User == null)
-                return InvokeResult<AuthResponse>.FromInvokeResult(proof.ToInvokeResult());
-
-            return await _authenticationFlowService.CompleteProvenUserTokenAsync(request.Auth, proof.Result.User);
+            return _passkeyManager.CompletePasswordlessAuthenticationAsync(request, OrgEntityHeader, UserEntityHeader);
         }
 
         /* ============================
