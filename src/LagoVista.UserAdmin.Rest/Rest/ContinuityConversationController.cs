@@ -95,10 +95,30 @@ namespace LagoVista.UserAdmin.Rest
             if (!identityResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(identityResult.ToInvokeResult());
             if (request == null) return InvokeResult<ContinuitySessionView>.FromError("Promotion request is required.");
 
+            EntityHeader timeZone = null;
+            if (!String.IsNullOrWhiteSpace(request.ClientTimeZoneId))
+            {
+                var timeZoneId = request.ClientTimeZoneId.Trim();
+                if (timeZoneId.Length > 128) return InvokeResult<ContinuitySessionView>.FromError("ClientTimeZoneId cannot exceed 128 characters.");
+
+                try
+                {
+                    var timeZoneReference = _timeZoneServices.GetTimeZoneReferenceById(timeZoneId);
+                    timeZone = EntityHeader.Create(timeZoneReference.Id, timeZoneReference.DisplayName);
+                }
+                catch (Exception)
+                {
+                    return InvokeResult<ContinuitySessionView>.FromError($"Unknown client timezone '{timeZoneId}'.");
+                }
+            }
+
             var promotionResult = await _promotionManager.PromoteAsync(identityResult.Result.ActorId, HttpContext.Connection.RemoteIpAddress?.ToString(), new AnonymousVisitorPromotionRequest
             {
                 TermsAndConditionsAccepted = request.TermsAndConditionsAccepted,
-                TermsAndConditionsVersion = request.TermsAndConditionsVersion
+                TermsAndConditionsVersion = request.TermsAndConditionsVersion,
+                ProvisionalFirstName = "New",
+                ProvisionalLastName = "User",
+                ProvisionalTimeZone = timeZone
             });
 
             if (!promotionResult.Successful) return InvokeResult<ContinuitySessionView>.FromInvokeResult(promotionResult.ToInvokeResult());
@@ -108,37 +128,23 @@ namespace LagoVista.UserAdmin.Rest
             if (appUser == null) return InvokeResult<ContinuitySessionView>.FromError("Could not load the provisional AppUser for sign-in.");
 
             var userChanged = false;
-            if (appUser.IsAnonymous && String.IsNullOrWhiteSpace(appUser.FirstName) && String.IsNullOrWhiteSpace(appUser.LastName))
+            if (promotionResult.Result.WasResumed && appUser.IsAnonymous && String.IsNullOrWhiteSpace(appUser.FirstName) && String.IsNullOrWhiteSpace(appUser.LastName))
             {
                 appUser.FirstName = "New";
                 appUser.LastName = "User";
                 userChanged = true;
             }
 
-            if (!String.IsNullOrWhiteSpace(request.ClientTimeZoneId))
+            if (timeZone != null)
             {
-                var timeZoneId = request.ClientTimeZoneId.Trim();
-                if (timeZoneId.Length > 128) return InvokeResult<ContinuitySessionView>.FromError("ClientTimeZoneId cannot exceed 128 characters.");
-
-                LagoVista.Core.Models.DateTimeTypes.TimeZoneReference timeZoneReference;
-                try
-                {
-                    timeZoneReference = _timeZoneServices.GetTimeZoneReferenceById(timeZoneId);
-                }
-                catch (Exception)
-                {
-                    return InvokeResult<ContinuitySessionView>.FromError($"Unknown client timezone '{timeZoneId}'.");
-                }
-
-                var timeZone = EntityHeader.Create(timeZoneReference.Id, timeZoneReference.DisplayName);
-                if (appUser.TimeZone?.Id != timeZoneReference.Id)
+                if (promotionResult.Result.WasResumed && appUser.TimeZone?.Id != timeZone.Id)
                 {
                     appUser.TimeZone = timeZone;
                     userChanged = true;
                 }
 
                 var organization = await _organizationRepo.GetOrganizationAsync(promotionResult.Result.OrganizationId);
-                if (organization != null && organization.TimeZone?.Id != timeZoneReference.Id)
+                if (organization != null && organization.TimeZone?.Id != timeZone.Id)
                 {
                     organization.TimeZone = timeZone;
                     await _organizationRepo.UpdateOrganizationAsync(organization);
