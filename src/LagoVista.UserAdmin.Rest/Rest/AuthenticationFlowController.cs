@@ -29,6 +29,12 @@ namespace LagoVista.UserAdmin.Rest
             return _authenticationFlowService.LoginWithPasswordAsync(request);
         }
 
+        [HttpPost("/api/auth/password/mfa-challenge")]
+        public Task<InvokeResult<AuthenticationResponse>> CreatePasswordMfaChallengeAsync([FromBody] AuthLoginRequest request)
+        {
+            return _authenticationFlowService.CreatePasswordMfaChallengeAsync(request);
+        }
+
         [HttpPost("/api/auth/totp/login")]
         public Task<InvokeResult<AuthenticationResponse>> AuthenticateWithTotpAsync([FromBody] TotpSignInRequest request)
         {
@@ -36,7 +42,7 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         [HttpPost("/api/auth/totp/token")]
-        public Task<InvokeResult<AuthResponse>> AuthenticateWithTotpTokenAsync([FromBody] AuthRequest request)
+        public Task<InvokeResult<AuthResponse>> AuthenticateWithTotpTokenAsync([FromBody] TotpTokenSignInRequest request)
         {
             return _authenticationFlowService.AuthenticateWithTotpTokenAsync(request);
         }
@@ -48,7 +54,7 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         [HttpPost("/api/auth/mfarecovery/token")]
-        public Task<InvokeResult<AuthResponse>> AuthenticateWithRecoveryCodeTokenAsync([FromBody] AuthRequest request)
+        public Task<InvokeResult<AuthResponse>> AuthenticateWithRecoveryCodeTokenAsync([FromBody] RecoveryCodeTokenSignInRequest request)
         {
             return _authenticationFlowService.AuthenticateWithRecoveryCodeTokenAsync(request);
         }
