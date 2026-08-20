@@ -1,6 +1,7 @@
 using LagoVista.Core.Authentication.Models;
 using LagoVista.Core.Validation;
 using LagoVista.UserAdmin.Authentication;
+using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,10 +15,12 @@ namespace LagoVista.UserAdmin.Rest
     public class AuthenticationFlowController : ControllerBase
     {
         private readonly IAuthenticationFlowService _authenticationFlowService;
+        private readonly IPendingIdentityManager _pendingIdentityManager;
 
-        public AuthenticationFlowController(IAuthenticationFlowService authenticationFlowService)
+        public AuthenticationFlowController(IAuthenticationFlowService authenticationFlowService, IPendingIdentityManager pendingIdentityManager)
         {
             _authenticationFlowService = authenticationFlowService ?? throw new ArgumentNullException(nameof(authenticationFlowService));
+            _pendingIdentityManager = pendingIdentityManager ?? throw new ArgumentNullException(nameof(pendingIdentityManager));
         }
 
         [HttpPost("/api/auth/password/login")]
@@ -57,6 +60,32 @@ namespace LagoVista.UserAdmin.Rest
         public Task<InvokeResult<AuthResponse>> AuthenticateWithRecoveryCodeTokenAsync([FromBody] RecoveryCodeTokenSignInRequest request)
         {
             return _authenticationFlowService.AuthenticateWithRecoveryCodeTokenAsync(request);
+        }
+
+        /// <summary>
+        /// Sends or resends the independent NuvIoT email-verification proof for a PendingIdentity ceremony.
+        /// A PendingIdentity id is a ceremony handle only; this operation does not establish application authorization.
+        /// </summary>
+        [HttpPost("/api/auth/pending-identity/{pendingIdentityId}/email/send")]
+        public Task<InvokeResult<string>> SendPendingIdentityEmailVerificationAsync(string pendingIdentityId)
+        {
+            if (String.IsNullOrWhiteSpace(pendingIdentityId))
+                return Task.FromResult(InvokeResult<string>.FromError("Pending identity id is required."));
+
+            return _pendingIdentityManager.SendEmailVerificationAsync(pendingIdentityId);
+        }
+
+        /// <summary>
+        /// Verifies the NuvIoT email code for a PendingIdentity and moves the ceremony to identity resolution.
+        /// This does not create, link, or authenticate a durable user by itself.
+        /// </summary>
+        [HttpPost("/api/auth/pending-identity/{pendingIdentityId}/email/verify")]
+        public Task<InvokeResult> VerifyPendingIdentityEmailAsync(string pendingIdentityId, [FromBody] ConfirmEmail request)
+        {
+            if (String.IsNullOrWhiteSpace(pendingIdentityId))
+                return Task.FromResult(InvokeResult.FromError("Pending identity id is required."));
+
+            return _pendingIdentityManager.VerifyEmailAsync(pendingIdentityId, request?.ReceivedCode);
         }
     }
 }
