@@ -40,5 +40,17 @@ namespace LagoVista.UserAdmin.Rest
         {
             return _authenticationFlowService.AuthenticateWithTotpTokenAsync(request);
         }
+
+        [HttpPost("/api/auth/mfarecovery/login")]
+        public Task<InvokeResult<AuthenticationResponse>> AuthenticateWithRecoveryCodeAsync([FromBody] RecoveryCodeSignInRequest request)
+        {
+            return _authenticationFlowService.AuthenticateWithRecoveryCodeAsync(request);
+        }
+
+        [HttpPost("/api/auth/mfarecovery/token")]
+        public Task<InvokeResult<AuthResponse>> AuthenticateWithRecoveryCodeTokenAsync([FromBody] AuthRequest request)
+        {
+            return _authenticationFlowService.AuthenticateWithRecoveryCodeTokenAsync(request);
+        }
     }
 }
