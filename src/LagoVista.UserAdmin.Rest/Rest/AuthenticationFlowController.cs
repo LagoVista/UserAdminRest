@@ -3,6 +3,7 @@ using LagoVista.Core.Validation;
 using LagoVista.UserAdmin.Authentication;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Auth;
+using LagoVista.UserAdmin.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
