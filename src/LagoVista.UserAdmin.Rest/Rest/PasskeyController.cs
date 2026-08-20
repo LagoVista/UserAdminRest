@@ -3,9 +3,7 @@
 // IndexVersion: 2
 // --- END CODE INDEX META ---
 using LagoVista.AspNetCore.Identity.Interfaces;
-using LagoVista.Core;
 using LagoVista.Core.Authentication.Models;
-using LagoVista.Core.Models;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
@@ -24,27 +22,23 @@ namespace LagoVista.UserAdmin.Rest
 {
     public class PasskeyController : LagoVistaBaseController
     {
-        private const string PasskeyMfaProvider = "passkey";
-
         private readonly IAppUserPasskeyManager _passkeyManager;
         private readonly IEmailPasskeyAuthenticationService _emailPasskeyAuthenticationService;
+        private readonly IPasskeyMfaAuthenticationService _passkeyMfaAuthenticationService;
         private readonly IAuthenticationFlowService _authenticationFlowService;
-        private readonly IMfaChallengeFlowService _mfaChallengeFlowService;
-        private readonly UserManager<AppUser> _userManager;
 
         public PasskeyController(
             IAppUserPasskeyManager passkeyManager,
             IEmailPasskeyAuthenticationService emailPasskeyAuthenticationService,
+            IPasskeyMfaAuthenticationService passkeyMfaAuthenticationService,
             IAuthenticationFlowService authenticationFlowService,
-            IMfaChallengeFlowService mfaChallengeFlowService,
             UserManager<AppUser> userManager,
             IAdminLogger logger) : base(userManager, logger)
         {
             _passkeyManager = passkeyManager ?? throw new ArgumentNullException(nameof(passkeyManager));
             _emailPasskeyAuthenticationService = emailPasskeyAuthenticationService ?? throw new ArgumentNullException(nameof(emailPasskeyAuthenticationService));
+            _passkeyMfaAuthenticationService = passkeyMfaAuthenticationService ?? throw new ArgumentNullException(nameof(passkeyMfaAuthenticationService));
             _authenticationFlowService = authenticationFlowService ?? throw new ArgumentNullException(nameof(authenticationFlowService));
-            _mfaChallengeFlowService = mfaChallengeFlowService ?? throw new ArgumentNullException(nameof(mfaChallengeFlowService));
-            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
         /* ============================
@@ -127,21 +121,12 @@ namespace LagoVista.UserAdmin.Rest
 
         [AllowAnonymous]
         [HttpPost("/api/auth/passkey/mfa/authentication/begin")]
-        public async Task<InvokeResult<PasskeyBeginOptionsResponse>> BeginMfaAuthenticationAsync([FromBody] PasskeyMfaAuthenticationBeginRequest request)
+        public Task<InvokeResult<PasskeyBeginOptionsResponse>> BeginMfaAuthenticationAsync([FromBody] PasskeyMfaAuthenticationBeginRequest request)
         {
             if (request == null || String.IsNullOrWhiteSpace(request.MfaChallengeId))
-                return InvokeResult<PasskeyBeginOptionsResponse>.FromError("mfa_challenge_required");
+                return Task.FromResult(InvokeResult<PasskeyBeginOptionsResponse>.FromError("mfa_challenge_required"));
 
-            var challengeResult = await _mfaChallengeFlowService.ValidateAsync(request.MfaChallengeId, PasskeyMfaProvider);
-            if (!challengeResult.Successful || challengeResult.Result == null)
-                return InvokeResult<PasskeyBeginOptionsResponse>.FromInvokeResult(challengeResult.ToInvokeResult());
-
-            return await _passkeyManager.BeginAuthenticationOptionsAsync(
-                challengeResult.Result.UserId,
-                true,
-                request.PasskeyUrl,
-                OrgEntityHeader,
-                UserEntityHeader);
+            return _passkeyMfaAuthenticationService.BeginAsync(request.MfaChallengeId, request.PasskeyUrl, OrgEntityHeader, UserEntityHeader);
         }
 
         [AllowAnonymous]
@@ -151,28 +136,11 @@ namespace LagoVista.UserAdmin.Rest
             if (request?.Passkey == null || String.IsNullOrWhiteSpace(request.MfaChallengeId))
                 return InvokeResult<AuthenticationResponse>.FromError("passkey_and_mfa_challenge_required");
 
-            var challengeResult = await _mfaChallengeFlowService.ValidateAsync(request.MfaChallengeId, PasskeyMfaProvider);
-            if (!challengeResult.Successful || challengeResult.Result == null)
-                return InvokeResult<AuthenticationResponse>.FromInvokeResult(challengeResult.ToInvokeResult());
+            var proof = await _passkeyMfaAuthenticationService.CompleteAsync(request.MfaChallengeId, request.Passkey, OrgEntityHeader, UserEntityHeader);
+            if (!proof.Successful || proof.Result == null)
+                return InvokeResult<AuthenticationResponse>.FromInvokeResult(proof.ToInvokeResult());
 
-            var proof = await _passkeyManager.CompleteAuthenticationAsync(
-                challengeResult.Result.UserId,
-                request.Passkey,
-                true,
-                OrgEntityHeader,
-                UserEntityHeader);
-            if (!proof.Successful)
-                return InvokeResult<AuthenticationResponse>.FromInvokeResult(proof);
-
-            var consumedChallenge = await _mfaChallengeFlowService.ConsumeAsync(request.MfaChallengeId, PasskeyMfaProvider);
-            if (!consumedChallenge.Successful || consumedChallenge.Result == null)
-                return InvokeResult<AuthenticationResponse>.FromInvokeResult(consumedChallenge.ToInvokeResult());
-
-            var appUser = await _userManager.FindByIdAsync(consumedChallenge.Result.UserId);
-            if (appUser == null)
-                return InvokeResult<AuthenticationResponse>.FromError("passkey_authentication_failed");
-
-            return await _authenticationFlowService.CompleteProvenUserSessionAsync(appUser, true);
+            return await _authenticationFlowService.CompleteProvenUserSessionAsync(proof.Result, true);
         }
 
         [AllowAnonymous]
@@ -182,28 +150,11 @@ namespace LagoVista.UserAdmin.Rest
             if (request?.Passkey == null || request.Auth == null || String.IsNullOrWhiteSpace(request.MfaChallengeId))
                 return InvokeResult<AuthResponse>.FromError("passkey_auth_and_mfa_challenge_required");
 
-            var challengeResult = await _mfaChallengeFlowService.ValidateAsync(request.MfaChallengeId, PasskeyMfaProvider);
-            if (!challengeResult.Successful || challengeResult.Result == null)
-                return InvokeResult<AuthResponse>.FromInvokeResult(challengeResult.ToInvokeResult());
+            var proof = await _passkeyMfaAuthenticationService.CompleteAsync(request.MfaChallengeId, request.Passkey, OrgEntityHeader, UserEntityHeader);
+            if (!proof.Successful || proof.Result == null)
+                return InvokeResult<AuthResponse>.FromInvokeResult(proof.ToInvokeResult());
 
-            var proof = await _passkeyManager.CompleteAuthenticationAsync(
-                challengeResult.Result.UserId,
-                request.Passkey,
-                true,
-                OrgEntityHeader,
-                UserEntityHeader);
-            if (!proof.Successful)
-                return InvokeResult<AuthResponse>.FromInvokeResult(proof);
-
-            var consumedChallenge = await _mfaChallengeFlowService.ConsumeAsync(request.MfaChallengeId, PasskeyMfaProvider);
-            if (!consumedChallenge.Successful || consumedChallenge.Result == null)
-                return InvokeResult<AuthResponse>.FromInvokeResult(consumedChallenge.ToInvokeResult());
-
-            var appUser = await _userManager.FindByIdAsync(consumedChallenge.Result.UserId);
-            if (appUser == null)
-                return InvokeResult<AuthResponse>.FromError("passkey_authentication_failed");
-
-            return await _authenticationFlowService.CompleteProvenUserTokenAsync(request.Auth, appUser);
+            return await _authenticationFlowService.CompleteProvenUserTokenAsync(request.Auth, proof.Result);
         }
 
         /* ============================
