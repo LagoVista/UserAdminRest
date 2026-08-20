@@ -70,6 +70,23 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// Updates the untrusted registration/profile information collected during a PendingIdentity ceremony.
+        /// The supplied email remains untrusted until the independent NuvIoT verification step succeeds.
+        /// </summary>
+        [HttpPost("/api/auth/pending-identity/{pendingIdentityId}/registration")]
+        public async Task<InvokeResult> UpdatePendingIdentityRegistrationAsync(string pendingIdentityId, [FromBody] RegisterUser request)
+        {
+            if (String.IsNullOrWhiteSpace(pendingIdentityId))
+                return InvokeResult.FromError("Pending identity id is required.");
+
+            if (request == null)
+                return InvokeResult.FromError("Registration details are required.");
+
+            await _pendingIdentityManager.AddRegistrationAsync(pendingIdentityId, request);
+            return InvokeResult.Success;
+        }
+
+        /// <summary>
         /// Sends or resends the independent NuvIoT email-verification proof for a PendingIdentity ceremony.
         /// A PendingIdentity id is a ceremony handle only; this operation does not establish application authorization.
         /// </summary>
