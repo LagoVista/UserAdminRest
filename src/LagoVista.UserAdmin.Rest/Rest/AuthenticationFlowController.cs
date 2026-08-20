@@ -4,6 +4,7 @@ using LagoVista.UserAdmin.Authentication;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Auth;
 using LagoVista.UserAdmin.Models.DTOs;
+using LagoVista.UserAdmin.Models.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -17,11 +18,16 @@ namespace LagoVista.UserAdmin.Rest
     {
         private readonly IAuthenticationFlowService _authenticationFlowService;
         private readonly IPendingIdentityManager _pendingIdentityManager;
+        private readonly IPendingIdentityResolutionService _pendingIdentityResolutionService;
 
-        public AuthenticationFlowController(IAuthenticationFlowService authenticationFlowService, IPendingIdentityManager pendingIdentityManager)
+        public AuthenticationFlowController(
+            IAuthenticationFlowService authenticationFlowService,
+            IPendingIdentityManager pendingIdentityManager,
+            IPendingIdentityResolutionService pendingIdentityResolutionService)
         {
             _authenticationFlowService = authenticationFlowService ?? throw new ArgumentNullException(nameof(authenticationFlowService));
             _pendingIdentityManager = pendingIdentityManager ?? throw new ArgumentNullException(nameof(pendingIdentityManager));
+            _pendingIdentityResolutionService = pendingIdentityResolutionService ?? throw new ArgumentNullException(nameof(pendingIdentityResolutionService));
         }
 
         [HttpPost("/api/auth/password/login")]
@@ -87,6 +93,20 @@ namespace LagoVista.UserAdmin.Rest
                 return Task.FromResult(InvokeResult.FromError("Pending identity id is required."));
 
             return _pendingIdentityManager.VerifyEmailAsync(pendingIdentityId, request?.ReceivedCode);
+        }
+
+        /// <summary>
+        /// Resolves an independently email-verified OAuth PendingIdentity to a durable user.
+        /// Existing verified-email matches are linked; otherwise a new durable user is created.
+        /// This operation does not apply invitation context or establish a normal application session.
+        /// </summary>
+        [HttpPost("/api/auth/pending-identity/{pendingIdentityId}/resolve/oauth")]
+        public Task<InvokeResult<AppUser>> ResolvePendingIdentityOAuthAsync(string pendingIdentityId, [FromBody] RegisterUser request)
+        {
+            if (String.IsNullOrWhiteSpace(pendingIdentityId))
+                return Task.FromResult(InvokeResult<AppUser>.FromError("Pending identity id is required."));
+
+            return _pendingIdentityResolutionService.ResolveOAuthAsync(pendingIdentityId, request);
         }
     }
 }
