@@ -3,10 +3,10 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="LagoVista.IoT.Billing.Managers" Version="7.0.2" />
+    <PackageVersion Include="LagoVista.IoT.Billing.Managers" Version="7.0.4" />
     <PackageVersion Include="LagoVista.IoT.Deployment.Admin" Version="7.0.3" />
     <PackageVersion Include="LagoVista.IoT.Web.Common" Version="7.0.5" />
     <PackageVersion Include="LagoVista.ProjectManagement.Core" Version="7.0.3" />
-    <PackageVersion Include="LagoVista.UserAdmin" Version="7.0.4" />
+    <PackageVersion Include="LagoVista.UserAdmin" Version="7.0.8" />
   </ItemGroup>
 </Project>
