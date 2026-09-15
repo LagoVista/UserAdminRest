@@ -13,6 +13,7 @@ using LagoVista.UserAdmin.Interfaces;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Security;
 using LagoVista.UserAdmin.Models.Users;
+using LagoVista.UserAdmin.Rest.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -116,6 +117,22 @@ namespace LagoVista.UserAdmin.Rest
                 form.FormFields.Remove(nameof(Module.IsPublic));
 
             return form;
+        }
+
+        /// <summary>
+        /// Compare the current Angular route table with the configured module/area/page hierarchy.
+        /// This endpoint is preview-only and does not mutate the module.
+        /// </summary>
+        [HttpPost("/api/module/{key}/reconcile-routes")]
+        public async Task<ModuleRouteReconciliationResult> ReconcileModuleRoutesAsync(string key, [FromBody] ModuleRouteReconciliationRequest request)
+        {
+            var module = await _moduleManager.GetModuleByKeyAsync(key, OrgEntityHeader, UserEntityHeader);
+            if (module == null)
+            {
+                throw new RecordNotFoundException(nameof(Module), key);
+            }
+
+            return ModuleRouteReconciler.Reconcile(module, request);
         }
 
         /// <summary>
