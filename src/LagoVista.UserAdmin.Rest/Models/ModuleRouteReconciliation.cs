@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LagoVista.UserAdmin.Rest.Models
+namespace LagoVista.UserAdmin.RouteReconciliation
 {
     public class ModuleRouteReconciliationRequest
     {

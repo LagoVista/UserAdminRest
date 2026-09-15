@@ -13,7 +13,7 @@ using LagoVista.UserAdmin.Interfaces;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Security;
 using LagoVista.UserAdmin.Models.Users;
-using LagoVista.UserAdmin.Rest.Models;
+using LagoVista.UserAdmin.RouteReconciliation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
