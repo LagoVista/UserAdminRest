@@ -125,11 +125,33 @@ namespace LagoVista.UserAdmin.RouteReconciliation
                     Status = "missing"
                 };
 
+                if (segments.Length > 2)
+                {
+                    var parentArea = module.Areas.FirstOrDefault(candidate =>
+                        candidate.Key.Equals(segments[0], StringComparison.OrdinalIgnoreCase));
+
+                    var parentPage = parentArea?.Pages.FirstOrDefault(candidate =>
+                        candidate.Key.Equals(segments[1], StringComparison.OrdinalIgnoreCase));
+
+                    if (parentPage != null)
+                    {
+                        item.Status = "supporting";
+                        item.ExistingAreaKey = parentArea.Key;
+                        item.ExistingPageKey = parentPage.Key;
+                        item.RelatedPath = $"{moduleKey}/{parentArea.Key}/{parentPage.Key}";
+                        item.Note = "Child route beneath an existing Area / Page destination.";
+                    }
+                }
+
                 var area = module.Areas.FirstOrDefault(candidate =>
                     candidate.Key.Equals(route.RelativePath, StringComparison.OrdinalIgnoreCase) ||
                     candidate.Key.Equals(suggestedKey, StringComparison.OrdinalIgnoreCase));
 
-                if (area != null && area.Pages.Count == 0)
+                if (item.Status == "supporting")
+                {
+                    // A route below an existing Area / Page is implementation navigation, not another menu entry.
+                }
+                else if (area != null && area.Pages.Count == 0)
                 {
                     item.Status = "matched";
                     item.ExistingAreaKey = area.Key;
