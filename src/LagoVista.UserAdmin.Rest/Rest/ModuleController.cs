@@ -120,6 +120,30 @@ namespace LagoVista.UserAdmin.Rest
         }
 
         /// <summary>
+        /// module - Get full editable module by key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        [HttpGet("/api/module/key/{key}")]
+        public async Task<DetailResponse<Module>> GetModuleByKeyForEditAsync(String key)
+        {
+            var module = await _moduleManager.GetModuleByKeyAsync(key, OrgEntityHeader, UserEntityHeader);
+            if (module == null)
+            {
+                throw new RecordNotFoundException(nameof(Module), key);
+            }
+
+            var form = DetailResponse<Module>.Create(module);
+            form.View[nameof(Module.UiCategory).CamelCase()].Options = new List<EnumDescription>(_moduleManager.GetTopLevelCategories().Select(cat =>
+                new EnumDescription() { Id = cat.Id, Key = cat.Key, Label = cat.Name, Name = cat.Name, Help = cat.Summary, Text = cat.Name }));
+
+            if (!IsPrimaryOrg)
+                form.FormFields.Remove(nameof(Module.IsPublic));
+
+            return form;
+        }
+
+        /// <summary>
         /// Compare the current Angular route table with the configured module/area/page hierarchy.
         /// This endpoint is preview-only and does not mutate the module.
         /// </summary>
