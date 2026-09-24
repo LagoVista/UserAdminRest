@@ -153,19 +153,10 @@ namespace LagoVista.UserAdmin.RouteReconciliation
                     }
                 }
 
-                if (item.Status == "missing" && parameterized && !String.IsNullOrWhiteSpace(route.Route.Component))
+                if (item.Status == "missing" && parameterized)
                 {
-                    var related = navigableRoutes.FirstOrDefault(candidate =>
-                        !candidate.RelativePath.Contains(":") &&
-                        !String.IsNullOrWhiteSpace(candidate.Route.Component) &&
-                        candidate.Route.Component.Equals(route.Route.Component, StringComparison.Ordinal));
-
-                    if (related != null)
-                    {
-                        item.Status = "supporting";
-                        item.RelatedPath = related.Path;
-                        item.Note = "Parameterized/deep-link route for the same component as a navigable route.";
-                    }
+                    item.Status = "supporting";
+                    item.Note = "Parameterized/detail route. Only static routes participate in the Module / Area / Page menu hierarchy.";
                 }
 
                 result.Items.Add(item);
