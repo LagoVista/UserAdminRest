@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="LagoVista.UserAdmin" />
+    <PackageReference Include="LagoVista.IoT.DeviceManagement.Core" />
     <PackageReference Include="LagoVista.IoT.Deployment.Admin" />
     <PackageReference Include="LagoVista.IoT.Billing.Managers" />
     <PackageReference Include="LagoVista.IoT.Web.Common" />
