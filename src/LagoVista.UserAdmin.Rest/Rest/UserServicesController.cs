@@ -249,6 +249,27 @@ namespace LagoVista.UserManagement.Rest
         }
 
         /// <summary>
+        /// System admin - add an existing user to an organization by email without changing their current organization.
+        /// </summary>
+        [SystemAdmin]
+        [HttpPost("/api/sys/org/{orgid}/user/add-by-email")]
+        public async Task<InvokeResult> AddUserToOrganizationByEmailAsync(string orgid, [FromBody] AddOrgUserByEmailRequest request)
+        {
+            if (!IsSysAdmin)
+                throw new NotAuthorizedException("Must be a system admin to add a user to organization.");
+
+            if (request == null || String.IsNullOrWhiteSpace(request.Email))
+                return InvokeResult.FromError("An email address is required.");
+
+            return await _orgManager.AddUserToOrgByEmailAsync(orgid, request.Email, OrgEntityHeader, UserEntityHeader);
+        }
+
+        public class AddOrgUserByEmailRequest
+        {
+            public string Email { get; set; }
+        }
+
+        /// <summary>
         /// User Service - Get User by Email
         /// </summary>
         /// <param name="email"></param>
