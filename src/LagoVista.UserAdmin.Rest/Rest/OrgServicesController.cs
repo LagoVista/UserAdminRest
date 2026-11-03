@@ -261,6 +261,7 @@ namespace LagoVista.UserAdmin.Rest
         /// Orgs Service - Return Currently Organization
         /// </summary>
         /// <returns></returns>
+        [McpEndpoint("organization-current-summary", Description = "Get the signed-in user's current organization summary. This does not expose other organizations or mutate organization settings.")]
         [HttpGet("/api/org/current/summary")]
         public async Task<InvokeResult<OrganizationSummary>> GetCurrentOrgSummaryAsync()
         {
