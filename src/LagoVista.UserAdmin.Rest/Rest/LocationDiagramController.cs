@@ -8,6 +8,7 @@ using LagoVista.Core.Models.UIMetaData;
 using LagoVista.Core.Validation;
 using LagoVista.IoT.Logging.Loggers;
 using LagoVista.IoT.Web.Common.Controllers;
+using LagoVista.IoT.Web.Common.Attributes;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Interfaces.Services;
 using LagoVista.UserAdmin.Models.Orgs;
@@ -36,18 +37,21 @@ namespace LagoVista.UserAdmin.Rest
             _dxfLocationDiagramDescriptorConverter = dxfLocationDiagramDescriptorConverter;
         }
 
+        [McpEndpoint("location-diagram-create", Description = "Create a location diagram for the current organization.", FamilyId = "orgs")]
         [HttpPost("/api/org/location/diagram")]
         public Task<InvokeResult> AddLocationAsync([FromBody] LocationDiagram diagram)
         {
             return _diagramManager.AddLocationDiagramAsync(diagram, OrgEntityHeader, UserEntityHeader);
         }
 
+        [McpEndpoint("location-diagram-update", Description = "Update a complete existing location diagram.", FamilyId = "orgs")]
         [HttpPut("/api/org/location/diagram")]
         public Task<InvokeResult> UpdateLocationAsync([FromBody] LocationDiagram diagram)
         {
             return _diagramManager.UpdateLocationDiagramAsync(diagram, OrgEntityHeader, UserEntityHeader);
         }
 
+        [McpEndpoint("location-diagram-get", Description = "Get a complete location diagram by ID.", FamilyId = "orgs")]
         [HttpGet("/api/org/location/diagram/{id}")]
         public async Task<DetailResponse<LocationDiagram>> GetOrgLocation(string id)
         {
@@ -75,6 +79,7 @@ namespace LagoVista.UserAdmin.Rest
             return _diagramManager.DeleteLocationDiagramAsync(id, OrgEntityHeader, UserEntityHeader);
         }
 
+        [McpEndpoint("location-diagram-list", Description = "List location diagrams for the current organization.", FamilyId = "orgs")]
         [HttpGet("/api/org/location/diagrams")]
         public Task<ListResponse<LocationDiagramSummary>> GetDiagrams()
         {
@@ -82,6 +87,7 @@ namespace LagoVista.UserAdmin.Rest
         }
 
 
+        [McpEndpoint("location-diagram-factory", Description = "Get an unsaved location diagram template.", FamilyId = "orgs")]
         [HttpGet("/api/org/location/diagram/factory")]
         public DetailResponse<LocationDiagram> CreateDiagram()
         {
