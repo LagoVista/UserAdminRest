@@ -81,9 +81,13 @@ namespace LagoVista.UserAdmin.Rest
 
         [McpEndpoint("location-diagram-list", Description = "List location diagrams for the current organization.", FamilyId = "orgs")]
         [HttpGet("/api/org/location/diagrams")]
-        public Task<ListResponse<LocationDiagramSummary>> GetDiagrams()
+        public Task<ListResponse<LocationDiagramSummary>> GetDiagrams(bool showDrafts = false)
         {
-            return _diagramManager.GetLocationDiagramsAsync(GetListRequestFromHeader(), OrgEntityHeader, UserEntityHeader);
+            var listRequest = GetListRequestFromHeader();
+            if (showDrafts)
+                listRequest.ShowDrafts = true;
+
+            return _diagramManager.GetLocationDiagramsAsync(listRequest, OrgEntityHeader, UserEntityHeader);
         }
 
 
