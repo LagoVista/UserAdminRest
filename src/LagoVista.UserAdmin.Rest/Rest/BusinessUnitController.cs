@@ -8,6 +8,7 @@ using LagoVista.IoT.Web.Common.Controllers;
 using LagoVista.UserAdmin.Interfaces.Managers;
 using LagoVista.UserAdmin.Models.Orgs;
 using LagoVista.UserAdmin.Models.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -18,6 +19,7 @@ namespace LagoVista.UserAdmin.Rest
     /// <summary>
     /// Optional organization-owned business units. All operations are scoped to the current organization.
     /// </summary>
+    [Authorize]
     [ConfirmedUser]
     public class BusinessUnitController : LagoVistaBaseController
     {
