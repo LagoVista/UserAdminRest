@@ -8,6 +8,6 @@
     <PackageVersion Include="LagoVista.IoT.DeviceManagement.Core" Version="7.0.15" />
     <PackageVersion Include="LagoVista.IoT.Web.Common" Version="7.0.72" />
     <PackageVersion Include="LagoVista.ProjectManagement.Core" Version="7.0.17" />
-    <PackageVersion Include="LagoVista.UserAdmin" Version="7.0.43" />
+    <PackageVersion Include="LagoVista.UserAdmin" Version="7.0.44" />
   </ItemGroup>
 </Project>
